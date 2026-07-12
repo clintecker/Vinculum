@@ -131,6 +131,14 @@ struct MathTypesetter {
         if monospaced {
             return PlatformFont.monospacedSystemFont(ofSize: size, weight: .regular) as CTFont
         }
+        // The bundled OpenType math font (Latin Modern Math) is the whole
+        // point — it gives Computer-Modern glyph shapes. Style (italic/bold)
+        // is expressed by remapping to math-alphanumeric codepoints in
+        // `mathVariant`, not by a synthetic slant, so the font itself is
+        // style-neutral here. Falls back to the system font if unavailable.
+        if let mathFont = MathFont.ctFont(size: size) {
+            return mathFont
+        }
         let base = bold ? PlatformFont.boldSystemFont(ofSize: size) : PlatformFont.systemFont(ofSize: size)
         if italic {
             #if canImport(AppKit)
@@ -147,7 +155,46 @@ struct MathTypesetter {
         return base as CTFont
     }
 
+    /// Remaps a single letter to its Mathematical-Alphanumeric codepoint so
+    /// the math font renders proper math italic/bold — LaTeX conventions:
+    /// ASCII variables italic (per the style flag), lowercase Greek always
+    /// italic, uppercase Greek upright. Only applied when the math font is
+    /// present; otherwise text passes through to the system-font path.
+    private static func mathVariant(_ text: String, italic: Bool, bold: Bool) -> String {
+        guard MathFont.isAvailable, text.unicodeScalars.count == 1,
+              let u = text.unicodeScalars.first else { return text }
+        let v = u.value
+        func s(_ x: UInt32) -> String { UnicodeScalar(x).map(String.init) ?? text }
+        // ASCII letters.
+        if (0x41...0x5A).contains(v) || (0x61...0x7A).contains(v) {
+            let upper = v <= 0x5A
+            let i = v - (upper ? 0x41 : 0x61)
+            if bold && italic { return s((upper ? 0x1D468 : 0x1D482) + i) }
+            if bold { return s((upper ? 0x1D400 : 0x1D41A) + i) }
+            if italic { return v == 0x68 ? "\u{210E}" : s((upper ? 0x1D434 : 0x1D44E) + i) } // ℎ hole
+            return text // roman/upright (digits, \mathrm, function names)
+        }
+        // Greek: lowercase α–ω → italic (contiguous with U+1D6FC, ς included);
+        // uppercase Α–Ω stays upright per LaTeX default.
+        if (0x3B1...0x3C9).contains(v) { return s((bold ? 0x1D6C2 : 0x1D6FC) + (v - 0x3B1)) }
+        if bold, (0x391...0x3A9).contains(v) { return s(0x1D6A8 + (v - 0x391)) }
+        return text
+    }
+
+    /// The vertical ink extent of a glyph relative to its baseline
+    /// (minY = ink bottom, maxY = ink top). Used to place accents on the
+    /// actual ink rather than the typographic box.
+    private func inkVerticalBounds(_ text: String, size: CGFloat) -> (minY: CGFloat, maxY: CGFloat) {
+        let ctFont = font(size: size, italic: false)
+        let attributed = NSAttributedString(string: text, attributes: [
+            kCTFontAttributeName as NSAttributedString.Key: ctFont])
+        let line = CTLineCreateWithAttributedString(attributed)
+        let b = CTLineGetImageBounds(line, nil)
+        return (b.minY, b.maxY)
+    }
+
     private func textBox(_ text: String, size: CGFloat, italic: Bool, bold: Bool = false, monospaced: Bool = false) -> MathBox {
+        let text = monospaced ? text : Self.mathVariant(text, italic: italic, bold: bold)
         let ctFont = font(size: size, italic: italic, bold: bold, monospaced: monospaced)
         let ink = self.ink
         let attributed = NSAttributedString(string: text, attributes: [
@@ -356,18 +403,20 @@ struct MathTypesetter {
         let accentSize = accent.isStretchy
             ? min(size * 1.6, max(size * 0.7, baseBox.width * 0.9))
             : size * 0.9
-        let accentBoxGlyph = textBox(glyph, size: accentSize, italic: false)
-        let clearance = size * 0.04
-        // Sit the accent on the base's INK top (a hat hugs `x`), not its
-        // font ascent — but never let the composite's ascent shrink below
-        // the base's, or neighboring atoms misalign.
-        let accentBaseY = baseBox.inkAscent + clearance
-        let ascent = max(baseBox.ascent, accentBaseY + accentBoxGlyph.height)
+        let accentGlyph = textBox(glyph, size: accentSize, italic: false)
+        // Place by the accent's actual INK bottom, not its typographic box —
+        // accent glyphs (^ ~ ¨) carry ink only near the top of a tall box,
+        // so a box-relative placement floats them far above the letter.
+        let accentInk = inkVerticalBounds(glyph, size: accentSize)
+        let clearance = size * 0.02
+        // Baseline for the accent such that its ink bottom sits just above
+        // the base's ink top.
+        let accentBaselineY = baseBox.inkAscent + clearance - accentInk.minY
+        let ascent = max(baseBox.ascent, accentBaselineY + accentInk.maxY)
         return MathBox(width: baseBox.width, ascent: ascent, descent: baseBox.descent) { context, pen in
             baseBox.draw(context, pen)
-            let x = pen.x + (baseBox.width - accentBoxGlyph.width) / 2
-            let y = pen.y + accentBaseY + accentBoxGlyph.descent
-            accentBoxGlyph.draw(context, CGPoint(x: x, y: y))
+            let x = pen.x + (baseBox.width - accentGlyph.width) / 2
+            accentGlyph.draw(context, CGPoint(x: x, y: pen.y + accentBaselineY))
         }
     }
 

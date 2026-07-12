@@ -18,7 +18,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "VinculumLayout", path: "Sources/VinculumLayout"),
-        .target(name: "VinculumRender", dependencies: ["VinculumLayout"], path: "Sources/VinculumRender"),
+        .target(name: "VinculumRender", dependencies: ["VinculumLayout"], path: "Sources/VinculumRender",
+                resources: [.copy("Resources/latinmodern-math.otf"),
+                            .copy("Resources/LatinModernMath-LICENSE.txt"),
+                            .copy("Resources/GUST-FONT-LICENSE.txt")]),
         .testTarget(name: "VinculumLayoutTests", dependencies: ["VinculumLayout"], path: "Tests/VinculumLayoutTests"),
         .testTarget(name: "VinculumRenderTests", dependencies: ["VinculumRender", "VinculumLayout"], path: "Tests/VinculumRenderTests"),
     ]
