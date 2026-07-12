@@ -2,9 +2,17 @@
 
 ## 0.3.0 — 2026-07-12
 
-Radical decomposition + a device-independent scene IR, mirroring TeX's DVI
-split and MermaidKit's layout/render seam. No change to rendered output (the
-golden fixtures pass byte-identical), but the internals are now:
+Two big things since 0.1.0: an OpenType MATH font for genuine LaTeX quality,
+and a device-independent scene-IR re-architecture.
+
+**Latin Modern Math (Computer Modern).** Real glyph shapes, codepoint-based
+math italics (variables → Mathematical Italic block, lowercase Greek italic),
+the font's MATH-table constants, and ink-hugging accent placement — plus
+standalone delimiters (`\langle` outside `\left…\right`) and ~80 more symbols.
+
+**Scene IR.** A radical decomposition mirroring TeX's DVI split and
+MermaidKit's layout/render seam. No change to rendered output (the golden
+fixtures pass byte-identical), but the internals are now:
 
 - **VinculumLayout is fully platform-free** and owns all typesetting geometry.
   `MathLayoutEngine` measures glyphs through an injected `MathTextMeasurer`
@@ -19,14 +27,6 @@ golden fixtures pass byte-identical), but the internals are now:
 - Public API unchanged: `MathParser`, `MathImageRenderer.attachmentString`,
   `MathTheme`. New public surface: `MathLayoutEngine`, `MathScene`,
   `MathTextMeasurer` for hosts that want the device-independent scene.
-
-## 0.2.0 — 2026-07-12
-
-Adopt an OpenType MATH font — Latin Modern Math (Computer Modern) — for
-genuine LaTeX quality: real glyph shapes, codepoint-based math italics
-(variables → Mathematical Italic block, lowercase Greek italic), the font's
-MATH-table constants, and ink-hugging accent placement. Plus standalone
-delimiters (`\langle` outside `\left…\right`) and ~80 more symbols.
 
 ## 0.1.0 — 2026-07-11
 
