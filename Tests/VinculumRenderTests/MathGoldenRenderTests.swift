@@ -18,24 +18,6 @@ import AppKit
 @MainActor
 final class MathGoldenRenderTests: XCTestCase {
 
-    // Goldens are rendered with MathTheme.light (black ink). Any earlier
-    // test that touches an NSView boots AppKit, after which the SYSTEM
-    // appearance can leak into dynamic-color resolution (dark-mode machines
-    // rendered white-ink actuals depending on test order). Pin Aqua for the
-    // duration of this suite so the ink resolves consistently.
-    private var savedAppearance: NSAppearance?
-
-    override func setUp() {
-        super.setUp()
-        savedAppearance = NSApp?.appearance
-        NSApp?.appearance = NSAppearance(named: .aqua)
-    }
-
-    override func tearDown() {
-        NSApp?.appearance = savedAppearance
-        super.tearDown()
-    }
-
     enum Expectation { case mustRender, knownUnsupported }
 
     struct Fixture {
@@ -170,6 +152,14 @@ final class MathGoldenRenderTests: XCTestCase {
     }
 
     func testEquationFixturesMatchGoldenRenders() throws {
+        // Goldens use MathTheme.light (black ink). Pin Aqua so dynamic-color
+        // resolution is deterministic regardless of the runner's appearance.
+        // (Done here, not in setUp — an override of the nonisolated setUp
+        // can't touch main-actor NSApp; this test method is @MainActor.)
+        let savedAppearance = NSApp?.appearance
+        NSApp?.appearance = NSAppearance(named: .aqua)
+        defer { NSApp?.appearance = savedAppearance }
+
         try FileManager.default.createDirectory(at: goldenDirectory, withIntermediateDirectories: true)
         var failures: [String] = []
         var coverageChanges: [String] = []
