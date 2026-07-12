@@ -1,0 +1,25 @@
+// swift-tools-version: 5.10
+import PackageDescription
+
+// Vinculum — native LaTeX math parsing and typesetting for Apple platforms.
+// VinculumLayout is platform-free (LaTeX → a TeX-style node tree, with
+// document-scoped \newcommand macro expansion); VinculumRender lays each
+// node out as geometry and draws it with CoreText/CoreGraphics behind a
+// small MathTheme seam. No MathJax, no KaTeX, no WebView, no dependencies.
+//
+// The vinculum is the bar in a fraction, the line over a root — the stroke
+// the typesetter draws to bind an expression together.
+let package = Package(
+    name: "Vinculum",
+    platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1)],
+    products: [
+        .library(name: "VinculumLayout", targets: ["VinculumLayout"]),
+        .library(name: "VinculumRender", targets: ["VinculumRender"]),
+    ],
+    targets: [
+        .target(name: "VinculumLayout", path: "Sources/VinculumLayout"),
+        .target(name: "VinculumRender", dependencies: ["VinculumLayout"], path: "Sources/VinculumRender"),
+        .testTarget(name: "VinculumLayoutTests", dependencies: ["VinculumLayout"], path: "Tests/VinculumLayoutTests"),
+        .testTarget(name: "VinculumRenderTests", dependencies: ["VinculumRender", "VinculumLayout"], path: "Tests/VinculumRenderTests"),
+    ]
+)
