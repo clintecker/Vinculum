@@ -27,31 +27,7 @@ enum MathFont {
         guard let cgFont else { return nil }
         return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
     }
-
-    /// MATH-table constants, as em fractions (the raw values are in the
-    /// font's 1000-unit em). These are Latin Modern Math's authoritative
-    /// numbers — the ones the engine previously hand-approximated.
-    enum Constants {
-        static let axisHeight: CGFloat = 0.250
-        static let fractionRuleThickness: CGFloat = 0.040
-        static let fractionNumeratorShiftUp: CGFloat = 0.394
-        static let fractionDenominatorShiftDown: CGFloat = 0.345
-        static let fractionNumeratorDisplayStyleShiftUp: CGFloat = 0.677
-        static let fractionDenominatorDisplayStyleShiftDown: CGFloat = 0.686
-        static let scriptPercentScaleDown: CGFloat = 0.70
-        static let scriptScriptPercentScaleDown: CGFloat = 0.50
-        static let superscriptShiftUp: CGFloat = 0.363
-        static let subscriptShiftDown: CGFloat = 0.247
-        static let radicalRuleThickness: CGFloat = 0.040
-        static let radicalVerticalGap: CGFloat = 0.148
-        static let overbarVerticalGap: CGFloat = 0.120
-        static let overbarRuleThickness: CGFloat = 0.040
-        static let underbarVerticalGap: CGFloat = 0.120
-        static let accentBaseHeight: CGFloat = 0.450
-        static let stackGapMin: CGFloat = 0.150
-        static let upperLimitBaselineRiseMin: CGFloat = 0.111
-        static let lowerLimitBaselineDropMin: CGFloat = 0.600
-        static let spaceAfterScript: CGFloat = 0.041
-    }
 }
+// The MATH-table constants moved to VinculumLayout's `MathConstants` (they're
+// pure numbers the platform-free layout stage needs).
 #endif

@@ -95,10 +95,10 @@ final class GalleryGenerator: XCTestCase {
 
     // MARK: - Compositor
 
-    private struct Row { let label: String; let box: MathTypesetter.MathBox; let labelLine: CTLine?; let labelW: CGFloat; let labelAsc: CGFloat; let labelDesc: CGFloat }
+    private struct Row { let label: String; let scene: MathScene; let labelLine: CTLine?; let labelW: CGFloat; let labelAsc: CGFloat; let labelDesc: CGFloat }
 
     private func poster(to url: URL, title: String, sections: [(String, [String])]) throws {
-        let ts = MathTypesetter(mathTheme: .light, baseSize: 22)
+        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 22)
         let labelFont = CTFontCreateWithName("Menlo" as CFString, 12, nil)
         let headerFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 15, nil)
         let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 20, nil)
@@ -128,11 +128,11 @@ final class GalleryGenerator: XCTestCase {
                 // SEGMENTS, so wrap the raw latex as a $$…$$ block first.
                 let table = MathMacros.collectDefinitions(from: "$$" + latex + "$$")
                 let expanded = MathMacros.expand(latex, with: table)
-                let box = ts.layout(MathParser.parse(expanded), display: true)
+                let scene = engine.layout(MathParser.parse(expanded), display: true)
                 let (ll, lw, la, ld) = line(latex, labelFont)
-                rows.append(Row(label: latex, box: box, labelLine: ll, labelW: lw, labelAsc: la, labelDesc: ld))
+                rows.append(Row(label: latex, scene: scene, labelLine: ll, labelW: lw, labelAsc: la, labelDesc: ld))
                 labelColW = max(labelColW, lw)
-                boxColW = max(boxColW, box.width)
+                boxColW = max(boxColW, scene.width)
             }
             let h = header.isEmpty ? nil : line(header, headerFont)
             built.append(Section(header: h, rows: rows))
@@ -146,7 +146,7 @@ final class GalleryGenerator: XCTestCase {
         var height = margin + (titleAsc + titleDesc) + sectionGap
         for s in built {
             if let h = s.header { height += h.2 + h.3 + rowGap * 0.6 }
-            for r in s.rows { height += max(r.box.height, r.labelAsc + r.labelDesc) + rowGap }
+            for r in s.rows { height += max(r.scene.height, r.labelAsc + r.labelDesc) + rowGap }
             height += sectionGap
         }
         height += margin - rowGap
@@ -178,15 +178,15 @@ final class GalleryGenerator: XCTestCase {
                 y -= h.3 + rowGap * 0.6
             }
             for r in s.rows {
-                let rowAsc = max(r.box.ascent, r.labelAsc)
-                let rowDesc = max(r.box.descent, r.labelDesc)
+                let rowAsc = max(r.scene.ascent, r.labelAsc)
+                let rowDesc = max(r.scene.descent, r.labelDesc)
                 y -= rowAsc
                 // Label right-aligned in its column.
                 if let ll = r.labelLine {
                     draw(ll, x: margin + (labelColW - r.labelW), baseline: y, color: gray)
                 }
                 // Math left-aligned, baseline shared with the label.
-                r.box.draw(ctx, CGPoint(x: boxX, y: y))
+                MathSceneRenderer.draw(r.scene, theme: .light, in: ctx, at: CGPoint(x: boxX, y: y))
                 y -= rowDesc + rowGap
             }
             y -= sectionGap

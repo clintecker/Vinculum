@@ -4,16 +4,18 @@ import CoreGraphics
 @testable import VinculumRender
 import VinculumLayout
 
-/// Font-independent invariants of the typesetter and the attachment API.
-/// (The Quoin-side integration — how the block renderer tags `mathSource`
-/// and falls back to a source card — is tested in Quoin, not here.)
+/// Font-independent invariants of the layout engine + the attachment API,
+/// exercised through the real CoreText measurer. (Purely headless geometry
+/// tests with a mock measurer live in VinculumLayoutTests.)
 final class MathTypesetterTests: XCTestCase {
 
     private let baseSize: CGFloat = 14
 
-    private func typesetter() -> MathTypesetter { MathTypesetter(mathTheme: .light, baseSize: baseSize) }
-    private func box(_ latex: String, display: Bool = false) -> MathTypesetter.MathBox {
-        typesetter().layout(MathParser.parse(latex), display: display)
+    private func engine() -> MathLayoutEngine {
+        MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: baseSize)
+    }
+    private func scene(_ latex: String, display: Bool = false) -> MathScene {
+        engine().layout(MathParser.parse(latex), display: display)
     }
 
     // MARK: - Support classification drives native vs. fallback
@@ -34,8 +36,6 @@ final class MathTypesetterTests: XCTestCase {
     }
 
     func testUnsupportedMathReturnsNilSoRendererFallsBack() {
-        // \unknownmacro parses to an `.unsupported` leaf → not fully supported
-        // → the host keeps its styled source card instead of a broken glyph.
         let latex = "\\weirdcommand{x} + \\notreal"
         XCTAssertFalse(MathParser.isFullySupported(MathParser.parse(latex)))
         XCTAssertNil(MathImageRenderer.attachmentString(
@@ -43,23 +43,23 @@ final class MathTypesetterTests: XCTestCase {
         ), "unsupported LaTeX must return nil so the host keeps the fallback")
     }
 
-    // MARK: - Font-independent MathBox structural invariants
+    // MARK: - Font-independent scene structural invariants
 
     func testFractionStacksTallerThanNumerator() {
-        let fraction = box("\\frac{1}{2}")
-        let numeral = box("1")
+        let fraction = scene("\\frac{1}{2}")
+        let numeral = scene("1")
         XCTAssertGreaterThan(fraction.width, 0)
         XCTAssertGreaterThan(fraction.height, numeral.height * 1.5,
             "a fraction stacks numerator over denominator, so it is far taller than one numeral")
     }
 
-    /// TeX puts a *thick* (5/18 em) space on each side of a relation. The
-    /// extra width is the only difference between `x=y` and the glyphs
-    /// `xy` + `=` laid out without relation spacing, so the font glyph
-    /// widths cancel and the surplus must be ≈ 2·(5/18)·size, on any font.
+    /// TeX puts a *thick* (5/18 em) space on each side of a relation. The extra
+    /// width is the only difference between `x=y` and `xy` + `=` laid out
+    /// without relation spacing, so the glyph widths cancel and the surplus is
+    /// ≈ 2·(5/18)·size on any font.
     func testRelationSpacingMatchesTeXThickSpace() {
-        let withRelation = box("x=y").width
-        let glyphs = box("xy").width + box("=").width
+        let withRelation = scene("x=y").width
+        let glyphs = scene("xy").width + scene("=").width
         let surplus = withRelation - glyphs
         let expected = 2 * (5.0 / 18.0) * baseSize
         XCTAssertEqual(surplus, expected, accuracy: 0.5,
@@ -67,10 +67,22 @@ final class MathTypesetterTests: XCTestCase {
     }
 
     func testDisplayLimitsStackTallerThanInlineScripts() {
-        let display = box("\\sum_{i=1}^{n} i", display: true)
-        let inline = box("\\sum_{i=1}^{n} i", display: false)
+        let display = scene("\\sum_{i=1}^{n} i", display: true)
+        let inline = scene("\\sum_{i=1}^{n} i", display: false)
         XCTAssertGreaterThan(display.height, inline.height,
             "display style stacks the operator's limits above and below, growing its height")
+    }
+
+    /// The scene is emitted, not drawn — a `\color` subtree carries its
+    /// resolved sRGB on its glyph elements (nil elsewhere = theme ink).
+    func testColorSubtreeTintsItsGlyphs() {
+        let s = engine().layout(MathParser.parse("\\color{red}{x} + y"), display: false)
+        var reds = 0, inks = 0
+        for e in s.elements {
+            if case let .glyphs(_, _, _, _, color) = e { color == nil ? (inks += 1) : (reds += 1) }
+        }
+        XCTAssertGreaterThan(reds, 0, "the \\color subtree should carry a color")
+        XCTAssertGreaterThan(inks, 0, "the rest should be theme ink (nil)")
     }
 }
 #endif
