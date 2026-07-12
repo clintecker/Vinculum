@@ -4,18 +4,34 @@ Vinculum is the native math engine extracted from
 [Quoin](https://github.com/clintecker/quoin), following the same pattern as
 [MermaidKit](https://github.com/clintecker/MermaidKit).
 
-## Layout
+## Architecture
 
-- **VinculumLayout** (platform-free, zero dependencies) — `MathParser`
-  (LaTeX → `MathNode` tree), `MathScanner` (delimiter scanning),
-  `MathAlphabet` (Unicode math-alphabet codepoints), `MathMacros`
-  (document-scoped `\newcommand`/`\def` expansion). No CoreGraphics, no
-  AppKit/UIKit — builds anywhere.
-- **VinculumRender** (Apple platforms) — `MathTypesetter` (`MathNode` → a
-  `MathBox` geometry tree, drawn with CoreText/CoreGraphics),
-  `MathImageRenderer` (cached `NSTextAttachment` production), and the
-  `MathTheme` seam (the sole host coupling: ink + appearance). Guarded
-  `#if canImport(AppKit) || canImport(UIKit)`.
+The design mirrors TeX's device-independent split (and MermaidKit's): layout
+decides WHAT to draw as a platform-free scene; a renderer decides HOW.
+
+- **VinculumLayout** (platform-free, Foundation only, zero deps — builds on
+  Linux) does parsing AND all typesetting geometry:
+  - *Parse* — `MathTokenizer` (lexer), `MathParser` (recursive descent),
+    `MathSymbolTable` (data), `MathScanner` (`$…$` delimiters), `MathMacros`
+    (`\newcommand`/`\def`), `MathAlphabet` (Unicode math alphabets),
+    `MathDiagnostics` (support classification). Model in `MathNode`.
+  - *Lay out* — `MathLayoutEngine` measures glyphs through the injected
+    `MathTextMeasurer` seam and emits a `MathScene` of positioned primitives
+    (`MathElement`: glyph runs, rules, stroked paths) in `MathColor`. The
+    per-domain builders live in `Layout+*.swift` (Fractions, Scripts,
+    Radicals, Delimiters, Accents, OverUnder, Decorations); `MathBox` is the
+    compositional unit; `MathConstants` holds the font's MATH-table metrics.
+  - No CoreGraphics/CoreText/AppKit — only Foundation geometry types.
+- **VinculumRender** (Apple platforms) is the thin platform seam:
+  `CoreTextMeasurer` (implements `MathTextMeasurer` via CTLine),
+  `MathSceneRenderer` (draws a `MathScene` to a `CGContext`), `MathFont`
+  (the bundled Latin Modern Math), `MathTheme` (the host coupling: ink +
+  appearance), and `MathImageRenderer` (cached `NSTextAttachment`,
+  orchestrating measure → layout → render). Guarded `#if canImport(AppKit)
+  || canImport(UIKit)`.
+
+Because layout is measurement-injected, its geometry is unit-tested headless
+with a mock measurer (`MathLayoutTests`) — on Linux, in CI.
 
 ## API stability (pre-1.0)
 

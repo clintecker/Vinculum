@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.3.0 — 2026-07-12
+
+Radical decomposition + a device-independent scene IR, mirroring TeX's DVI
+split and MermaidKit's layout/render seam. No change to rendered output (the
+golden fixtures pass byte-identical), but the internals are now:
+
+- **VinculumLayout is fully platform-free** and owns all typesetting geometry.
+  `MathLayoutEngine` measures glyphs through an injected `MathTextMeasurer`
+  and emits a `MathScene` of positioned primitives (`MathElement` / `MathColor`
+  / `MathConstants`). Builds and tests on **Linux** (headless, mock measurer).
+- **VinculumRender shrank to the platform seam**: `CoreTextMeasurer`,
+  `MathSceneRenderer`, `MathFont`, `MathTheme`, `MathImageRenderer`. The old
+  876-line `MathTypesetter` is gone.
+- The two 800-line monoliths are now ~25 single-responsibility files (largest
+  452 lines).
+- **Swift 6** language mode + strict concurrency; platforms add **tvOS 17**.
+- Public API unchanged: `MathParser`, `MathImageRenderer.attachmentString`,
+  `MathTheme`. New public surface: `MathLayoutEngine`, `MathScene`,
+  `MathTextMeasurer` for hosts that want the device-independent scene.
+
+## 0.2.0 — 2026-07-12
+
+Adopt an OpenType MATH font — Latin Modern Math (Computer Modern) — for
+genuine LaTeX quality: real glyph shapes, codepoint-based math italics
+(variables → Mathematical Italic block, lowercase Greek italic), the font's
+MATH-table constants, and ink-hugging accent placement. Plus standalone
+delimiters (`\langle` outside `\left…\right`) and ~80 more symbols.
+
 ## 0.1.0 — 2026-07-11
 
 First release. The native LaTeX math engine extracted from

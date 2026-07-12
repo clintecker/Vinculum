@@ -25,11 +25,14 @@ let run = MathImageRenderer.attachmentString(
     mathTheme: .light,
     baseSize: 15)
 
-// Or drive the pieces directly:
-let node = MathParser.parse(#"\sum_{i=1}^{n} i^2"#)   // VinculumLayout
+// Or drive the pieces directly. Layout is platform-free: it measures glyphs
+// through an injected measurer and returns a device-independent MathScene of
+// positioned primitives (glyph runs, rules, strokes) — TeX's DVI in miniature.
+let node = MathParser.parse(#"\sum_{i=1}^{n} i^2"#)          // VinculumLayout
 if MathParser.isFullySupported(node) {
-    let box = MathTypesetter(mathTheme: .dark, baseSize: 15).layout(node, display: true)
-    // box.draw(cgContext, at: penPoint)
+    let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 15)
+    let scene = engine.layout(node, display: true)          // MathScene
+    MathSceneRenderer.draw(scene, theme: .dark, in: cgContext, at: penPoint)
 }
 ```
 

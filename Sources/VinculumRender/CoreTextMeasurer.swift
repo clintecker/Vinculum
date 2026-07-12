@@ -8,9 +8,10 @@ import VinculumLayout
 /// glyph run in the bundled math font (or the monospace fallback for
 /// unsupported source), returning typographic bounds plus the ink extents that
 /// drive accent placement. This is the only place layout touches CoreText.
-enum CoreTextMeasurer {
+public enum CoreTextMeasurer {
 
-    static func make() -> MathTextMeasurer {
+    /// A CoreText-backed measurer to feed `MathLayoutEngine`.
+    public static func make() -> MathTextMeasurer {
         { text, size, mono in
             let ctFont: CTFont
             if mono {

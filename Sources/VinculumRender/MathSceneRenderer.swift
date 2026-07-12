@@ -9,10 +9,10 @@ import VinculumLayout
 /// font; `nil`-colored primitives take the theme ink; a `\color` element
 /// carries its own resolved sRGB. The context is expected to be y-up (the
 /// scene's convention).
-enum MathSceneRenderer {
+public enum MathSceneRenderer {
 
-    /// Draws `scene` with its baseline origin placed at `origin`.
-    static func draw(_ scene: MathScene, theme: MathTheme, in ctx: CGContext, at origin: CGPoint) {
+    /// Draws `scene` into a y-up context with its baseline origin at `origin`.
+    public static func draw(_ scene: MathScene, theme: MathTheme, in ctx: CGContext, at origin: CGPoint) {
         for element in scene.elements {
             switch element {
             case let .glyphs(text, size, mono, o, color):

@@ -2,31 +2,12 @@ import Foundation
 
 extension MathLayoutEngine {
 
-    /// `\frac`: numerator over denominator on the math axis, separated by a
-    /// rule. Parts shrink (0.9× display / 0.8× inline).
+    /// `\frac`: numerator over denominator, separated by a rule. It is exactly
+    /// a ruled `genfrac` with no fences — one stacking implementation, kept DRY.
     func fractionBox(_ numerator: MathNode, _ denominator: MathNode,
                      size: CGFloat, display: Bool) -> MathBox {
-        let partSize = size * (display ? 0.9 : 0.8)
-        let top = box(for: numerator, size: partSize, display: false)
-        let bottom = box(for: denominator, size: partSize, display: false)
-
-        let ruleThickness = max(1, size * 0.045)
-        let gap = size * 0.14
-        let axis = size * 0.26 // math axis above baseline
-        let width = max(top.width, bottom.width) + size * 0.24
-        let ascent = axis + ruleThickness / 2 + gap + top.height
-        let descent = -(axis - ruleThickness / 2 - gap - bottom.height)
-
-        var elements: [MathElement] = [
-            rule(x: size * 0.04, y: axis - ruleThickness / 2,
-                 width: width - size * 0.08, height: ruleThickness)
-        ]
-        elements += top.placed(at: CGPoint(x: (width - top.width) / 2,
-                                           y: axis + ruleThickness / 2 + gap + top.descent))
-        elements += bottom.placed(at: CGPoint(x: (width - bottom.width) / 2,
-                                              y: axis - ruleThickness / 2 - gap - bottom.ascent))
-        return MathBox(width: width, ascent: ascent,
-                       descent: max(descent, bottom.height + gap - axis), elements: elements)
+        genfracBox(numerator, denominator, hasRule: true, left: "", right: "",
+                   size: size, display: display)
     }
 
     /// `\binom` and ruleless stacks: numerator over denominator with an
