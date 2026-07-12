@@ -14,6 +14,8 @@ import AppKit
 /// STARTS rendering means coverage improved — move it up and regenerate.
 /// On comparison failure the actual render lands in /tmp/math-actual-*.png
 /// for side-by-side inspection.
+// Touches NSApp.appearance (main-actor) to pin Aqua for deterministic ink.
+@MainActor
 final class MathGoldenRenderTests: XCTestCase {
 
     // Goldens are rendered with MathTheme.light (black ink). Any earlier

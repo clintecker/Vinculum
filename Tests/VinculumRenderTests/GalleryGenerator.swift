@@ -9,6 +9,8 @@ import VinculumLayout
 /// On-demand visual coverage gallery: renders labeled posters (LaTeX source
 /// beside its native Vinculum render). Writes PNGs to $VINCULUM_GALLERY_DIR;
 /// skipped when that env var is unset, so it never runs in normal CI.
+// Touches NSApp.appearance (main-actor) to pin Aqua for deterministic ink.
+@MainActor
 final class GalleryGenerator: XCTestCase {
 
     func testGenerateGallery() throws {
