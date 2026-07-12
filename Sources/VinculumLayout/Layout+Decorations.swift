@@ -15,8 +15,8 @@ extension MathLayoutEngine {
         case .vphantom:
             return MathBox(width: 0, ascent: baseBox.ascent, descent: baseBox.descent)
         case .boxed:
-            let pad = size * 0.18
-            let line = max(1, size * 0.04)
+            let pad = size * MathLayout.Box.padding
+            let line = max(1, size * MathConstants.defaultRuleThickness)
             let width = baseBox.width + pad * 2
             let ascent = baseBox.ascent + pad
             let descent = baseBox.descent + pad

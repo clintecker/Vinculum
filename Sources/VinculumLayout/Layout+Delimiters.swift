@@ -36,11 +36,11 @@ extension MathLayoutEngine {
     func delimitedBoxAround(_ bodyBox: MathBox, left: String, right: String, size: CGFloat) -> MathBox {
         let leftBox = stretchedFence(left, targetHeight: bodyBox.height, around: bodyBox, size: size)
         let rightBox = stretchedFence(right, targetHeight: bodyBox.height, around: bodyBox, size: size)
-        let width = leftBox.width + bodyBox.width + rightBox.width + size * 0.1
+        let width = leftBox.width + bodyBox.width + rightBox.width + size * MathLayout.Grid.fencePadding
 
         var elements = leftBox.elements
-        elements += bodyBox.placed(at: CGPoint(x: leftBox.width + size * 0.05, y: 0))
-        elements += rightBox.placed(at: CGPoint(x: leftBox.width + bodyBox.width + size * 0.05, y: 0))
+        elements += bodyBox.placed(at: CGPoint(x: leftBox.width + size * MathLayout.Grid.fenceInset, y: 0))
+        elements += rightBox.placed(at: CGPoint(x: leftBox.width + bodyBox.width + size * MathLayout.Grid.fenceInset, y: 0))
         return MathBox(width: width,
                        ascent: max(bodyBox.ascent, leftBox.ascent, rightBox.ascent),
                        descent: max(bodyBox.descent, leftBox.descent, rightBox.descent),
@@ -52,7 +52,7 @@ extension MathLayoutEngine {
     func matrixBox(_ rows: [[MathNode]], left: String, right: String,
                    style: MathMatrixStyle, size baseSize: CGFloat) -> MathBox {
         guard !rows.isEmpty else { return .empty }
-        let size = style == .substack ? baseSize * 0.7 : baseSize
+        let size = style == .substack ? baseSize * MathConstants.scriptPercentScaleDown : baseSize
 
         let columns = rows.map(\.count).max() ?? 0
         var cellBoxes: [[MathBox]] = []
@@ -68,12 +68,12 @@ extension MathLayoutEngine {
                 rowAscent[r] = max(rowAscent[r], b.ascent)
                 rowDescent[r] = max(rowDescent[r], b.descent)
             }
-            if row.isEmpty { rowAscent[r] = size * 0.5; rowDescent[r] = size * 0.2 }
+            if row.isEmpty { rowAscent[r] = size * MathLayout.Grid.emptyRowAscent; rowDescent[r] = size * MathLayout.Grid.emptyRowDescent }
             cellBoxes.append(boxes)
         }
 
-        let rowGap = style == .substack ? size * 0.18 : size * 0.35
-        let colGap = style == .aligned ? size * 0.16 : size * 0.7
+        let rowGap = size * (style == .substack ? MathLayout.Grid.substackRowGap : MathLayout.Grid.matrixRowGap)
+        let colGap = size * (style == .aligned ? MathLayout.Grid.alignedColGap : MathLayout.Grid.matrixColGap)
 
         var totalHeight: CGFloat = 0
         for r in 0..<rows.count {
@@ -82,7 +82,7 @@ extension MathLayoutEngine {
         }
         let gridWidth = colWidth.reduce(0, +) + CGFloat(max(columns - 1, 0)) * colGap
 
-        let axis = size * 0.26
+        let axis = size * MathConstants.axisHeight
         let ascent = totalHeight / 2 + axis
         let descent = totalHeight / 2 - axis
 

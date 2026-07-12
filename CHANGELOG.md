@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.0 — 2026-07-12
+
+**Every magic number is now a named font parameter.** Following Knuth's rule
+that math typesetting reads its constants from the font, never from literals
+(Appendix G of *The TeXbook*), the ~35 hand-tuned multipliers scattered
+through the layout builders were replaced:
+
+- Values with an OpenType MATH-table equivalent now read the font's real
+  number from `MathConstants` — the axis (0.26→**0.250**), fraction/radical/
+  overbar rules (0.045→**0.040**), script scale (0.68→**0.70**), superscript
+  raise (0.42→**0.363**), subscript drop (0.20→**0.247**), radical gap
+  (0.12→**0.148**), overbar gap (0.08→**0.120**). Rendering now matches what
+  real LaTeX produces; goldens regenerated.
+- Inter-atom spacing is expressed in `mu` (1/18 em) via `MathSpacing`
+  (thin/medium/thick = 3/4/5 mu), the unit TeX actually uses.
+- Vinculum's own drawing proportions — the hand-stroked radical hook, the
+  brace arcs, the arrowhead, the style-lattice shrink — have no font
+  parameter, so they are named and documented in `MathLayout` instead of
+  left as bare literals. Zero unexplained numbers remain in the builders.
+
+Public API unchanged.
+
 ## 0.3.0 — 2026-07-12
 
 Two big things since 0.1.0: an OpenType MATH font for genuine LaTeX quality,

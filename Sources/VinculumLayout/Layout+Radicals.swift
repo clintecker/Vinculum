@@ -7,31 +7,32 @@ extension MathLayoutEngine {
     /// degree tucked into the crook.
     func radicalBox(_ degree: MathNode?, _ radicand: MathNode, size: CGFloat, display: Bool) -> MathBox {
         let body = box(for: radicand, size: size, display: display)
-        let ruleThickness = max(1, size * 0.045)
-        let gap = size * 0.12
-        let signWidth = size * 0.55
-        let degreeBox = degree.map { box(for: $0, size: size * 0.6, display: false) }
-        let degreeAdvance = degreeBox.map { max(0, $0.width - signWidth * 0.35) } ?? 0
+        let ruleThickness = max(1, size * MathConstants.radicalRuleThickness)
+        let gap = size * MathConstants.radicalVerticalGap
+        let signWidth = size * MathLayout.Radical.signWidth
+        let degreeBox = degree.map { box(for: $0, size: size * MathLayout.Radical.degreeScale, display: false) }
+        let degreeAdvance = degreeBox.map { max(0, $0.width - signWidth * MathLayout.Radical.degreeOverlap) } ?? 0
 
-        let ascent = body.ascent + gap + ruleThickness + size * 0.06
+        let ascent = body.ascent + gap + ruleThickness + size * MathLayout.Radical.extraAscent
         let descent = body.descent
-        let width = degreeAdvance + signWidth + body.width + size * 0.12
+        let width = degreeAdvance + signWidth + body.width + size * MathLayout.Radical.vinculumOverhang
 
         let signX = degreeAdvance
         let topY = ascent - ruleThickness / 2
         let bottomY = -descent
 
         var elements: [MathElement] = [stroke([
-            .move(CGPoint(x: signX, y: body.height * 0.25 - body.descent)),
-            .line(CGPoint(x: signX + signWidth * 0.3, y: body.height * 0.12 - body.descent)),
-            .line(CGPoint(x: signX + signWidth * 0.55, y: bottomY)),
+            .move(CGPoint(x: signX, y: body.height * MathLayout.Radical.tickStartHeight - body.descent)),
+            .line(CGPoint(x: signX + signWidth * MathLayout.Radical.shoulderFrac,
+                          y: body.height * MathLayout.Radical.notchHeight - body.descent)),
+            .line(CGPoint(x: signX + signWidth * MathLayout.Radical.valleyFrac, y: bottomY)),
             .line(CGPoint(x: signX + signWidth, y: topY)),
-            .line(CGPoint(x: signX + signWidth + body.width + size * 0.12, y: topY)),
+            .line(CGPoint(x: signX + signWidth + body.width + size * MathLayout.Radical.vinculumOverhang, y: topY)),
         ], width: ruleThickness, cap: .round, join: .miter)]
 
-        elements += body.placed(at: CGPoint(x: signX + signWidth + size * 0.06, y: 0))
+        elements += body.placed(at: CGPoint(x: signX + signWidth + size * MathLayout.Radical.bodyInset, y: 0))
         if let degreeBox {
-            elements += degreeBox.placed(at: CGPoint(x: 0, y: body.height * 0.45 - body.descent))
+            elements += degreeBox.placed(at: CGPoint(x: 0, y: body.height * MathLayout.Radical.degreeRaise - body.descent))
         }
         return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
     }

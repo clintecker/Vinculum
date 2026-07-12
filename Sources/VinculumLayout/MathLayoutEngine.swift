@@ -81,7 +81,7 @@ public struct MathLayoutEngine {
 
         case .unsupported(let source):
             // Callers gate on isFullySupported; draw something sane regardless.
-            return glyphBox(source, size: s * 0.85, italic: false, mono: true)
+            return glyphBox(source, size: s * MathLayout.unsupportedSourceScale, italic: false, mono: true)
         }
     }
 
@@ -166,7 +166,7 @@ public struct MathLayoutEngine {
 
     /// TeX inter-atom spacing (in ems): thin 3/18 · medium 4/18 · thick 5/18.
     func spacing(between left: MathAtomClass, and right: MathAtomClass) -> CGFloat {
-        let thin: CGFloat = 3.0 / 18.0, medium: CGFloat = 4.0 / 18.0, thick: CGFloat = 5.0 / 18.0
+        let thin = MathSpacing.thin, medium = MathSpacing.medium, thick = MathSpacing.thick
         switch (left, right) {
         case (.ordinary, .binary), (.binary, .ordinary),
              (.closing, .binary), (.binary, .opening),

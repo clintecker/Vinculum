@@ -7,18 +7,18 @@ extension MathLayoutEngine {
     /// `\xleftarrow` (a stretchy arrow sized to its annotations).
     func overUnderBox(_ base: MathNode, over: MathNode?, under: MathNode?,
                       kind: MathOverUnder, size: CGFloat, display: Bool) -> MathBox {
-        let annotationSize = size * 0.7
+        let annotationSize = size * MathConstants.scriptPercentScaleDown
         let overBox = over.map { box(for: $0, size: annotationSize, display: false) }
         let underBox = under.map { box(for: $0, size: annotationSize, display: false) }
-        let gap = size * 0.08
+        let gap = size * MathLayout.overUnderGap
 
         switch kind {
         case .rightarrow, .leftarrow:
             let labelWidth = max(overBox?.width ?? 0, underBox?.width ?? 0)
-            let arrowWidth = max(size * 1.4, labelWidth + size * 0.5)
-            let arrowThickness = max(1, size * 0.04)
-            let headLength = size * 0.28
-            let axis = size * 0.26
+            let arrowWidth = max(size * MathLayout.Arrow.minWidth, labelWidth + size * MathLayout.Arrow.labelPadding)
+            let arrowThickness = max(1, size * MathConstants.defaultRuleThickness)
+            let headLength = size * MathLayout.Arrow.headLength
+            let axis = size * MathConstants.axisHeight
             var ascent = axis + arrowThickness / 2
             var descent = arrowThickness / 2 - axis
             if let overBox { ascent += gap + overBox.height }
@@ -45,7 +45,7 @@ extension MathLayoutEngine {
 
         case .overbrace, .underbrace:
             let baseBox = box(for: base, size: size, display: display)
-            let braceHeight = size * 0.22
+            let braceHeight = size * MathLayout.Brace.height
             let isOver = kind == .overbrace
             let label = isOver ? overBox : underBox
             var ascent = baseBox.ascent
@@ -92,18 +92,20 @@ extension MathLayoutEngine {
     /// a center notch — the same hand-stroked approach as the radical.
     private func horizontalBrace(x: CGFloat, y: CGFloat, width: CGFloat,
                                  height: CGFloat, pointingUp: Bool) -> MathElement {
-        let thickness = max(1, height * 0.18)
+        let thickness = max(1, height * MathLayout.Brace.thicknessFrac)
         let notch = pointingUp ? y + height : y            // tip toward the label
         let shoulder = pointingUp ? y : y + height         // ends toward the base
         let midX = x + width / 2
         return stroke([
             .move(CGPoint(x: x, y: shoulder)),
-            .quad(to: CGPoint(x: x + width * 0.25, y: (shoulder + notch) * 0.5),
-                  control: CGPoint(x: x + width * 0.18, y: shoulder)),
-            .quad(to: CGPoint(x: midX, y: notch), control: CGPoint(x: x + width * 0.32, y: notch)),
-            .quad(to: CGPoint(x: x + width * 0.75, y: (shoulder + notch) * 0.5),
-                  control: CGPoint(x: x + width * 0.68, y: notch)),
-            .quad(to: CGPoint(x: x + width, y: shoulder), control: CGPoint(x: x + width * 0.82, y: shoulder)),
+            .quad(to: CGPoint(x: x + width * MathLayout.Brace.leftArcEnd, y: (shoulder + notch) * 0.5),
+                  control: CGPoint(x: x + width * MathLayout.Brace.leftArcControl, y: shoulder)),
+            .quad(to: CGPoint(x: midX, y: notch),
+                  control: CGPoint(x: x + width * MathLayout.Brace.leftNotchControl, y: notch)),
+            .quad(to: CGPoint(x: x + width * MathLayout.Brace.rightArcEnd, y: (shoulder + notch) * 0.5),
+                  control: CGPoint(x: x + width * MathLayout.Brace.rightNotchControl, y: notch)),
+            .quad(to: CGPoint(x: x + width, y: shoulder),
+                  control: CGPoint(x: x + width * MathLayout.Brace.rightArcControl, y: shoulder)),
         ], width: thickness, cap: .round)
     }
 }

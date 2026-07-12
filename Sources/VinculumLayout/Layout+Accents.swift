@@ -7,8 +7,8 @@ extension MathLayoutEngine {
     /// ink top so a hat hugs `x` instead of floating at the font ascent.
     func accentBox(_ base: MathNode, accent: MathAccent, size: CGFloat, display: Bool) -> MathBox {
         let baseBox = box(for: base, size: size, display: display)
-        let ruleThickness = max(1, size * 0.045)
-        let gap = size * 0.08
+        let ruleThickness = max(1, size * MathConstants.overbarRuleThickness)
+        let gap = size * MathConstants.overbarVerticalGap
 
         // Drawn rules: \overline above, \underline below.
         if accent == .overline || accent == .underline {
@@ -25,11 +25,12 @@ extension MathLayoutEngine {
         // Stretchy accents (\widehat/\widetilde) scale toward the base width;
         // point accents keep their natural size.
         let accentSize = accent.isStretchy
-            ? min(size * 1.6, max(size * 0.7, baseBox.width * 0.9))
-            : size * 0.9
+            ? min(size * MathLayout.Accent.stretchyMax,
+                  max(size * MathLayout.Accent.stretchyMin, baseBox.width * MathLayout.Accent.stretchyTarget))
+            : size * MathLayout.Accent.pointScale
         let glyph = Self.mathVariant(rawGlyph, italic: false, bold: false)
         let m = measure(glyph, accentSize, false)
-        let clearance = size * 0.02
+        let clearance = size * MathLayout.Accent.clearance
         // Baseline for the accent such that its ink bottom sits just above the
         // base's ink top.
         let accentBaselineY = baseBox.inkAscent + clearance - m.inkDescent
