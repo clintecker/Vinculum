@@ -12,7 +12,9 @@ import CoreGraphics
 enum MathFont {
 
     /// The loaded CGFont for the bundled math font, or nil if unavailable.
-    static let cgFont: CGFont? = {
+    /// A CGFont is immutable and safe to read from any thread; the compiler
+    /// can't prove CGFont Sendable, so we vouch for it.
+    nonisolated(unsafe) static let cgFont: CGFont? = {
         guard let url = Bundle.module.url(forResource: "latinmodern-math", withExtension: "otf"),
               let data = try? Data(contentsOf: url),
               let provider = CGDataProvider(data: data as CFData),

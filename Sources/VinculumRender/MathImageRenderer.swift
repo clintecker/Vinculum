@@ -21,7 +21,8 @@ public enum MathImageRenderer {
         init(image: PlatformImage, descent: CGFloat) { self.image = image; self.descent = descent }
     }
 
-    private static let cache = NSCache<NSString, Entry>()
+    // NSCache is documented thread-safe; the compiler can't prove it Sendable.
+    nonisolated(unsafe) private static let cache = NSCache<NSString, Entry>()
     /// The shared CoreText measurer feeding the platform-free layout engine.
     private static let measurer: MathTextMeasurer = CoreTextMeasurer.make()
 

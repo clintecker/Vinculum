@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 import PackageDescription
 
 // Vinculum — native LaTeX math parsing and typesetting for Apple platforms.
@@ -11,7 +11,7 @@ import PackageDescription
 // the typesetter draws to bind an expression together.
 let package = Package(
     name: "Vinculum",
-    platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1)],
+    platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1), .tvOS(.v17)],
     products: [
         .library(name: "VinculumLayout", targets: ["VinculumLayout"]),
         .library(name: "VinculumRender", targets: ["VinculumRender"]),

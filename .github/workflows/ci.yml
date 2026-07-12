@@ -9,6 +9,24 @@ permissions:
   contents: read
 
 jobs:
+  # VinculumLayout is platform-free (Foundation only) — this proves it builds
+  # and its geometry tests pass headless on Linux, with no CoreText/AppKit.
+  # VinculumRender's sources are AppKit/UIKit-guarded, so they compile to an
+  # empty module here.
+  linux:
+    name: VinculumLayout (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        run: swift build
+      - name: Test (parser, macros, headless layout)
+        run: swift test
+
   test:
     name: swift test (macOS)
     runs-on: macos-15
