@@ -123,6 +123,8 @@ final class MathGoldenRenderTests: XCTestCase {
         // Batch 9 — \genfrac, extended stretchy arrows
         .init(name: "genfrac-forms", latex: #"\genfrac{[}{]}{0pt}{}{n}{k} \quad \genfrac{(}{)}{}{}{a+b}{c}"#, expectation: .mustRender),
         .init(name: "x-arrows-ext", latex: #"A \xLongrightarrow{\varphi} B \xhookrightarrow{\iota} C \xmapsto{f} D"#, expectation: .mustRender),
+        // Batch 10 — smallmatrix
+        .init(name: "smallmatrix", latex: #"\left( \begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix} \right) x = \left( \begin{smallmatrix} a \\ b \end{smallmatrix} \right)"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

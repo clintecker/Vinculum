@@ -427,6 +427,7 @@ public enum MathParser {
         case "vmatrix": (left, right, style) = ("|", "|", .centered)
         case "Vmatrix": (left, right, style) = ("‖", "‖", .centered)
         case "cases":   (left, right, style) = ("{", "", .cases)
+        case "smallmatrix": (left, right, style) = ("", "", .substack)   // script-size grid
         case "aligned", "align", "alignedat", "alignat", "split", "gather":
             (left, right, style) = ("", "", .aligned)
         default:        (left, right, style) = ("", "", .centered)   // matrix, array, …

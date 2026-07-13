@@ -83,6 +83,15 @@ final class MathStressGallery: XCTestCase {
             #"|\psi\rangle_{AB} = \sum_i \sqrt{\lambda_i}\; |i\rangle_A \otimes |i\rangle_B"#,
             #"\langle \hat{O} \rangle = \operatorname{tr}\!\left(\rho\, \hat{O}\right)"#,
         ]),
+        ("Extended notation (v0.6–0.15)", [
+            #"\frac{\cancel{n!}}{\cancel{n!}\,(n+1)} = \frac{1}{n+1}"#,
+            #"\overrightarrow{F} = m\,\overrightarrow{a}, \qquad \overrightarrow{AB} \perp \overrightarrow{CD}"#,
+            #"\bigoplus_{i=1}^{n} V_i \cong V, \qquad \coprod_{j \in J} X_j"#,
+            #"x \equiv 7 \pmod{12}, \qquad a \bmod n, \qquad \binom{p}{k} \equiv 0 \pmod{p}"#,
+            #"\mathbb{Q} \not\subset \mathbb{Z}, \qquad p \land q \lor \neg r \implies s"#,
+            #"\left( \begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix} \right) \qquad \dfrac{1}{2} \ne \tfrac{1}{2}"#,
+            #"\underbrace{\overbrace{a + \cdots + a}^{n}}_{\text{$n$ copies}} = na"#,
+        ]),
         ("Tables, arrays & linear systems", [
             #"\begin{array}{c|c|c} a & b & a + b \\ \hline 0 & 0 & 0 \\ 0 & 1 & 1 \\ 1 & 1 & 2 \end{array}"#,
             #"\left[ \begin{array}{ccc|c} 1 & 2 & 3 & 6 \\ 0 & 1 & 1 & 3 \\ 0 & 0 & 1 & 2 \end{array} \right]"#,

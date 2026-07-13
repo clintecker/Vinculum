@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.0 — 2026-07-12
+
+`\smallmatrix` (Batch 10) — script-size inline matrices, e.g.
+`\left(\begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix}\right)`. Stress
+corpus grows to 66 equations (a "New notation" showcase page) at 100% native.
+
 ## 0.14.0 — 2026-07-12
 
 General fractions & arrow variants (Batch 9).
