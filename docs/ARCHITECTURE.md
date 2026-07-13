@@ -32,31 +32,22 @@ data — the layout stage needs it, and it must build on Linux — while the fon
 
 ## The pipeline
 
-```
-LaTeX string
-  │
-  ▼  MathMacros.collectDefinitions / .expand      (VinculumLayout, HOST-DRIVEN)
-      \newcommand / \renewcommand / \def expanded, definitions stripped.
-      This is a SEPARATE pre-pass the host runs BEFORE parsing — neither
-      MathParser.parse nor MathImageRenderer.attachmentString calls it. A
-      host that wants macros expands first, then feeds the result in.
-  │
-  ▼  MathParser.parse                              (VinculumLayout)
-      Tokenizer → recursive-descent parser → MathNode tree
-      (unknown commands become .unsupported leaves; parse never fails)
-  │
-  ▼  MathLayoutEngine.layout(node, display:)       (VinculumLayout)
-      measures glyphs via the injected MathTextMeasurer,
-      picks delimiter size-variants via the optional MathDelimiterProvider,
-      composes MathBoxes, flattens to positioned MathElements
-  │
-  ▼  MathScene { width, ascent, descent, elements }    ← the DVI analog
-  │
-  ├─▼ MathSceneRenderer.draw(scene, theme, ctx, at:)   (VinculumRender)
-  │     glyph runs, glyph-ID variants, rules, strokes → CGContext
-  │
-  └─▼ MathImageRenderer.attachmentString(...)          (VinculumRender)
-        orchestrates measure→layout→render, caches, returns NSTextAttachment
+```mermaid
+flowchart TD
+    L["LaTeX string"]
+    L --> M["MathMacros.collectDefinitions / .expand<br/>host-driven pre-pass · \\newcommand / \\def<br/>expanded, definitions stripped"]
+    M --> P["MathParser.parse<br/>tokenizer → recursive-descent → MathNode tree<br/>unknown → .unsupported · never fails"]
+    P --> E["MathLayoutEngine.layout(node, display:)<br/>measures via injected MathTextMeasurer ·<br/>delimiter size-variants via optional MathDelimiterProvider ·<br/>composes MathBoxes → positioned MathElements"]
+    E --> S["MathScene<br/>{ width, ascent, descent, elements }<br/>— the DVI analog"]
+    S --> D["MathSceneRenderer.draw(scene, theme, ctx, at:)<br/>glyph runs · glyph-ID variants · rules · strokes → CGContext"]
+    S --> A["MathImageRenderer.attachmentString(…)<br/>measure→layout→render · caches → NSTextAttachment"]
+
+    subgraph layout["VinculumLayout · platform-free · builds &amp; tests on Linux"]
+        M; P; E; S
+    end
+    subgraph render["VinculumRender · Apple only"]
+        D; A
+    end
 ```
 
 The macro pre-pass is deliberately outside the parser: definitions are

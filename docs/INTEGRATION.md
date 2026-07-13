@@ -207,11 +207,11 @@ Want to render math on Linux, in a SwiftUI `Canvas`, in a Metal pipeline, to
 PDF, or into a custom view — anywhere that isn't an `NSTextAttachment`? Drive
 the three stages directly:
 
-```
-MathParser.parse(latex)  →  MathLayoutEngine.layout(_:display:)  →  MathScene
-                                                                        │
-                     MathSceneRenderer.draw(scene, theme:in:at:)  ◄─────┘   (Apple)
-                     or walk scene.elements yourself                        (any platform)
+```mermaid
+flowchart LR
+    P["MathParser.parse(latex)"] --> E["MathLayoutEngine<br/>.layout(_:display:)"] --> S["MathScene"]
+    S --> D["MathSceneRenderer.draw(scene, theme:in:at:)<br/>Apple — into any CGContext"]
+    S --> W["walk scene.elements yourself<br/>any platform"]
 ```
 
 ### On Apple platforms — lay out, then draw into any `CGContext`
