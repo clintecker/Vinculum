@@ -176,16 +176,26 @@ Vinculum ships no PDF convenience wrapper; you own the context.
 
 ## Gallery
 
-Vinculum renders the everyday math people actually write. To generate a
-labeled poster gallery (LaTeX source beside its native render), point the
-gallery test at an output directory:
+Vinculum renders the everyday math people actually write. **CI regenerates
+these posters on every push to `main`** and publishes them to the orphan
+[`gallery` branch](https://github.com/clintecker/Vinculum/tree/gallery), so
+they always show the *current* rendering — no stale screenshots:
+
+![Real-world equations](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/04-equations.png)
+
+![Stress corpus: quantum information](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/page-06.png)
+
+To regenerate them locally, point the gallery test at an output directory:
 
 ```bash
 VINCULUM_GALLERY_DIR=/tmp/vinculum-gallery \
   swift test --filter GalleryGenerator/testGenerateGallery
+# and the multi-page stress corpus:
+VINCULUM_STRESS_DIR=/tmp/vinculum-gallery \
+  swift test --filter MathStressGallery/testGenerateStressPages
 ```
 
-It writes posters covering:
+The gallery posters cover:
 
 | Poster | Shows |
 | --- | --- |
@@ -200,8 +210,9 @@ It writes posters covering:
 > `Tests/fixtures/math-golden/` (one per construct: `quadratic.png`,
 > `integral.png`, `pmatrix.png`, `mathbb.png`, `overbrace.png`, …) that the
 > render tests diff against, plus a 66-equation stress corpus
-> (`MathStressGallery`) held at 100% native coverage by a CI ratchet. Drop
-> generated posters into `docs/images/` if you want them inlined here.
+> (`MathStressGallery`) held at 100% native coverage by a CI ratchet. The
+> `gallery` branch's raw URLs are stable, so docs and the website can embed
+> the always-current posters directly.
 
 Example expressions, all natively rendered:
 
