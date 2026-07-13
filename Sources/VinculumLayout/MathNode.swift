@@ -97,19 +97,21 @@ public enum MathOverUnder: Hashable, Sendable {
     // the \under… mirrors.
     case overRightArrow, overLeftArrow, overLeftRightArrow
     case underRightArrow, underLeftArrow, underLeftRightArrow
+    // Square-bracket and parenthesis shapes over/under the base.
+    case overbracket, underbracket, overparen, underparen
 }
 
 /// An accent decoration placed over (or, for rules, over/under) a base.
 public enum MathAccent: Hashable, Sendable {
     case hat, check, tilde, bar, vec, dot, ddot, breve, mathring, acute, grave
-    case widehat, widetilde   // stretchy variants
+    case widehat, widetilde, widecheck   // stretchy variants
     case overline, underline  // drawn rules, not glyphs
 
     /// The glyph drawn above the base (nil for the rule accents).
     public var glyph: String? {
         switch self {
         case .hat, .widehat: return "^"
-        case .check: return "ˇ"
+        case .check, .widecheck: return "ˇ"
         case .tilde, .widetilde: return "~"
         case .bar: return "‾"
         case .vec: return "⃗"
@@ -123,7 +125,7 @@ public enum MathAccent: Hashable, Sendable {
         }
     }
 
-    public var isStretchy: Bool { self == .widehat || self == .widetilde }
+    public var isStretchy: Bool { self == .widehat || self == .widetilde || self == .widecheck }
 
     public init?(command: String) {
         switch command {
@@ -140,6 +142,7 @@ public enum MathAccent: Hashable, Sendable {
         case "grave": self = .grave
         case "widehat": self = .widehat
         case "widetilde": self = .widetilde
+        case "widecheck": self = .widecheck
         case "overline": self = .overline
         case "underline": self = .underline
         default: return nil

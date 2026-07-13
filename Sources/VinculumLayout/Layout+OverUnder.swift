@@ -43,10 +43,10 @@ extension MathLayoutEngine {
             }
             return MathBox(width: arrowWidth, ascent: ascent, descent: max(descent, 0), elements: elements)
 
-        case .overbrace, .underbrace:
+        case .overbrace, .underbrace, .overbracket, .underbracket, .overparen, .underparen:
             let baseBox = box(for: base, size: size, display: display)
             let braceHeight = size * MathLayout.Brace.height
-            let isOver = kind == .overbrace
+            let isOver = kind == .overbrace || kind == .overbracket || kind == .overparen
             let label = isOver ? overBox : underBox
             var ascent = baseBox.ascent
             var descent = baseBox.descent
@@ -59,8 +59,14 @@ extension MathLayoutEngine {
 
             var elements = baseBox.placed(at: CGPoint(x: (width - baseBox.width) / 2, y: 0))
             let braceY = isOver ? baseBox.ascent + gap : -baseBox.descent - gap - braceHeight
-            elements.append(horizontalBrace(x: 0, y: braceY, width: width,
-                                            height: braceHeight, pointingUp: isOver))
+            switch kind {
+            case .overbracket, .underbracket:
+                elements.append(horizontalBracket(x: 0, y: braceY, width: width, height: braceHeight, pointingUp: isOver))
+            case .overparen, .underparen:
+                elements.append(horizontalParen(x: 0, y: braceY, width: width, height: braceHeight, pointingUp: isOver))
+            default:
+                elements.append(horizontalBrace(x: 0, y: braceY, width: width, height: braceHeight, pointingUp: isOver))
+            }
             if let label {
                 let labelY = isOver ? braceY + braceHeight + gap + label.descent
                                     : braceY - gap - label.ascent
@@ -128,6 +134,33 @@ extension MathLayoutEngine {
                     .line(CGPoint(x: x0 + head, y: y - head * 0.5))]
         }
         return stroke(ops, width: thickness, cap: .round)
+    }
+
+    /// A square bracket (⎴/⎵) spanning `width`: a spine line away from the base
+    /// with short turned ends toward it.
+    private func horizontalBracket(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, pointingUp: Bool) -> MathElement {
+        let thickness = max(1, height * MathLayout.Brace.thicknessFrac)
+        let baseSide = pointingUp ? y : y + height
+        let spineSide = pointingUp ? y + height : y
+        return stroke([
+            .move(CGPoint(x: x, y: baseSide)),
+            .line(CGPoint(x: x, y: spineSide)),
+            .line(CGPoint(x: x + width, y: spineSide)),
+            .line(CGPoint(x: x + width, y: baseSide)),
+        ], width: thickness, cap: .round, join: .miter)
+    }
+
+    /// A shallow parenthesis arc (⏜/⏝) spanning `width`, one quadratic bowing
+    /// away from the base.
+    private func horizontalParen(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, pointingUp: Bool) -> MathElement {
+        let thickness = max(1, height * MathLayout.Brace.thicknessFrac)
+        let baseSide = pointingUp ? y : y + height
+        let spineSide = pointingUp ? y + height : y
+        let control = baseSide + (spineSide - baseSide) * 2.0   // overshoot → rounded arc reaching the spine
+        return stroke([
+            .move(CGPoint(x: x, y: baseSide)),
+            .quad(to: CGPoint(x: x + width, y: baseSide), control: CGPoint(x: x + width / 2, y: control)),
+        ], width: thickness, cap: .round)
     }
 
     /// A horizontal curly brace spanning `width`, as four quadratic arcs with

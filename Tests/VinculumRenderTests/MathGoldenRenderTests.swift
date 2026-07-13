@@ -140,6 +140,8 @@ final class MathGoldenRenderTests: XCTestCase {
         // Batch 12 — atom-class overrides, \pmb, stateful \color
         .init(name: "atom-class", latex: #"a \mathbin{\star} b \mathrel{\triangleq} c, \quad \pmb{v} = \mathbf{0}"#, expectation: .mustRender),
         .init(name: "stateful-color", latex: #"{\color{red} a + b} + \color{blue} c \cdot d"#, expectation: .mustRender),
+        // Batch 14 — over/under brackets & parens, \widecheck
+        .init(name: "over-brackets", latex: #"\overbracket{a + b + c}^{k} \quad \underbracket{x + y}_{m} \quad \overparen{p + q} \quad \underparen{u + v} \quad \widecheck{ABC}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

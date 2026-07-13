@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.21.0 — 2026-07-13
+
+Over/under constructs & accents (Batch 14).
+
+- **`\overbracket` / `\underbracket`** — square-bracket (⎴/⎵) over/under the
+  content, with `^`/`_` labels.
+- **`\overparen` / `\underparen`** — parenthesis-arc (⏜/⏝) over/under.
+- **`\widecheck`** — stretchy check accent.
+
+New `MathOverUnder` cases + `horizontalBracket`/`horizontalParen` stroke
+helpers; `MathAccent.widecheck`. (`\cancelto`, `\utilde`, harpoon accents are a
+small remaining tail.)
+
 ## 0.20.0 — 2026-07-13
 
 True **`\cfrac`** continued fractions. Parts now lay out at full display size

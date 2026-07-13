@@ -301,7 +301,7 @@ public enum MathParser {
             return parseEnvironment(&tokens)
 
         case "hat", "check", "tilde", "bar", "vec", "dot", "ddot", "breve",
-             "mathring", "acute", "grave", "widehat", "widetilde",
+             "mathring", "acute", "grave", "widehat", "widetilde", "widecheck",
              "overline", "underline":
             // The case list and MathAccent.init? must agree; rather than trust
             // that (a force-unwrap would violate the never-crash contract),
@@ -351,6 +351,20 @@ public enum MathParser {
                 label = parseAtom(&tokens)
             }
             return .overUnder(base: body, over: nil, under: label, kind: .underbrace)
+
+        case "overbracket", "overparen":
+            let body = parseAtom(&tokens) ?? .row([])
+            var label: MathNode?
+            if tokens.first == .superscriptMark { tokens.removeFirst(); label = parseAtom(&tokens) }
+            return .overUnder(base: body, over: label, under: nil,
+                              kind: name == "overbracket" ? .overbracket : .overparen)
+
+        case "underbracket", "underparen":
+            let body = parseAtom(&tokens) ?? .row([])
+            var label: MathNode?
+            if tokens.first == .subscriptMark { tokens.removeFirst(); label = parseAtom(&tokens) }
+            return .overUnder(base: body, over: nil, under: label,
+                              kind: name == "underbracket" ? .underbracket : .underparen)
 
         case "xrightarrow", "xleftarrow", "xLongrightarrow", "xLongleftarrow",
              "xhookrightarrow", "xhookleftarrow", "xmapsto", "xrightharpoonup",
