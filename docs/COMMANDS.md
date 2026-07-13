@@ -1,0 +1,421 @@
+# Vinculum Command Reference
+
+The exhaustive "does Vinculum support `\foo`?" lookup, generated against the
+source of truth: `MathParser.swift` (every structural / decoration command) and
+`MathSymbolTable.swift` (404 symbol commands + 37 function-name operators).
+
+Every command listed here renders natively. **Anything not listed degrades to a
+named fallback** — the parser turns an unknown command into an `.unsupported`
+leaf, `MathParser.isFullySupported` returns `false`, and
+`MathParser.unsupportedCommands(in:)` names it so a host can explain why. For
+semantics, caveats, and the roadmap gaps, see [COVERAGE.md](COVERAGE.md); for
+how to add a command, [ARCHITECTURE.md](ARCHITECTURE.md).
+
+This file is a lookup index, not a semantics spec. Where a command has a caveat
+(letters-only alphabets, gated delimiter variants, approximated arrows) it is
+noted inline.
+
+---
+
+# Part 1 — Structural & layout commands
+
+## Fractions & stacks
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\frac{a}{b}` | `\frac{a}{b}` | Ruled fraction, axis-aligned |
+| `\dfrac{a}{b}` | `\dfrac{a}{b}` | Force **display** style |
+| `\tfrac{a}{b}` | `\tfrac{a}{b}` | Force **text** style |
+| `\cfrac{a}{b}` | `\cfrac{1}{1+\cfrac{1}{x}}` | Full-size continued fraction; optional `[l]`/`[r]` alignment: `\cfrac[l]{1}{x}` |
+| `\binom{n}{k}` | `\binom{n}{k}` | Ruleless, paren-fenced |
+| `\dbinom{n}{k}` | `\dbinom{n}{k}` | Binom, forced display style |
+| `\tbinom{n}{k}` | `\tbinom{n}{k}` | Binom, forced text style |
+| `\genfrac{l}{r}{thick}{style}{n}{d}` | `\genfrac{[}{]}{0pt}{}{n}{k}` | Custom delimiters; `thick=0pt`→no rule; `style` `0`=display, `1/2/3`=text |
+
+## Roots
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\sqrt{x}` | `\sqrt{x+1}` | Square root |
+| `\sqrt[n]{x}` | `\sqrt[3]{x}` | Radical with degree index |
+
+## Scripts & primes
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `^` superscript | `x^2`, `x^{n+1}` | |
+| `_` subscript | `x_i`, `a_{ij}` | |
+| `'` prime | `f'`, `f''`, `f'^2` | Runs of `'` become ′ superscripts; bind before an explicit `^` |
+| `\overset{o}{b}` | `\overset{!}{=}` | `o` set above base `b` |
+| `\underset{u}{b}` | `\underset{n\to\infty}{\lim}` | `u` set below base `b` |
+| `\stackrel{o}{b}` | `\stackrel{\text{def}}{=}` | Like `\overset` with a relation base |
+
+Big-operator limits are automatic: ∑-class stacks limits above/below in display,
+∫-class keeps them to the side, and the `\lim`-family stacks. `\operatorname*`
+and `\mathop{…}` force the stacking (limits) form.
+
+## Delimiters
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\left … \right` | `\left( \frac{a}{b} \right)` | Auto-sizes fences to the body |
+| `\left. … \right)` | `\left. \frac{dy}{dx} \right|_0` | `.` is a null (invisible) fence |
+| `\middle` | `\left\{ x \middle| x>0 \right\}` | Extra full-height divider inside `\left…\right` |
+| `\big \Big \bigg \Bigg` | `\Big( x \Big)` | Fixed enlargement: 1.2 / 1.8 / 2.4 / 3.0× base |
+| …`l`/`r`/`m` suffix | `\bigl( \bigr] \bigm|` | Sets opening / closing / relation spacing class |
+
+Delimiters accepted after `\left`/`\right`/`\middle`/`\big…` include `( ) [ ]`,
+`\{ \}` `\lbrace \rbrace`, `| \vert \lvert \rvert`, `\| \Vert \lVert \rVert`,
+`\langle \rangle`, `\lceil \rceil \lfloor \rfloor`, `\uparrow \downarrow
+\updownarrow \Uparrow \Downarrow`, and `\backslash`. As of 0.23.0 tall
+`( ) [ ] { }` use the font's MATH-table size-variant glyphs (constant stroke
+weight); other delimiters scale the base glyph continuously.
+
+## Matrices & environments
+
+Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
+
+| Environment | Example | Note |
+| --- | --- | --- |
+| `matrix` | `\begin{matrix} a & b \\ c & d \end{matrix}` | Bare grid, no fences |
+| `pmatrix` | `\begin{pmatrix} a & b \\ c & d \end{pmatrix}` | `( )` fences |
+| `bmatrix` | `\begin{bmatrix} … \end{bmatrix}` | `[ ]` fences |
+| `Bmatrix` | `\begin{Bmatrix} … \end{Bmatrix}` | `{ }` fences |
+| `vmatrix` | `\begin{vmatrix} … \end{vmatrix}` | `\| \|` fences (determinant) |
+| `Vmatrix` | `\begin{Vmatrix} … \end{Vmatrix}` | `‖ ‖` fences |
+| `smallmatrix` | `\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}` | Script-size inline grid |
+| `matrix*[r]` etc. | `\begin{pmatrix*}[r] … \end{pmatrix*}` | Starred variants take an optional column alignment |
+| `array` | `\begin{array}{c\|cc} … \end{array}` | Column spec `l`/`c`/`r`, `\|` rules; `p`/`m`/`b`→left |
+| `cases` | `\begin{cases} 1 & x>0 \\ 0 & x\le 0 \end{cases}` | Left brace, left-aligned cases |
+| `aligned` / `align` | `\begin{aligned} a &= b \\ &= c \end{aligned}` | `&`-aligned equation stack |
+| `alignat` / `alignedat` | `\begin{alignat}{2} … \end{alignat}` | Takes an `{n}` column count |
+| `split` | `\begin{split} … \end{split}` | Aligned |
+| `gather` / `gathered` | `\begin{gather} a \\ b \end{gather}` | Centered rows |
+| `multline` | `\begin{multline} … \end{multline}` | Aligned |
+| `substack` | `\sum_{\substack{0<i<n \\ i\ \text{odd}}}` | Tight vertical stack for limits |
+
+Row rules inside `array`: `\hline` (full-width rule), `\cline{i-j}` (columns
+i…j), `\hdashline`. Unknown environments still lay out as a bare centered grid so
+content survives.
+
+## Accents
+
+Each takes one following atom: `\hat{x}`, `\widehat{AB}`, etc.
+
+| Command | Glyph | Command | Glyph |
+| --- | :---: | --- | :---: |
+| `\hat` | ̂ | `\check` | ̌ |
+| `\tilde` | ̃ | `\bar` | ̄ |
+| `\vec` | ⃗ | `\dot` | ̇ |
+| `\ddot` | ̈ | `\breve` | ̆ |
+| `\acute` | ́ | `\grave` | ̀ |
+| `\mathring` | ̊ | `\widehat` | wide ̂ |
+| `\widetilde` | wide ̃ | `\widecheck` | wide ̌ |
+| `\overline` | over-bar | `\underline` | under-bar |
+
+## Over / under decorations
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\overbrace{…}^{lbl}` | `\overbrace{a+b}^{s}` | Brace above, optional `^` label |
+| `\underbrace{…}_{lbl}` | `\underbrace{a+b}_{s}` | Brace below, optional `_` label |
+| `\overbracket` / `\underbracket` | `\overbracket{x}^{n}` | Square bracket variant |
+| `\overparen` / `\underparen` | `\overparen{x}` | Parenthesis variant |
+| `\overrightarrow` / `\overleftarrow` | `\overrightarrow{AB}` | Vector arrow above base |
+| `\overleftrightarrow` | `\overleftrightarrow{AB}` | Bidirectional arrow above |
+| `\underrightarrow` / `\underleftarrow` / `\underleftrightarrow` | `\underrightarrow{x}` | Arrow below base |
+
+**Extensible (stretchy) arrows** — `\xrightarrow[under]{over}`, optional `[under]`
+then `{over}`. All approximate to a stretchy left- or right-pointing shaft:
+`\xrightarrow`, `\xleftarrow`, `\xLongrightarrow`, `\xLongleftarrow`,
+`\xhookrightarrow`, `\xhookleftarrow`, `\xmapsto`, `\xrightharpoonup`,
+`\xrightharpoondown`, `\xleftharpoonup`, `\xleftharpoondown`, `\xleftrightarrow`,
+`\xrightleftharpoons`.
+
+Example: `\xrightarrow[\text{below}]{f}`.
+
+## Boxes & decorations
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\boxed{…}` | `\boxed{E=mc^2}` | Framed |
+| `\fbox{…}` | `\fbox{x}` | Framed (alias of `\boxed`) |
+| `\colorbox{c}{…}` | `\colorbox{yellow}{x}` | Filled background |
+| `\fcolorbox{b}{c}{…}` | `\fcolorbox{red}{white}{x}` | Border + fill |
+| `\rule{w}{h}` | `\rule{2em}{1pt}` | Solid rule of given width/height; optional `[raise]` ignored |
+| `\raisebox{d}{…}` | `\raisebox{0.5em}{x}` | Vertical shift |
+| `\cancel{…}` | `\cancel{x}` | Diagonal strike |
+| `\bcancel{…}` | `\bcancel{x}` | Back-diagonal strike |
+| `\xcancel{…}` | `\xcancel{x}` | Cross strike |
+| `\cancelto{t}{…}` | `\cancelto{0}{x}` | Strike with a raised target label |
+| `\not` | `\not\subset`, `\not=` | Negation slash over the following atom |
+| `\phantom{…}` | `\phantom{xyz}` | Occupies size, draws nothing |
+| `\hphantom{…}` / `\vphantom{…}` | `\vphantom{\frac12}` | Horizontal / vertical phantom |
+| `\smash{…}` | `\smash{\sum}` | Keep width, zero height/depth (`[t]`/`[b]` ignored) |
+| `\mathstrut` | `\sqrt{\mathstrut a}` | Invisible paren-height strut |
+| `\mathrlap` / `\mathllap` / `\mathclap` | `\mathclap{x}` | Zero-width right / left / center overlap |
+
+## Spacing
+
+| Command | Width | Command | Width |
+| --- | --- | --- | --- |
+| `\,` / `\thinspace` | 3/18 em | `\!` / `\negthinspace` | −3/18 em |
+| `\:` / `\>` / `\medspace` | 4/18 em | `\negmedspace` | −4/18 em |
+| `\;` / `\thickspace` | 5/18 em | `\negthickspace` | −5/18 em |
+| `\ ` (backslash-space) | 6/18 em | `\enspace` | 1/2 em |
+| `\quad` | 1 em | `\qquad` | 2 em |
+| `\hspace{…}` / `\kern…` | explicit em/pt | `\mspace{…}` / `\mkern…` | explicit mu |
+
+## Color
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\textcolor{c}{…}` | `\textcolor{red}{x}` | Colors the body only |
+| `\color{c}{…}` | `\color{blue}{x}` | Colors the braced body |
+| `\color{c}` | `x + \color{red} y + z` | Stateful — colors the rest of the current group |
+
+## Math alphabets
+
+Each maps one following atom's letters/digits to the styled codepoint.
+
+| Command | Example | Caveat |
+| --- | --- | --- |
+| `\mathbb{…}` | `\mathbb{R}` | Blackboard bold; letters + digits |
+| `\mathcal{…}` | `\mathcal{L}` | Script; **letters only** (no digits) |
+| `\mathscr{…}` | `\mathscr{H}` | Script (same alphabet as `\mathcal`); letters only |
+| `\mathfrak{…}` | `\mathfrak{g}` | Fraktur; **letters only** |
+| `\mathsf{…}` | `\mathsf{AB}` | Sans-serif; letters + digits |
+| `\mathtt{…}` | `\mathtt{code}` | Monospace; letters + digits |
+| `\mathbf{…}` | `\mathbf{v}` | Bold via **system font** (not a codepoint) |
+| `\boldsymbol{…}` / `\bm{…}` | `\boldsymbol{\alpha}` | Bold-italic |
+| `\pmb{…}` | `\pmb{+}` | Poor-man bold ≈ `\mathbf` |
+| `\mathrm{…}` / `\textrm{…}` | `\mathrm{d}x` | Upright roman |
+| `\text{…}` | `\text{if } x>0` | Upright text; embedded `$…$` renders as math |
+| `\operatorname{…}` | `\operatorname{lcm}` | Roman operator name |
+| `\operatorname*{…}` | `\operatorname*{argmax}` | Operator with stacked limits |
+
+Alphabet holes (letters encoded outside the contiguous math block, e.g. `\mathbb{R}`→ℝ,
+`\mathcal{H}`→ℋ) are mapped correctly.
+
+## Atom-class overrides
+
+Force the inter-atom spacing class of a subexpression.
+
+| Command | Class | Command | Class |
+| --- | --- | --- | --- |
+| `\mathbin{…}` | binary | `\mathrel{…}` | relation |
+| `\mathop{…}` | large operator (stacks limits) | `\mathord{…}` / `\mathinner{…}` | ordinary |
+| `\mathopen{…}` | opening | `\mathclose{…}` | closing |
+| `\mathpunct{…}` | punctuation | | |
+
+## Operators & modular arithmetic
+
+37 function-name operators are recognized (upright, with operator spacing):
+
+`\sin \cos \tan \cot \sec \csc \arcsin \arccos \arctan \sinh \cosh \tanh \coth
+\sech \csch \log \ln \lg \exp \min \max \sup \inf \lim \det \dim \ker \arg \gcd
+\deg \mod \Pr \hom \argmin \argmax \limsup \liminf`
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\pmod{n}` | `a \equiv b \pmod{n}` | Parenthesized `(mod n)` |
+| `\bmod` | `a \bmod n` | Binary `mod` |
+| `\pod{n}` | `a \pod{n}` | Parenthesized without "mod" |
+
+## Equation tags & numbering
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\tag{…}` | `x=1 \tag{1}` | Appends `(1)` inline (flush-right is a host concern) |
+| `\tag*{…}` | `x=1 \tag*{$\star$}` | Tag without parentheses |
+| `\notag` / `\nonumber` | `x=1 \notag` | No-op (Vinculum has no auto-numbering to suppress) |
+
+## Macros
+
+`\newcommand` / `\renewcommand` / `\def` are expanded before typesetting
+(supports `#1`…`#9`, optional `[argc]`, recursion cap). See COVERAGE.md.
+
+```latex
+\newcommand{\abs}[1]{\left|#1\right|} \abs{x} \ge 0
+```
+
+---
+
+# Part 2 — Symbols
+
+`\name` → glyph, grouped by atom class. All render upright (roman) unless the
+glyph itself carries a style.
+
+## Greek — lowercase
+
+`\alpha` α · `\beta` β · `\gamma` γ · `\delta` δ · `\epsilon` ε ·
+`\varepsilon` ε · `\zeta` ζ · `\eta` η · `\theta` θ · `\vartheta` ϑ ·
+`\iota` ι · `\kappa` κ · `\lambda` λ · `\mu` μ · `\nu` ν · `\xi` ξ ·
+`\pi` π · `\varpi` ϖ · `\rho` ρ · `\sigma` σ · `\varsigma` ς · `\tau` τ ·
+`\upsilon` υ · `\phi` φ · `\varphi` φ · `\chi` χ · `\psi` ψ · `\omega` ω ·
+`\digamma` ϝ · `\varkappa` ϰ · `\varrho` ϱ
+
+## Greek — uppercase
+
+`\Gamma` Γ · `\Delta` Δ · `\Theta` Θ · `\Lambda` Λ · `\Xi` Ξ · `\Pi` Π ·
+`\Sigma` Σ · `\Upsilon` Υ · `\Phi` Φ · `\Psi` Ψ · `\Omega` Ω
+
+## Big operators
+
+`\sum` ∑ · `\prod` ∏ · `\coprod` ∐ · `\int` ∫ · `\iint` ∬ · `\iiint` ∭ ·
+`\iiiint` ⨌ · `\oint` ∮ · `\oiint` ∯ · `\oiiint` ∰ · `\bigcup` ⋃ ·
+`\bigcap` ⋂ · `\bigsqcup` ⨆ · `\biguplus` ⨄ · `\bigvee` ⋁ · `\bigwedge` ⋀ ·
+`\bigoplus` ⨁ · `\bigotimes` ⨂ · `\bigodot` ⨀
+
+## Binary operators
+
+`\pm` ± · `\mp` ∓ · `\times` × · `\div` ÷ · `\cdot` ⋅ · `\ast` ∗ ·
+`\star` ⋆ · `\circ` ∘ · `\bullet` • · `\diamond` ⋄ · `\cup` ∪ · `\cap` ∩ ·
+`\Cup` ⋓ · `\Cap` ⋒ · `\uplus` ⊎ · `\sqcup` ⊔ · `\sqcap` ⊓ ·
+`\setminus` ∖ · `\smallsetminus` ∖ · `\wedge` ∧ · `\vee` ∨ · `\land` ∧ ·
+`\lor` ∨ · `\oplus` ⊕ · `\ominus` ⊖ · `\otimes` ⊗ · `\oslash` ⊘ ·
+`\odot` ⊙ · `\boxplus` ⊞ · `\boxminus` ⊟ · `\boxtimes` ⊠ · `\boxdot` ⊡ ·
+`\circledast` ⊛ · `\circledcirc` ⊚ · `\circleddash` ⊝ · `\dagger` † ·
+`\ddagger` ‡ · `\amalg` ⨿ · `\wr` ≀ · `\intercal` ⊺ · `\dotplus` ∔ ·
+`\divideontimes` ⋇ · `\ltimes` ⋉ · `\rtimes` ⋊ · `\leftthreetimes` ⋋ ·
+`\rightthreetimes` ⋌ · `\barwedge` ⊼ · `\veebar` ⊻ · `\doublebarwedge` ⩞ ·
+`\curlywedge` ⋏ · `\curlyvee` ⋎ · `\lessdot` ⋖ · `\gtrdot` ⋗ ·
+`\triangleleft` ◁ · `\triangleright` ▷ · `\bigtriangleup` △ ·
+`\bigtriangledown` ▽
+
+## Relations — equality, order & set
+
+`\leq` / `\le` ≤ · `\geq` / `\ge` ≥ · `\neq` / `\ne` ≠ · `\equiv` ≡ ·
+`\approx` ≈ · `\thickapprox` ≈ · `\approxeq` ≊ · `\sim` ∼ · `\thicksim` ∼ ·
+`\simeq` ≃ · `\cong` ≅ · `\propto` ∝ · `\asymp` ≍ · `\doteq` ≐ ·
+`\doteqdot` ≑ · `\risingdotseq` ≓ · `\fallingdotseq` ≒ · `\eqcirc` ≖ ·
+`\circeq` ≗ · `\triangleq` ≜ · `\coloneqq` ≔ · `\eqsim` ≂ · `\backsim` ∽ ·
+`\backsimeq` ⋍ · `\bumpeq` ≏ · `\Bumpeq` ≎ · `\ll` ≪ · `\gg` ≫ ·
+`\lll` ⋘ · `\ggg` ⋙ · `\leqq` ≦ · `\geqq` ≧ · `\leqslant` ⩽ ·
+`\geqslant` ⩾ · `\lesssim` ≲ · `\gtrsim` ≳ · `\lessapprox` ⪅ ·
+`\gtrapprox` ⪆ · `\lessgtr` ≶ · `\gtrless` ≷ · `\between` ≬ ·
+`\prec` ≺ · `\succ` ≻ · `\preceq` ⪯ · `\succeq` ⪰ · `\precsim` ≾ ·
+`\succsim` ≿ · `\subset` ⊂ · `\supset` ⊃ · `\subseteq` ⊆ · `\supseteq` ⊇ ·
+`\subseteqq` ⫅ · `\supseteqq` ⫆ · `\Subset` ⋐ · `\Supset` ⋑ ·
+`\sqsubset` ⊏ · `\sqsupset` ⊐ · `\sqsubseteq` ⊑ · `\sqsupseteq` ⊒ ·
+`\in` ∈ · `\ni` ∋
+
+## Relations — other
+
+`\perp` ⊥ · `\parallel` ∥ · `\shortparallel` ∥ · `\mid` ∣ · `\shortmid` ∣ ·
+`\models` ⊨ · `\vDash` ⊨ · `\vdash` ⊢ · `\dashv` ⊣ · `\Vdash` ⊩ ·
+`\Vvdash` ⊪ · `\multimap` ⊸ · `\frown` ⌢ · `\smile` ⌣ · `\bowtie` ⋈ ·
+`\pitchfork` ⋔ · `\therefore` ∴ · `\because` ∵ · `\gets` ← ·
+`\trianglelefteq` ⊴ · `\trianglerighteq` ⊵ · `\vartriangleleft` ⊲ ·
+`\vartriangleright` ⊳
+
+## Negated relations
+
+`\notin` ∉ · `\nleq` ≰ · `\ngeq` ≱ · `\nless` ≮ · `\ngtr` ≯ · `\nsim` ≁ ·
+`\ncong` ≇ · `\nprec` ⊀ · `\nsucc` ⊁ · `\npreceq` ⋠ · `\nsucceq` ⋡ ·
+`\nmid` ∤ · `\nparallel` ∦ · `\nsubseteq` ⊈ · `\nsupseteq` ⊉ ·
+`\subsetneq` ⊊ · `\supsetneq` ⊋ · `\subsetneqq` ⫋ · `\supsetneqq` ⫌ ·
+`\lneq` ⪇ · `\gneq` ⪈ · `\lneqq` ≨ · `\gneqq` ≩ · `\lnsim` ⋦ · `\gnsim` ⋧ ·
+`\precnsim` ⋨ · `\succnsim` ⋩ · `\nvdash` ⊬ · `\nvDash` ⊭ · `\nVdash` ⊮ ·
+`\nVDash` ⊯ · `\ntriangleleft` ⋪ · `\ntriangleright` ⋫ ·
+`\ntrianglelefteq` ⋬ · `\ntrianglerighteq` ⋭
+
+## Arrows
+
+`\to` / `\rightarrow` → · `\leftarrow` / `\gets` ← · `\leftrightarrow` ↔ ·
+`\Rightarrow` ⇒ · `\Leftarrow` ⇐ · `\Leftrightarrow` ⇔ · `\mapsto` ↦ ·
+`\mapsfrom` ↤ · `\longrightarrow` ⟶ · `\longleftarrow` ⟵ ·
+`\longleftrightarrow` ⟷ · `\Longrightarrow` ⟹ · `\Longleftrightarrow` ⟺ ·
+`\longmapsto` ⟼ · `\iff` ⟺ · `\implies` ⟹ · `\impliedby` ⟸ ·
+`\uparrow` ↑ · `\downarrow` ↓ · `\updownarrow` ↕ · `\Uparrow` ⇑ ·
+`\Downarrow` ⇓ · `\nearrow` ↗ · `\searrow` ↘ · `\swarrow` ↙ · `\nwarrow` ↖ ·
+`\hookrightarrow` ↪ · `\hookleftarrow` ↩ · `\twoheadrightarrow` ↠ ·
+`\twoheadleftarrow` ↞ · `\rightarrowtail` ↣ · `\leftarrowtail` ↢ ·
+`\rightrightarrows` ⇉ · `\leftleftarrows` ⇇ · `\rightleftarrows` ⇄ ·
+`\leftrightarrows` ⇆ · `\upuparrows` ⇈ · `\downdownarrows` ⇊ ·
+`\Rrightarrow` ⇛ · `\Lleftarrow` ⇚ · `\dashrightarrow` ⇢ · `\dashleftarrow` ⇠ ·
+`\rightsquigarrow` / `\leadsto` ⇝ · `\circlearrowright` ↻ ·
+`\circlearrowleft` ↺ · `\curvearrowright` ↷ · `\curvearrowleft` ↶ ·
+`\looparrowright` ↬ · `\looparrowleft` ↫
+
+Negated arrows: `\nrightarrow` ↛ · `\nleftarrow` ↚ · `\nRightarrow` ⇏ ·
+`\nLeftarrow` ⇍ · `\nleftrightarrow` ↮ · `\nLeftrightarrow` ⇎
+
+`\uparrow \downarrow \updownarrow \Uparrow \Downarrow` also serve as stretchy
+delimiters inside `\left…\right`.
+
+## Harpoons
+
+`\leftharpoonup` ↼ · `\leftharpoondown` ↽ · `\rightharpoonup` ⇀ ·
+`\rightharpoondown` ⇁ · `\upharpoonright` ↾ · `\upharpoonleft` ↿ ·
+`\downharpoonright` ⇂ · `\downharpoonleft` ⇃ · `\leftrightharpoons` ⇋ ·
+`\rightleftharpoons` ⇌
+
+## Delimiters (as symbols)
+
+`\langle` ⟨ · `\rangle` ⟩ · `\lceil` ⌈ · `\rceil` ⌉ · `\lfloor` ⌊ ·
+`\rfloor` ⌋ · `\lbrace` { · `\rbrace` } · `\lbrack` [ · `\rbrack` ] ·
+`\{` { · `\}` } · `\lvert` | · `\rvert` | · `\vert` | · `\|` ‖ · `\lVert` ‖ ·
+`\rVert` ‖ · `\Vert` ‖ · `\backslash` \
+
+## Dots
+
+`\dots` / `\ldots` … · `\cdots` ⋯ · `\vdots` ⋮ · `\ddots` ⋱ ·
+`\dotsb` ⋯ · `\dotsc` … · `\dotsm` ⋯ · `\dotsi` ⋯ · `\dotso` …
+
+## Letterlike & ordinary symbols
+
+`\infty` ∞ · `\partial` ∂ · `\nabla` ∇ · `\forall` ∀ · `\exists` ∃ ·
+`\nexists` ∄ · `\emptyset` / `\varnothing` ∅ · `\hbar` / `\hslash` ℏ ·
+`\ell` ℓ · `\Re` ℜ · `\Im` ℑ · `\aleph` ℵ · `\beth` ℶ · `\gimel` ℷ ·
+`\daleth` ℸ · `\eth` ð · `\wp` ℘ · `\prime` ′ · `\backprime` ‵ ·
+`\angle` ∠ · `\measuredangle` ∡ · `\sphericalangle` ∢ · `\degree` ° ·
+`\neg` / `\lnot` ¬ · `\top` ⊤ · `\bot` ⊥ · `\complement` ∁ · `\surd` √ ·
+`\imath` ı · `\jmath` ȷ · `\Bbbk` 𝕜 · `\flat` ♭ · `\sharp` ♯ · `\natural` ♮ ·
+`\clubsuit` ♣ · `\diamondsuit` ♢ · `\heartsuit` ♡ · `\spadesuit` ♠ ·
+`\triangle` / `\vartriangle` △ · `\triangledown` ▽ · `\square` / `\Box` □ ·
+`\blacksquare` ■ · `\Diamond` ◇ · `\lozenge` ◊ · `\blacklozenge` ⧫ ·
+`\bigstar` ★ · `\blacktriangle` ▲ · `\blacktriangledown` ▼ ·
+`\blacktriangleleft` ◀ · `\blacktriangleright` ▶ · `\checkmark` ✓ ·
+`\maltese` ✠ · `\circledR` ® · `\circledS` Ⓢ · `\mho` ℧ · `\Finv` Ⅎ ·
+`\Game` ⅁
+
+## Punctuation & literals
+
+`\colon` : · `\$` $ · `\%` % · `\&` & · `\#` #
+
+---
+
+# Part 3 — Function-name operators
+
+Recognized as upright multi-letter operators with correct operator spacing;
+`\lim`-family members stack their `_{…}` limits below in display style.
+
+`\sin` `\cos` `\tan` `\cot` `\sec` `\csc` · `\arcsin` `\arccos` `\arctan` ·
+`\sinh` `\cosh` `\tanh` `\coth` `\sech` `\csch` · `\log` `\ln` `\lg` `\exp` ·
+`\min` `\max` `\sup` `\inf` `\lim` `\limsup` `\liminf` · `\det` `\dim` `\ker`
+`\arg` `\gcd` `\deg` `\hom` `\Pr` · `\argmin` `\argmax` · `\mod`
+
+For any operator name not on this list, use `\operatorname{name}` (or
+`\operatorname*{name}` for stacked limits).
+
+---
+
+# Part 4 — Not supported (degrades to fallback)
+
+These parse to an `.unsupported` leaf (host shows its own fallback). See the
+"Not yet supported" tail of [COVERAGE.md](COVERAGE.md) for the maintained list.
+
+- `\sideset`, `\mathchoice`, `\DeclareMathOperator` (needs a macro-table branch).
+- `\utilde`, harpoon accents (`\overrightharpoon`, …).
+- Arbitrarily-tall **extensible delimiter assembly**, and MATH-table variant
+  glyphs for `⟨ ⟩ ‖ ⌈ ⌉ ⌊ ⌋` (currently the variant path is gated to
+  `( ) [ ] { }`; other delimiters scale continuously).
+- `\begin{CD}` commutative diagrams (out of scope — a diagram problem).
+- Out of scope by design: `\href`, `\includegraphics`, mhchem `\ce`, siunitx,
+  `\verb`.
+
+Caveats on supported commands: `\mathcal` / `\mathscr` / `\mathfrak` render
+letters only (no digits); `\mathbf` uses a bold system font rather than a
+Mathematical-Alphanumeric codepoint; the `\x…arrow` family all approximate to a
+single stretchy left/right shaft regardless of arrowhead style.

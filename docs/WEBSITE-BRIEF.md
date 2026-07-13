@@ -20,9 +20,9 @@ real code. Never overclaim — the site's support claims must match
 
 **Headline:** *Native LaTeX math for Apple platforms. No WebView.*
 
-**Sub-headline:** Real OpenType MATH glyphs, TeX-faithful metrics, and a
-device-independent scene IR — a baseline-aligned `NSTextAttachment` in one
-call. Swift 6, zero dependencies, builds on Linux.
+**Sub-headline:** ~400 LaTeX commands, real OpenType MATH glyphs, TeX-faithful
+metrics, and a device-independent scene IR — a baseline-aligned
+`NSTextAttachment` in one call. Swift 6, zero dependencies, builds on Linux.
 
 **Primary CTA:** `Get started` → Installation.
 **Secondary CTA:** `View on GitHub` → repo.
@@ -37,14 +37,41 @@ light/dark to show the theme seam live.
 1. **No WebView, no JavaScript.** No web-content process, no HTML/CSS reflow,
    no bridge. Just CoreGraphics and a bundled font.
 2. **Real TeX metrics.** Layout constants come from the font's OpenType MATH
-   table (per Knuth, Appendix G) — not hand-tuned guesses. Latin Modern Math
-   (Computer Modern) glyph shapes.
+   table (per Knuth, Appendix G) — not hand-tuned guesses: cramped-style and
+   TeX fraction shift-model included, axis-centered delimiters, array column
+   rules. Latin Modern Math (Computer Modern) glyph shapes. Tall
+   `\left…\right` fences use the font's purpose-drawn MATH-table size variants,
+   so stroke weight stays constant instead of fattening.
 3. **Flows inline in TextKit.** Output is an `NSTextAttachment` that shares
    your text baseline, selection, and line-breaking — not a snapshot image
    floating in a box.
 4. **Device-independent & testable.** Layout emits a `MathScene` IR (TeX's DVI
    in miniature) through an injected measurer seam, so geometry builds and
    unit-tests headless — on Linux, in CI.
+
+### What it renders (a "coverage at a glance" strip)
+
+A one-line-per-group band, each with a live render, to make the breadth
+concrete without overpromising:
+
+- **Structure** — fractions (`\frac`/`\dfrac`/`\tfrac`/`\cfrac`/`\genfrac`),
+  `\sqrt[n]`, sub/superscripts with correct display-limit placement, `\binom`.
+- **Environments** — `pmatrix`/`bmatrix`/`Bmatrix`/`vmatrix`/`Vmatrix`, `cases`,
+  `array` with column specs + `|` rules + `\hline`/`\cline`, `aligned`/`align`/
+  `alignat`/`gather`/`split`/`multline`, `substack`, `smallmatrix`.
+- **Delimiters** — `\left…\right`, `\big…\Bigg`, `\middle`, MATH-table tall
+  variants for `( ) [ ] { }`.
+- **Decoration** — accents and stretchy wide accents, over/underbraces and
+  brackets and parens, `\xrightarrow`-family arrows, `\cancel`/`\cancelto`,
+  `\boxed`/`\fbox`/`\colorbox`/`\fcolorbox`/`\rule`/`\raisebox`, stateful
+  `\color`.
+- **~400 symbols** — Greek, operators, relations, arrows, set/logic, and the
+  math alphabets, plus over three dozen function-name operators
+  (`\sin`, `\lim`, `\gcd`, …).
+- **Macros** — `\newcommand`/`\def` expanded before layout.
+
+Real-world reach: quantum-information notation, full-domain physics and
+analysis. See the **Gallery** for actual renders.
 
 ---
 
@@ -90,10 +117,12 @@ Hood · GitHub**.
 - Each entry: LaTeX source (monospace) beside its actual Vinculum render.
 - Group by category matching the gallery posters: *Fractions, roots, scripts,
   operators* · *Delimiters, matrices, cases, aligned* · *Accents, binomials,
-  braces, arrows, alphabets, color* · *Real-world equations* · *Macros* ·
-  *Symbols & delimiters*.
+  braces, arrows, alphabets, color* · *Boxes, rules & cancels* · *Real-world
+  equations* · *Quantum information* · *Macros* · *Symbols & delimiters*.
 - Include a "Real-world equations" row: quadratic, Euler, Schrödinger, Bayes,
-  Maxwell, Riemann zeta — the ones already in `GalleryGenerator`.
+  Maxwell, Riemann zeta — the ones already in `GalleryGenerator` — and a
+  "harder pages" band sourced from the stress corpus (`MathStressGallery`),
+  which tracks a coverage-audit percentage in CI.
 - Source the images from the golden fixtures (`Tests/fixtures/math-golden/`)
   or generate posters via `VINCULUM_GALLERY_DIR`. **Show light *and* dark.**
 
@@ -102,9 +131,11 @@ Hood · GitHub**.
 - **Concept:** "Type LaTeX → see the native render." The single most
   persuasive page — it lets an evaluating developer test *their* equations.
 - **Honest matrix twist:** when input contains an unsupported command, surface
-  the *same* fallback the library gives — "⚠️ `\genfrac` not supported yet" —
-  driven by the real coverage list. This turns the honesty policy into a trust
-  feature.
+  the *same* fallback the library gives — "⚠️ `\sideset` not supported yet" —
+  driven by the real coverage list (`MathParser.unsupportedCommands`). This
+  turns the honesty policy into a trust feature. (Pick genuinely-unsupported
+  examples like `\sideset`, `\mathchoice`, or `\DeclareMathOperator`;
+  `\genfrac`, `\cfrac`, `\middle`, and `\color` all render now.)
 - Preset chips (quadratic, sum with limits, pmatrix, `\newcommand` demo).
 - Light/dark toggle and a base-size slider (mirrors `display`/`baseSize`).
 - **Implementation note for the builder:** the library is native Swift, so a
@@ -144,13 +175,20 @@ Hood · GitHub**.
   2. *Knuth's rule: read constants from the font.* Appendix G. The MATH table.
      Show the before/after from 0.4.0 — 35 hand-tuned multipliers replaced by
      the font's real numbers (axis 0.26→0.250, subscript drop 0.20→0.247, …).
-  3. *Two kinds of numbers.* `MathConstants` (font-sourced) vs. `MathLayout`
-     (Vinculum's own drawn shapes — the radical hook, brace arcs, arrowhead).
-     "Zero unexplained numbers in the builders."
+  3. *Two kinds of numbers.* `MathConstants` (font-sourced) vs.
+     `MathLayoutMetrics` (Vinculum's own drawn shapes — the radical hook,
+     brace arcs, arrowhead). "Zero unexplained numbers in the builders."
   4. *The atom-class spacing model.* Why `a+b` and `a=b` space differently —
-     TeX's pair table, in `mu`.
+     TeX's pair table, in `mu`, with binary/unary reclassification (`x=-1`).
   5. *The measurer seam.* One injected closure makes the whole engine testable
-     without a screen.
+     without a screen — and a second optional seam, the delimiter provider,
+     supplies tall glyphs only where a real font is present.
+  6. *Reading the MATH table at runtime.* Beyond static constants, Vinculum's
+     `MathVariantTable` parses the font's OpenType `MathVariants` subtable live
+     to pick the correct purpose-drawn size variant for a tall `( ) [ ] { }` —
+     so a stretched fence keeps the designer's stroke weight instead of being
+     point-scaled fatter. This is the same Knuth story one layer deeper: don't
+     guess the shape, ask the font.
 - Diagrams: the pipeline flowchart (see ARCHITECTURE.md), a MATH-table
   constant callout, an atom-class spacing table.
 
@@ -218,7 +256,7 @@ kind of deep-dive that gets posted to Hacker News / iOS Dev Weekly).
 ## Calls to action
 
 - **Primary everywhere:** copy the SwiftPM one-liner
-  (`.package(url: "…/Vinculum.git", from: "0.5.0")`) + "Get started".
+  (`.package(url: "…/Vinculum.git", from: "0.23.0")`) + "Get started".
 - **Playground:** "Try your own equation."
 - **Gallery:** "Copy this LaTeX."
 - **Under the Hood / Compare:** "Read the architecture" → docs.
@@ -232,7 +270,14 @@ kind of deep-dive that gets posted to Hacker News / iOS Dev Weekly).
 - Every capability claim must match [COVERAGE.md](COVERAGE.md). If the site
   says a construct renders, it must render — verify against golden fixtures.
 - Show ⚠️/❌ limitations openly (playground fallback, a "not yet" note on the
-  coverage page). Candor is the brand.
+  coverage page). Candor is the brand. The honest framing is **curated but
+  broad, with a small documented tail** — ~400 commands covered, and a short,
+  named list of things that degrade to fallback (`\sideset`, `\mathchoice`,
+  `\DeclareMathOperator`, harpoon accents, extensible/arbitrarily-tall
+  delimiter assembly, `\begin{CD}`) or are out of scope by design (`\href`,
+  `\includegraphics`, mhchem `\ce`, siunitx, `\verb`). Never imply "all of
+  LaTeX." Note the known nuances too: `\mathcal`/`\mathfrak`/`\mathscr` cover
+  letters (not digits) and `\mathbf` uses a bold system font.
 - All rendered math on the site should be genuine Vinculum output, not
   KaTeX/MathJax standing in — using a competitor to render the marketing would
   be self-defeating.

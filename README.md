@@ -1,8 +1,8 @@
 # Vinculum
 
 **Native LaTeX math typesetting for Apple platforms. Real glyph shapes, TeX
-metrics, a device-independent scene IR — no MathJax, no KaTeX, no WebView,
-zero dependencies.**
+metrics from the font's MATH table, a device-independent scene IR — no MathJax,
+no KaTeX, no WebView, zero dependencies.**
 
 <!-- badges: replace with real shields once CI/tags are public -->
 ![Swift 6](https://img.shields.io/badge/swift-6.0-orange)
@@ -12,12 +12,12 @@ zero dependencies.**
 
 Vinculum parses LaTeX math into a TeX-style atom tree and typesets it with an
 OpenType MATH font (bundled **Latin Modern Math**), reading its layout
-constants — axis height, rule thickness, script scales, shifts — from the
-font's MATH table the way Knuth's algorithm intends (Appendix G of *The
-TeXbook*). Layout is platform-free and emits a device-independent
-`MathScene` of positioned primitives — TeX's DVI in miniature — which a thin
-CoreGraphics renderer turns into a baseline-aligned `NSTextAttachment` (or
-draws into any `CGContext` you own).
+constants — axis height, rule thickness, script scales, fraction shifts — from
+the font's MATH table the way Knuth's algorithm intends (Appendix G of *The
+TeXbook*). Layout is platform-free and emits a device-independent `MathScene`
+of positioned primitives — TeX's DVI in miniature — which a thin CoreGraphics
+renderer turns into a baseline-aligned `NSTextAttachment` (or draws into any
+`CGContext` you own).
 
 *A vinculum is the bar in a fraction, the line over a root — the stroke that
 binds an expression together.* Vinculum is the native math engine extracted
@@ -41,8 +41,9 @@ is a third option with different trade-offs.
   selection, and line-breaking — a WebView snapshot never does.
 - Deterministic, headless-testable geometry (see the golden-image suite),
   instead of pixels that depend on a web engine version.
-- Trade-off: Vinculum implements a **curated subset** of LaTeX math, not the
-  whole of KaTeX. If you need every macro package, a WebView still wins.
+- Trade-off: Vinculum covers the **everyday LaTeX math** most documents
+  actually use, not every macro package KaTeX ships. If you need mhchem,
+  siunitx, `\href`, or arbitrary embedded HTML, a WebView still wins.
 
 **vs. iosMath**
 
@@ -51,6 +52,8 @@ is a third option with different trade-offs.
 - A **device-independent scene IR** and an injected measurer seam, so the
   entire layout stage builds and unit-tests on **Linux**, headless.
 - A `\newcommand`/`\def` macro processor and a document-scoped model.
+- Broader current coverage: ~400 symbols, `array` rules, stateful `\color`,
+  MATH-table tall-delimiter variants, cramped-style scripts, and more (below).
 
 **vs. rendering to a static image on a server** — Vinculum runs on-device,
 offline, private. Nothing leaves the machine.
@@ -66,7 +69,7 @@ Swift Package Manager. Add the dependency:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.5.0"),
+    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.23.0"),
 ]
 ```
 
@@ -80,10 +83,42 @@ Then pick your product(s):
 ```
 
 - **VinculumRender** — Apple platforms. Everything below, including the
-  bundled font and the one-call attachment API.
+  bundled font, the MATH-table delimiter provider, and the one-call
+  attachment API.
 - **VinculumLayout** — platform-free (Foundation only, builds on Linux):
   parsing, macros, and all typesetting geometry, emitting a `MathScene`. Use
   it alone if you supply your own measurer and renderer.
+
+---
+
+## What's new
+
+Since the early releases, Vinculum grew from a small curated subset into broad
+coverage of everyday math. Highlights:
+
+- **TeX-faithful metrics** — layout constants come from the bundled font's
+  OpenType MATH table (axis height, rule thickness, script scales, fraction
+  numerator/denominator shifts), not hand-tuned guesses.
+- **Cramped style + the TeX fraction shift-model** — subscripts and radical
+  indices lower correctly in cramped positions; fractions shift by the font's
+  named parameters.
+- **MATH-table tall-delimiter variants** — tall `( ) [ ] { }` step through the
+  font's purpose-drawn size-variant glyphs (constant stroke weight) instead of
+  scaling a base glyph; the feature is gated and optional so it can never
+  regress. Other delimiters and short stretches scale continuously.
+- **`array` with rules** — column specs (`l c r`), `|` vertical rules, and
+  `\hline` / `\cline` for augmented matrices, bordered tables, and truth
+  tables.
+- **`\middle`, `\cfrac`, `\genfrac`** — `\left…\middle|…\right` growing
+  separators; true full-size continued fractions with `[l]`/`[r]` alignment;
+  the general 5-argument `\genfrac`.
+- **Stateful `\color`** — `\color{blue}` tints the remainder of its group, in
+  addition to the braced `\color{name}{body}` and `\textcolor` forms.
+- **~400 symbols** across Greek, operators, relations, arrows, delimiters,
+  and letterlike sets, each carrying its correct TeX atom class so inter-atom
+  spacing is real.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full arc.
 
 ---
 
@@ -121,8 +156,13 @@ guard MathParser.isFullySupported(node) else {
     return
 }
 
-let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 15)
-let scene  = engine.layout(node, display: true)   // MathScene: width/ascent/descent + primitives
+// The delimiter provider is optional; pass it in for MATH-table tall-fence
+// variants, or omit it (defaults to nil) to scale base glyphs.
+let engine = MathLayoutEngine(
+    measure: CoreTextMeasurer.make(),
+    baseSize: 15,
+    delimiters: CoreTextDelimiterProvider.make())
+let scene = engine.layout(node, display: true)   // MathScene: width/ascent/descent + primitives
 
 // Draw into any y-up CGContext (an image, a PDF page, a custom view):
 MathSceneRenderer.draw(scene, theme: .dark, in: cgContext, at: penPoint)
@@ -152,15 +192,16 @@ It writes posters covering:
 | `01-core.png` | Fractions, roots, sub/superscripts, big operators with stacked limits |
 | `02-structures.png` | Auto-sized `\left…\right` fences, matrices, `cases`, `aligned` |
 | `03-notation.png` | Accents, `\binom`, `\overbrace`/`\underbrace`, `\xrightarrow`, `\substack`, alphabets, color |
-| `04-equations.png` | Quadratic formula, Euler's identity, Schrödinger, Bayes, Maxwell, the zeta functional-product |
+| `04-equations.png` | Real-world equations: quadratic, Euler, Schrödinger, Bayes, Maxwell, the zeta functional product |
 | `05-macros.png` | Document-scoped `\newcommand` in action |
 | `06-symbols.png` | Standalone delimiters and the extended symbol set |
 
-> The repo also carries ~42 golden reference PNGs under
+> The repo also carries ~87 golden reference PNGs under
 > `Tests/fixtures/math-golden/` (one per construct: `quadratic.png`,
 > `integral.png`, `pmatrix.png`, `mathbb.png`, `overbrace.png`, …) that the
-> render tests diff against. Drop generated posters into `docs/images/` if you
-> want them inlined here.
+> render tests diff against, plus a 66-equation stress corpus
+> (`MathStressGallery`) held at 100% native coverage by a CI ratchet. Drop
+> generated posters into `docs/images/` if you want them inlined here.
 
 Example expressions, all natively rendered:
 
@@ -179,41 +220,55 @@ e^{i\pi} + 1 = 0
 
 Native = renders with real geometry. Everything unsupported degrades to a
 named source fallback (`isFullySupported` returns `false`; the render API
-returns `nil`) — never a broken half-render. Full detail with examples in
-[docs/COVERAGE.md](docs/COVERAGE.md).
+returns `nil`) — never a broken half-render. Full, code-checked detail with
+examples in [docs/COVERAGE.md](docs/COVERAGE.md); the exhaustive
+command-by-command index (every supported `\command`) is in
+[docs/COMMANDS.md](docs/COMMANDS.md).
 
 | Feature | Status | Notes |
 | --- | :---: | --- |
-| Fractions `\frac`, `\cfrac` | ✅ | `\cfrac` lays out as a plain nested fraction |
+| Fractions `\frac`, `\cfrac`, `\genfrac` | ✅ | `\cfrac` is a true full-size continued fraction (`[l]`/`[r]` alignment); `\genfrac` is the general 5-arg form (custom fences, rule on/off, forced style) |
 | Roots `\sqrt`, `\sqrt[n]{}` | ✅ | Optional degree |
-| Sub/superscripts `^` `_` | ✅ | Nested, both, on any atom |
-| Big operators with limits | ✅ | `\sum \prod \bigcup \bigcap` stack limits in display; `\int \oint` keep side-scripts (TeX `\nolimits`) |
-| Named operators `\lim \max \min \sup` | ✅ | Stack their limit underneath in display (`\lim_{x\to0}`) |
+| Sub/superscripts `^` `_` | ✅ | Nested, both, on any atom; cramped-style lowering modeled |
+| Big operators with limits | ✅ | `\sum \prod \bigcup \bigcap …` stack limits in display; `\int \oint` keep side-scripts (TeX `\nolimits`) |
+| Named operators `\lim \max \min \sup \det \gcd …` | ✅ | 37 function names; the `\lim` family stacks its limit underneath in display |
+| `\operatorname`, `\operatorname*` | ✅ | Upright custom operator; `*` stacks limits in display |
 | Symbols & Greek (~400 commands) | ✅ | Correct TeX atom classes → real inter-atom spacing |
-| Matrix environments | ✅ | `pmatrix bmatrix Bmatrix vmatrix Vmatrix matrix`, `cases`, `aligned`/`align`/`gather`/`split`, `substack` |
-| Math alphabets | ✅ | `\mathbb \mathcal \mathscr \mathfrak \mathsf \mathtt \mathbf \boldsymbol` (Letterlike holes handled) |
-| Accents | ✅ | Point (`\hat \vec \bar \dot …`), stretchy (`\widehat \widetilde`), rules (`\overline \underline`) |
-| `\binom` / `\dbinom` / `\tbinom` | ✅ | Renders; forced size is ignored (see below) |
-| `\overbrace` / `\underbrace` + labels | ✅ | Drawn brace with `^`/`_` annotation |
-| `\xrightarrow` / `\xleftarrow` | ✅ | Stretchy, with over `{}` and under `[]` labels |
-| `\boxed`, `\phantom` family | ✅ | `\phantom \hphantom \vphantom` |
-| `\color` / `\textcolor` | ✅ | Braced `{name}{body}` form; named + `#rrggbb` |
-| `\text \mathrm \textrm \operatorname` | ✅ | Upright; interior spaces preserved (`\text{if } x`) |
-| Primes `f'`, `f''` | ✅ | Render as raised primes, coalesced |
+| Matrix environments | ✅ | `pmatrix bmatrix Bmatrix vmatrix Vmatrix matrix` (+ `*[r]` alignment), `cases`, `smallmatrix`, `substack` |
+| Aligned display environments | ✅ | `aligned align alignat split gather gathered multline`; `\tag`/`\tag*`/`\notag` |
+| `array` column specs & rules | ✅ | `{l c r \| c}` alignment + `\|` vertical rules + `\hline`/`\cline` — augmented matrices, bordered/truth tables |
+| Math alphabets | ✅ | `\mathbb \mathcal \mathscr \mathfrak \mathsf \mathtt \mathbf \boldsymbol \pmb`; `\mathcal`/`\mathfrak`/`\mathscr` cover letters (not digits), `\mathbf` uses a bold system font |
+| Accents | ✅ | Point (`\hat \vec \bar \dot \ddot \acute …`), stretchy (`\widehat \widetilde \widecheck`), rules (`\overline \underline`) |
+| Over/under constructs | ✅ | `\overbrace`/`\underbrace`, `\overbracket`/`\underbracket`, `\overparen`/`\underparen`, `\overrightarrow` & vector arrows |
+| `\binom` / `\dbinom` / `\tbinom` | ✅ | Ruleless paren-fenced; `d`/`t` force display/text size |
+| Extended big operators | ✅ | `\iiint \oiint \coprod \bigsqcup \bigvee \bigwedge \bigoplus \bigotimes \bigodot …` |
+| `\xrightarrow` / `\xleftarrow` family | ✅ | Stretchy, with over `{}` and under `[]` labels |
+| Boxes & rules | ✅ | `\boxed \fbox \colorbox \fcolorbox \rule \raisebox`; `\phantom \hphantom \vphantom \smash \mathrlap \mathllap \mathclap` |
+| `\color` / `\textcolor` | ✅ | Braced `{name}{body}` form **and** stateful `\color{name}` for the rest of the group; named + `#rrggbb` |
+| Atom-class overrides | ✅ | `\mathbin \mathrel \mathop \mathord \mathopen \mathclose \mathpunct` |
+| Strikes & negation | ✅ | `\cancel \bcancel \xcancel \cancelto`; `\not` slashes any relation (`\not\subset` → ⊄) |
+| `\text \mathrm \textrm` | ✅ | Upright; interior spaces preserved (`\text{if } x`), inline math via `\text{$…$}` |
+| Primes `f'`, `f''` | ✅ | Raised, coalesced primes |
 | Direct Unicode math (`∫ ∑ ≤ α`) | ✅ | Classed like its command spelling |
 | `\newcommand \renewcommand \def` | ✅ | Document-scoped, `#1…#9`, recursion-capped |
-| Spacing `\, \: \; \! \quad \qquad` | ✅ | |
+| Spacing `\, \: \; \! \quad \qquad \hspace \kern \mkern` | ✅ | mu-unit spacing from the MATH table |
 | `\dfrac` / `\tfrac` / `\dbinom` / `\tbinom` | ✅ | Force display/text style regardless of context |
-| `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ✅ | Enlarge the delimiter 1.2–3×, with opening/closing/relation spacing |
+| `\big \Big \bigg \Bigg` (+`l`/`r`/`m`), `\middle` | ✅ | Enlarge the delimiter 1.2–3×, or a growing `\middle` separator, with correct opening/closing/relation spacing |
+| Auto delimiters `\left … \right`, `\middle` | ✅ | Auto-sizes fences to the body; tall `( ) [ ] { }` use MATH-table size variants, others scale |
 | `\pmod` / `\bmod` / `\pod` | ✅ | `a \equiv b \pmod{n}`, `a \bmod n` |
-| `\genfrac` (general 5-arg form) | ❌ | Not parsed (only `\binom` uses the node internally) |
-| `array` column specs & rules | ✅ | `{l c r \| c}` alignment + `\|` vertical rules + `\hline`/`\cline` — augmented matrices, bordered tables |
-| `\cancel` / `\bcancel` / `\xcancel`, `\not` | ✅ | Diagonal strike-through; `\not` slashes any relation (`\not\subset` → ⊄) |
-| Extended big operators | ✅ | `\iiint \oiint \coprod \bigsqcup \bigvee \bigwedge \bigoplus \bigotimes \bigodot …` |
-| `\operatorname*` | ❌ | Parses/renders upright; `*` limit-stacking not honored yet |
-| Cramped-style script lowering | ❌ | Not modeled |
+| `\sideset`, `\DeclareMathOperator`, `\mathchoice` | ❌ | Degrade to source fallback |
+| Harpoon accents, `\utilde` | ❌ | Degrade to source fallback |
+| Arbitrarily-tall extensible fences | ⚠️ | Very tall non-`()[]{}` delimiters scale continuously (slightly heavy strokes) rather than assembling from font pieces |
+| mhchem `\ce`, siunitx, `\href`, `\includegraphics`, `\verb`, `\begin{CD}` | ❌ | Out of scope by design |
 
 ⚠️ = accepted but semantics not fully honored. ❌ = degrades to fallback.
+
+The short tail is honest and documented: extensible delimiter *assembly*
+(arbitrarily-tall fences built from font pieces) and the remaining variant
+glyphs (`⟨ ⟩ ‖ ⌈ ⌋`), a few macro-table operators (`\DeclareMathOperator`,
+`\sideset`, `\mathchoice`), harpoon accents, and packages that are diagrams or
+chemistry rather than math (`\begin{CD}`, mhchem, siunitx). Everything there
+degrades to a named source fallback, never a broken render.
 
 ---
 
@@ -242,18 +297,19 @@ flowchart LR
 
 - **VinculumLayout** (Foundation only, Linux-buildable) owns parsing, macro
   expansion, and *all* typesetting geometry. `MathLayoutEngine` measures
-  glyphs through an injected `MathTextMeasurer` closure and emits a
-  `MathScene` of positioned primitives (`MathElement`: glyph runs, filled
-  rules, stroked paths) in `MathColor`. No CoreText, no CoreGraphics — just
-  geometry. The font's MATH-table constants live in `MathConstants`;
-  Vinculum's own drawing proportions (radical hook, brace arcs, arrowhead)
-  live in `MathLayout`. Every number is named.
+  glyphs through an injected `MathTextMeasurer` closure (and optional
+  `MathDelimiterProvider`) and emits a `MathScene` of positioned primitives
+  (`MathElement`: glyph runs, filled rules, stroked paths) in `MathColor`. No
+  CoreText, no CoreGraphics — just geometry. The font's MATH-table constants
+  live in `MathConstants`; Vinculum's own drawing proportions (radical hook,
+  brace arcs, arrowhead) live in `MathLayout`. Every number is named.
 - **VinculumRender** (Apple only) is the thin platform seam:
-  `CoreTextMeasurer` implements the measurer via `CTLine`, `MathSceneRenderer`
-  draws a scene into a `CGContext`, `MathFont` bundles Latin Modern Math,
-  `MathTheme` is the host coupling (ink color + appearance), and
-  `MathImageRenderer` orchestrates measure → layout → render into a cached
-  attachment.
+  `CoreTextMeasurer` implements the measurer via `CTLine`,
+  `CoreTextDelimiterProvider` reads MATH-table delimiter size variants,
+  `MathSceneRenderer` draws a scene into a `CGContext`, `MathFont` bundles
+  Latin Modern Math, `MathTheme` is the host coupling (ink color +
+  appearance), and `MathImageRenderer` orchestrates measure → layout → render
+  into a cached attachment.
 
 The measurer seam is why layout is headless- and Linux-testable: unit tests
 inject a mock measurer and assert on exact geometry, no display required.
@@ -273,9 +329,10 @@ struct MathTheme {
 }
 ```
 
-Use `.light` / `.dark`, or build one from your design system. `\color` /
-`\textcolor` override the ink per-subtree during layout. That's the whole
-surface — see [docs/INTEGRATION.md](docs/INTEGRATION.md).
+Use `.light` / `.dark`, or build one from your design system with
+`MathTheme(ink:prefersDark:)`. `\color` / `\textcolor` override the ink
+per-subtree during layout. That's the whole surface — see
+[docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ---
 
@@ -293,8 +350,10 @@ surface — see [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Performance
 
-- **Renders are cached** by content + theme + size (`NSCache`), so repeated
-  layout of the same equation is a dictionary hit.
+- **Renders are cached** by content + theme + size (`NSCache`, bounded by
+  count and pixel-byte cost), so repeated layout of the same equation is a
+  dictionary hit. A `nil` (unsupported) result is cached as a negative entry,
+  so a live editor doesn't re-parse known-bad LaTeX every keystroke.
 - Layout is allocation-light struct geometry with no WebView spin-up — the
   cost is one CoreText line measurement per glyph run plus arithmetic.
 - The parser is bounded: a linear pre-scan caps recursion (adversarial
@@ -320,3 +379,5 @@ golden-image suite. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
   License (GFL)**, an OFL-style license — see
   `Sources/VinculumRender/Resources/GUST-FONT-LICENSE.txt` and
   `LatinModernMath-LICENSE.txt`. The GFL permits redistribution and embedding.
+</content>
+</invoke>
