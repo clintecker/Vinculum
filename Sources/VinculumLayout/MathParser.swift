@@ -225,6 +225,19 @@ public enum MathParser {
             let base = parseAtom(&tokens) ?? .row([])
             return .overUnder(base: base, over: nil, under: under, kind: .plain)
 
+        case "overrightarrow", "overleftarrow", "overleftrightarrow",
+             "underrightarrow", "underleftarrow", "underleftrightarrow":
+            let kind: MathOverUnder
+            switch name {
+            case "overrightarrow": kind = .overRightArrow
+            case "overleftarrow": kind = .overLeftArrow
+            case "overleftrightarrow": kind = .overLeftRightArrow
+            case "underrightarrow": kind = .underRightArrow
+            case "underleftarrow": kind = .underLeftArrow
+            default: kind = .underLeftRightArrow
+            }
+            return .overUnder(base: parseAtom(&tokens) ?? .row([]), over: nil, under: nil, kind: kind)
+
         case "overbrace":
             let body = parseAtom(&tokens) ?? .row([])
             var label: MathNode?

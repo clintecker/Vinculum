@@ -68,6 +68,30 @@ extension MathLayoutEngine {
             }
             return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
 
+        case .overRightArrow, .overLeftArrow, .overLeftRightArrow,
+             .underRightArrow, .underLeftArrow, .underLeftRightArrow:
+            let baseBox = box(for: base, size: size, display: display)
+            let isOver = kind == .overRightArrow || kind == .overLeftArrow || kind == .overLeftRightArrow
+            let left = kind == .overLeftArrow || kind == .overLeftRightArrow
+                    || kind == .underLeftArrow || kind == .underLeftRightArrow
+            let right = kind == .overRightArrow || kind == .overLeftRightArrow
+                     || kind == .underRightArrow || kind == .underLeftRightArrow
+            let thickness = max(1, size * MathConstants.defaultRuleThickness)
+            let head = size * MathLayout.Arrow.headLength * 0.75
+            let width = max(baseBox.width, head * 2)
+            var elements = baseBox.placed(at: CGPoint(x: (width - baseBox.width) / 2, y: 0))
+            if isOver {
+                let y = baseBox.ascent + gap + head * 0.5
+                elements.append(horizontalArrow(x0: 0, x1: width, y: y, thickness: thickness,
+                                                 head: head, left: left, right: right))
+                return MathBox(width: width, ascent: y + head * 0.5, descent: baseBox.descent, elements: elements)
+            } else {
+                let y = -baseBox.descent - gap - head * 0.5
+                elements.append(horizontalArrow(x0: 0, x1: width, y: y, thickness: thickness,
+                                                 head: head, left: left, right: right))
+                return MathBox(width: width, ascent: baseBox.ascent, descent: -y + head * 0.5, elements: elements)
+            }
+
         case .plain:
             let baseBox = box(for: base, size: size, display: display)
             let width = max(baseBox.width, overBox?.width ?? 0, underBox?.width ?? 0)
@@ -86,6 +110,24 @@ extension MathLayoutEngine {
             }
             return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
         }
+    }
+
+    /// A horizontal shaft from `x0` to `x1` at height `y`, with a drawn
+    /// arrowhead on the left and/or right end.
+    private func horizontalArrow(x0: CGFloat, x1: CGFloat, y: CGFloat, thickness: CGFloat,
+                                 head: CGFloat, left: Bool, right: Bool) -> MathElement {
+        var ops: [PathOp] = [.move(CGPoint(x: x0, y: y)), .line(CGPoint(x: x1, y: y))]
+        if right {
+            ops += [.move(CGPoint(x: x1 - head, y: y + head * 0.5)),
+                    .line(CGPoint(x: x1, y: y)),
+                    .line(CGPoint(x: x1 - head, y: y - head * 0.5))]
+        }
+        if left {
+            ops += [.move(CGPoint(x: x0 + head, y: y + head * 0.5)),
+                    .line(CGPoint(x: x0, y: y)),
+                    .line(CGPoint(x: x0 + head, y: y - head * 0.5))]
+        }
+        return stroke(ops, width: thickness, cap: .round)
     }
 
     /// A horizontal curly brace spanning `width`, as four quadratic arcs with

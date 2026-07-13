@@ -115,6 +115,8 @@ final class MathGoldenRenderTests: XCTestCase {
         // Batch 6 — explicit spacing, smash, struts, lap
         .init(name: "explicit-spacing", latex: #"a \hspace{1em} b \quad p \mkern18mu q \quad x \thinspace y"#, expectation: .mustRender),
         .init(name: "smash-strut", latex: #"\frac{\smash{\sqrt{2}}}{2} + \mathstrut x"#, expectation: .mustRender),
+        // Batch 7 — vector / over-arrows
+        .init(name: "vector-arrows", latex: #"\overrightarrow{AB} + \overleftarrow{CD} = \overleftrightarrow{PQ}, \quad \underrightarrow{xy}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

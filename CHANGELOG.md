@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.12.0 — 2026-07-12
+
+Vector / over-arrows (Batch 7).
+
+- **`\overrightarrow` / `\overleftarrow` / `\overleftrightarrow`** draw a
+  stretchy arrow over the content, sized to its width — the vector notation
+  (`\overrightarrow{AB}`), with correct single- or double-headed arrows.
+- **`\underrightarrow` / `\underleftarrow` / `\underleftrightarrow`** draw the
+  same beneath the content.
+
+New `MathOverUnder` cases + a shared `horizontalArrow` stroke helper. +1
+fixture.
+
 ## 0.11.0 — 2026-07-12
 
 Spacing & box commands (Batch 6).

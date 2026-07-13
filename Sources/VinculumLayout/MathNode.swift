@@ -74,6 +74,11 @@ public enum MathOverUnder: Hashable, Sendable {
     case underbrace   // ⏟ drawn below the base
     case rightarrow   // stretchy → with the annotation(s) over/under it
     case leftarrow    // stretchy ←
+    // Arrows drawn OVER / UNDER the base itself, stretched to its width —
+    // \overrightarrow{AB} (vectors), \overleftarrow, \overleftrightarrow, and
+    // the \under… mirrors.
+    case overRightArrow, overLeftArrow, overLeftRightArrow
+    case underRightArrow, underLeftArrow, underLeftRightArrow
 }
 
 /// An accent decoration placed over (or, for rules, over/under) a base.

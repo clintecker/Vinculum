@@ -176,6 +176,8 @@ Point accents use ink extents (not the loose typographic box) for placement.
 | `\overbrace{}^{label}` | ✅ | `\overbrace{a+b+c}^{\text{sum}}` |
 | `\underbrace{}_{label}` | ✅ | `\underbrace{1+\cdots+n}_{n\text{ terms}}` |
 | `\xrightarrow` / `\xleftarrow` | ✅ | `A \xrightarrow{f} B \xrightarrow[g]{} C` |
+| `\overrightarrow` / `\overleftarrow` / `\overleftrightarrow` | ✅ | Vector arrows over the content: `\overrightarrow{AB}` |
+| `\underrightarrow` / `\underleftarrow` / `\underleftrightarrow` | ✅ | Arrows drawn under the content |
 
 Braces are drawn as hand-stroked quadratic arcs; arrows are a stretchy rule
 plus a drawn head sized to fit the label.
