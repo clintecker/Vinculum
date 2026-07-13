@@ -65,8 +65,8 @@ stack their limit *underneath* in display style (`\lim_{x\to0}`), matching
 TeX. Integrals (`\int`, `\oint`) correctly keep their scripts to the side even
 in display (`\nolimits`), while `\sum`-class operators stack.
 
-❌ Not in the table (degrade): `\iiint`, `\bigsqcup`, `\bigvee`, `\bigwedge`,
-`\bigoplus`, `\bigotimes`, `\bigodot`, `\coprod`.
+Extended set (all stack limits in display): `\iiint \iiiint \oiint \oiiint
+\coprod \biguplus \bigsqcup \bigvee \bigwedge \bigoplus \bigotimes \bigodot`.
 
 ---
 
@@ -258,13 +258,10 @@ Honest list of what degrades to a source fallback (or is silently ignored):
 
 - **`\genfrac`** — the general 5-argument fraction form is not parsed.
 - **True `\cfrac` alignment** — renders as a plain nested fraction.
-- **`\operatorname*` limit stacking** (parses, but renders upright),
-  **`\cancel`**, **`\not`**.
+- **`\operatorname*` limit stacking** (parses, but renders upright).
 - **Discrete delimiter variants** — auto-sized fences scale the base glyph
   continuously rather than stepping through the font's MATH-table size variants
   and extensible assemblies, so a very tall fence has slightly heavy strokes.
-- **Additional big operators** — `\iiint \coprod \bigsqcup \bigvee \bigwedge
-  \bigoplus \bigotimes \bigodot` are not in the symbol table.
 
 If you need one of these, it's a good first contribution — see the "add a
 command" walkthrough in [ARCHITECTURE.md](ARCHITECTURE.md).

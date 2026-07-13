@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.10.0 — 2026-07-12
+
+Coverage expansion (Batch 5) — beyond the original roadmap.
+
+- **Extended big operators.** `\iiint`, `\iiiint`, `\oiint`, `\oiiint`,
+  `\coprod`, `\biguplus`, `\bigsqcup`, `\bigvee`, `\bigwedge`, `\bigoplus`,
+  `\bigotimes`, `\bigodot` — all with the large-operator class (correct
+  spacing) and display-limit stacking.
+- **`\cancel` / `\bcancel` / `\xcancel`.** A diagonal strike (forward,
+  backward, or both) across the content, drawn over the kept base — the
+  fraction-cancellation notation.
+- **`\not`.** Slashes the following atom, so `\not=` → ≠, `\not\in` → ∉,
+  `\not\subset` → ⊄ — works over *any* relation, not just precomposed ones.
+
+New `MathDecoration` cases `.cancel`/`.bcancel`/`.xcancel`/`.negation`. +3
+golden fixtures.
+
 ## 0.9.0 — 2026-07-12
 
 Structural `array` (Batch 4) — completes the four-batch typesetting roadmap.

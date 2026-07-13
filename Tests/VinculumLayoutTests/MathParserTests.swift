@@ -276,9 +276,9 @@ final class MathParserTests: XCTestCase {
     // MARK: - Diagnostics (Phase 0)
 
     func testUnsupportedCommandsNamesTheCulprit() {
-        let node = MathParser.parse("\\xcancel{x}")
+        let node = MathParser.parse("\\cancelto{0}{x}")
         XCTAssertFalse(MathParser.isFullySupported(node))
-        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\xcancel"])
+        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\cancelto"])
     }
 
     func testUnsupportedCommandsDedupesAndPreservesOrder() {
@@ -293,8 +293,8 @@ final class MathParserTests: XCTestCase {
 
     func testUnsupportedCommandsFindsCulpritInsideStructure() {
         // A single unsupported command buried in a fraction still surfaces.
-        let node = MathParser.parse("\\frac{1}{\\xcancel{a}}")
-        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\xcancel"])
+        let node = MathParser.parse("\\frac{1}{\\notacommand{a}}")
+        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\notacommand"])
     }
 
     func testFullySupportedExpressionHasNoUnsupportedCommands() {

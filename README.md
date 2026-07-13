@@ -208,7 +208,9 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | `\pmod` / `\bmod` / `\pod` | ✅ | `a \equiv b \pmod{n}`, `a \bmod n` |
 | `\genfrac` (general 5-arg form) | ❌ | Not parsed (only `\binom` uses the node internally) |
 | `array` column specs & rules | ✅ | `{l c r \| c}` alignment + `\|` vertical rules + `\hline`/`\cline` — augmented matrices, bordered tables |
-| `\operatorname*`, `\cancel`, `\not` | ❌ | `\operatorname*` parses (renders upright, no stacked limit yet); `\cancel`/`\not` degrade |
+| `\cancel` / `\bcancel` / `\xcancel`, `\not` | ✅ | Diagonal strike-through; `\not` slashes any relation (`\not\subset` → ⊄) |
+| Extended big operators | ✅ | `\iiint \oiint \coprod \bigsqcup \bigvee \bigwedge \bigoplus \bigotimes \bigodot …` |
+| `\operatorname*` | ❌ | Parses/renders upright; `*` limit-stacking not honored yet |
 | Cramped-style script lowering | ❌ | Not modeled |
 
 ⚠️ = accepted but semantics not fully honored. ❌ = degrades to fallback.

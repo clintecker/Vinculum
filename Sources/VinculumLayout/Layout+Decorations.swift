@@ -32,6 +32,32 @@ extension MathLayoutEngine {
                 .close,
             ], width: line, cap: .butt, join: .miter))
             return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
+
+        case .cancel, .bcancel, .xcancel:
+            // Diagonal strike(s) across the base's box, base kept underneath.
+            let t = max(1, size * MathConstants.defaultRuleThickness)
+            let yb = -baseBox.descent, yt = baseBox.ascent
+            var elements = baseBox.elements
+            if decoration != .bcancel {   // forward ╱
+                elements.append(stroke([.move(CGPoint(x: 0, y: yb)), .line(CGPoint(x: baseBox.width, y: yt))], width: t))
+            }
+            if decoration != .cancel {    // backward ╲
+                elements.append(stroke([.move(CGPoint(x: 0, y: yt)), .line(CGPoint(x: baseBox.width, y: yb))], width: t))
+            }
+            return MathBox(width: baseBox.width, ascent: baseBox.ascent, descent: baseBox.descent,
+                           inkAscent: baseBox.inkAscent, elements: elements)
+
+        case .negation:
+            // \not — a short steep slash centered on the atom (a ≠ from =).
+            let t = max(1, size * MathConstants.defaultRuleThickness)
+            let axis = size * MathConstants.axisHeight
+            let cx = baseBox.width / 2
+            let halfH = size * 0.42, halfW = size * 0.15
+            var elements = baseBox.elements
+            elements.append(stroke([.move(CGPoint(x: cx - halfW, y: axis - halfH)),
+                                    .line(CGPoint(x: cx + halfW, y: axis + halfH))], width: t))
+            return MathBox(width: baseBox.width, ascent: max(baseBox.ascent, axis + halfH),
+                           descent: baseBox.descent, inkAscent: baseBox.inkAscent, elements: elements)
         }
     }
 }

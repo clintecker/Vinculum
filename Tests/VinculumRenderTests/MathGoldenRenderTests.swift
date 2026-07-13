@@ -108,6 +108,10 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "array-augmented", latex: #"\left[ \begin{array}{cc|c} 1 & 0 & 3 \\ 0 & 1 & 5 \end{array} \right]"#, expectation: .mustRender),
         .init(name: "array-bordered", latex: #"\begin{array}{|r|l|} \hline x & 1 \\ \hline y^2 & 2 \\ \hline \end{array}"#, expectation: .mustRender),
         .init(name: "array-aligned-cols", latex: #"\begin{array}{lcr} 1 & 22 & 333 \\ 4444 & 5 & 66 \end{array}"#, expectation: .mustRender),
+        // Batch 5 — more big operators, \cancel family, \not
+        .init(name: "big-operators-ext", latex: #"\bigoplus_{i=1}^{n} V_i \quad \coprod_j X_j \quad \iiint_V f\, dV"#, expectation: .mustRender),
+        .init(name: "cancel", latex: #"\frac{\cancel{a}\, b}{\cancel{a}} = b, \quad \xcancel{x^2}"#, expectation: .mustRender),
+        .init(name: "not-relations", latex: #"a \not= b, \quad x \not\in A, \quad P \not\subset Q"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

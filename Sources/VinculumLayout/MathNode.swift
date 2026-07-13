@@ -50,12 +50,17 @@ public indirect enum MathNode: Hashable, Sendable {
     case unsupported(String)
 }
 
-/// A `.decorated` treatment: a frame or reserved (invisible) space.
+/// A `.decorated` treatment: a frame, reserved (invisible) space, or a
+/// strike-through.
 public enum MathDecoration: Hashable, Sendable {
     case boxed        // \boxed — stroked frame with padding
     case phantom      // reserve full box, draw nothing
     case hphantom     // reserve width only
     case vphantom     // reserve height only
+    case cancel       // \cancel — a forward diagonal strike (╱)
+    case bcancel      // \bcancel — a backward diagonal strike (╲)
+    case xcancel      // \xcancel — both diagonals (╳)
+    case negation     // \not — a short negation slash centered on the atom
 }
 
 /// How an `.overUnder` decoration is drawn between base and annotations.

@@ -264,6 +264,15 @@ public enum MathParser {
 
         case "boxed":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .boxed)
+        case "cancel":
+            return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .cancel)
+        case "bcancel":
+            return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .bcancel)
+        case "xcancel":
+            return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .xcancel)
+        case "not":
+            // \not\subset, \not= : negate the FOLLOWING atom with a slash.
+            return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .negation)
         case "phantom":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .phantom)
         case "hphantom":

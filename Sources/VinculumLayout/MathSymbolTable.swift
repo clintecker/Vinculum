@@ -31,8 +31,14 @@ extension MathParser {
         // Large operators.
         "sum": ("∑", .largeOperator), "prod": ("∏", .largeOperator),
         "int": ("∫", .largeOperator), "iint": ("∬", .largeOperator),
-        "oint": ("∮", .largeOperator), "bigcup": ("⋃", .largeOperator),
-        "bigcap": ("⋂", .largeOperator),
+        "iiint": ("∭", .largeOperator), "iiiint": ("⨌", .largeOperator),
+        "oint": ("∮", .largeOperator), "oiint": ("∯", .largeOperator),
+        "oiiint": ("∰", .largeOperator),
+        "bigcup": ("⋃", .largeOperator), "bigcap": ("⋂", .largeOperator),
+        "coprod": ("∐", .largeOperator), "biguplus": ("⨄", .largeOperator),
+        "bigsqcup": ("⨆", .largeOperator), "bigvee": ("⋁", .largeOperator),
+        "bigwedge": ("⋀", .largeOperator), "bigoplus": ("⨁", .largeOperator),
+        "bigotimes": ("⨂", .largeOperator), "bigodot": ("⨀", .largeOperator),
         // Binary operators.
         "pm": ("±", .binary), "mp": ("∓", .binary), "times": ("×", .binary),
         "div": ("÷", .binary), "cdot": ("⋅", .binary), "ast": ("∗", .binary),
