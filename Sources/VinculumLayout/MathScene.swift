@@ -72,6 +72,24 @@ public struct GlyphMetrics: Sendable {
 /// measurer needs nothing more. Injected by the host so layout is portable.
 public typealias MathTextMeasurer = @Sendable (_ text: String, _ size: CGFloat, _ mono: Bool) -> GlyphMetrics
 
+/// A discrete size variant for a stretchy delimiter from the font's MATH
+/// table — a single purpose-drawn taller glyph (constant stroke weight),
+/// addressed by glyph ID because variant glyphs are usually unencoded.
+public struct DelimiterShape: Sendable {
+    public var glyphID: UInt16
+    public var metrics: GlyphMetrics
+    public init(glyphID: UInt16, metrics: GlyphMetrics) {
+        self.glyphID = glyphID; self.metrics = metrics
+    }
+}
+
+/// Injected MATH-table variant selection: given a base delimiter glyph and a
+/// minimum height (points) at `size`, returns the smallest discrete size
+/// variant reaching it, or `nil` — in which case the caller falls back to
+/// continuous glyph scaling. Optional, so headless/Linux layout is unaffected.
+public typealias MathDelimiterProvider =
+    @Sendable (_ baseGlyph: String, _ minHeight: CGFloat, _ size: CGFloat) -> DelimiterShape?
+
 /// A segment of a stroked path, in scene coordinates (y-up).
 public enum PathOp: Sendable {
     case move(CGPoint)
@@ -94,11 +112,15 @@ public enum MathElement: Sendable {
     case rule(CGRect, color: MathColor?)
     /// A stroked path — radical signs, braces, arrows, box borders.
     case stroke(path: [PathOp], width: CGFloat, cap: StrokeCap, join: StrokeJoin, color: MathColor?)
+    /// A single glyph addressed by ID (a MATH-table delimiter size variant),
+    /// drawn in the math font at `size` with its origin at the baseline.
+    case glyph(id: UInt16, size: CGFloat, origin: CGPoint, color: MathColor?)
 
     /// The explicit `\color` this primitive carries, or `nil` for theme ink.
     public var color: MathColor? {
         switch self {
-        case let .glyphs(_, _, _, _, c), let .rule(_, c), let .stroke(_, _, _, _, c): return c
+        case let .glyphs(_, _, _, _, c), let .rule(_, c), let .stroke(_, _, _, _, c),
+             let .glyph(_, _, _, c): return c
         }
     }
 
@@ -121,6 +143,8 @@ public enum MathElement: Sendable {
                 case .close: return .close
                 }
             }, width: w, cap: cap, join: join, color: c)
+        case let .glyph(id, s, o, c):
+            return .glyph(id: id, size: s, origin: CGPoint(x: o.x + d.x, y: o.y + d.y), color: c)
         }
     }
 }

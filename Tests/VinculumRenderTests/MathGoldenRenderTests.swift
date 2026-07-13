@@ -144,6 +144,10 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "over-brackets", latex: #"\overbracket{a + b + c}^{k} \quad \underbracket{x + y}_{m} \quad \overparen{p + q} \quad \underparen{u + v} \quad \widecheck{ABC}"#, expectation: .mustRender),
         // Batch 15 — boxes: \fbox, \colorbox, \fcolorbox, \rule, \raisebox
         .init(name: "boxes", latex: #"\fbox{a+b} \quad \colorbox{yellow}{x^2} \quad \fcolorbox{red}{gray}{y+z} \quad a \rule{1.5em}{0.5pt} b \quad \raisebox{0.4em}{w}"#, expectation: .mustRender),
+        // Delimiter size-variants — tall fences should use font cuts, not scaling
+        .init(name: "tall-delimiters", latex: #"\left( \dfrac{a}{\dfrac{b}{\dfrac{c}{d}}} \right) \left[ \begin{matrix} w \\ x \\ y \\ z \end{matrix} \right] \left\{ \sum_{i=1}^{n} \frac{1}{i} \right\}"#, expectation: .mustRender),
+        // \cancelto
+        .init(name: "cancelto", latex: #"\cancelto{0}{\frac{x}{y}} + \cancelto{\infty}{n}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

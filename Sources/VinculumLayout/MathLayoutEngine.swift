@@ -8,6 +8,9 @@ import Foundation
 public struct MathLayoutEngine {
 
     let measure: MathTextMeasurer
+    /// Optional MATH-table delimiter variant provider; `nil` → continuous
+    /// glyph scaling (the platform-free / headless default).
+    let delimiters: MathDelimiterProvider?
     let baseSize: CGFloat
     /// The active `\color` override for the current subtree; `nil` primitives
     /// take the renderer's theme ink.
@@ -18,8 +21,10 @@ public struct MathLayoutEngine {
     /// sub-context copies of the engine, like `colorOverride`.
     var cramped = false
 
-    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat) {
+    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
+                delimiters: MathDelimiterProvider? = nil) {
         self.measure = measure
+        self.delimiters = delimiters
         self.baseSize = baseSize
         self.colorOverride = nil
     }

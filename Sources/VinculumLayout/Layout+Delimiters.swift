@@ -12,8 +12,20 @@ extension MathLayoutEngine {
         // measures each side from the axis, not the baseline), so an
         // off-baseline body still gets a fence tall enough on both ends.
         let half = max(bodyBox.ascent - axis, bodyBox.descent + axis, targetHeight / 2)
+        let target = 2 * half
+        // For clearly-tall fences, prefer a discrete MATH-table size variant
+        // (constant stroke weight). Small stretches scale fine with negligible
+        // distortion, so we skip the variant path there.
+        if target >= size * 2.0, let provider = delimiters, let shape = provider(glyph, target, size) {
+            let m = shape.metrics
+            let offset = axis - (m.ascent - m.descent) / 2
+            return MathBox(width: m.width, ascent: m.ascent + offset, descent: m.descent - offset,
+                           inkAscent: m.inkAscent + offset,
+                           elements: [.glyph(id: shape.glyphID, size: size,
+                                             origin: CGPoint(x: 0, y: offset), color: colorOverride)])
+        }
         let probe = glyphBox(glyph, size: size, italic: false)
-        let scale = max(1, 2 * half / max(probe.height, 1))
+        let scale = max(1, target / max(probe.height, 1))
         let scaled = glyphBox(glyph, size: size * scale, italic: false)
         // Center the fence's midline on the axis, not the body midline.
         let offset = axis - (scaled.ascent - scaled.descent) / 2

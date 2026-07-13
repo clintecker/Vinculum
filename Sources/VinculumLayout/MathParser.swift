@@ -416,6 +416,12 @@ public enum MathParser {
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .bcancel)
         case "xcancel":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .xcancel)
+        case "cancelto":
+            // \cancelto{target}{expr}: strike expr, target as a raised label.
+            let target = parseAtom(&tokens) ?? .row([])
+            let expr = parseAtom(&tokens) ?? .row([])
+            return .scripts(base: .decorated(base: expr, decoration: .cancel),
+                            subscript: nil, superscript: target)
         case "not":
             // \not\subset, \not= : negate the FOLLOWING atom with a slash.
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .negation)

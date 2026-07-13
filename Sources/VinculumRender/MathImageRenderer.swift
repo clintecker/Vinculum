@@ -38,6 +38,8 @@ public enum MathImageRenderer {
     }()
     /// The shared CoreText measurer feeding the platform-free layout engine.
     private static let measurer: MathTextMeasurer = CoreTextMeasurer.make()
+    /// MATH-table delimiter size-variant provider (thins tall-fence strokes).
+    private static let delimiterProvider: MathDelimiterProvider = CoreTextDelimiterProvider.make()
 
     /// An attachment string for the given LaTeX, or nil if unsupported.
     public static func attachmentString(
@@ -73,7 +75,8 @@ public enum MathImageRenderer {
         let node = MathParser.parse(latex)
         guard MathParser.isFullySupported(node) else { return negative }
 
-        let engine = MathLayoutEngine(measure: measurer, baseSize: display ? baseSize * 1.15 : baseSize)
+        let engine = MathLayoutEngine(measure: measurer, baseSize: display ? baseSize * 1.15 : baseSize,
+                                      delimiters: delimiterProvider)
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 

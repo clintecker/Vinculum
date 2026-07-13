@@ -265,7 +265,7 @@ so a definition in one block applies everywhere; later definitions win
 
 Honest list of what degrades to a source fallback (or is silently ignored):
 
-- **Discrete delimiter variants** — auto-sized fences scale the base glyph
+- **Extensible delimiter assembly & remaining variant glyphs** — tall `( ) [ ] { }` now use the font's MATH-table size variants; other delimiters and arbitrarily-tall fences still scale the base glyph
   continuously rather than stepping through the font's MATH-table size variants
   and extensible assemblies, so a very tall fence has slightly heavy strokes.
 

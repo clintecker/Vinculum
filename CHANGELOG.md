@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.23.0 — 2026-07-13
+
+Delimiter size-variants (the big one) + `\cancelto`.
+
+- **Discrete delimiter size-variants from the font's MATH table.** Tall
+  `\left…\right` fences now use the font's purpose-drawn size-variant glyphs
+  (constant stroke weight) instead of continuous point-scaling (which fattened
+  strokes). New: a runtime OpenType **MATH**-table parser
+  (`MathVariantTable` reads `MathVariants` → vertical glyph construction), a
+  glyph-by-ID scene primitive (`MathScene.glyph(id:)`), and an injected,
+  optional `MathDelimiterProvider` seam (nil on Linux/headless → the old
+  scaling path, so no regression). Engaged for clearly-tall fences of the
+  verified delimiters `( ) [ ] { }`; other delimiters and short stretches use
+  scaling. (Extensible assembly for arbitrarily-tall fences, and the remaining
+  delimiters, are the staged follow-up.)
+- **`\cancelto{target}{expr}`** — strike-through with a raised target label.
+
+`\sideset` and `\mathchoice` remain a low-frequency tail. All CIs green.
+
 ## 0.22.0 — 2026-07-13
 
 Box & rule decorations (Batch 15).

@@ -375,9 +375,9 @@ final class MathParserTests: XCTestCase {
     // MARK: - Diagnostics (Phase 0)
 
     func testUnsupportedCommandsNamesTheCulprit() {
-        let node = MathParser.parse("\\cancelto{0}{x}")
+        let node = MathParser.parse("\\sideset{x}")   // \sideset is genuinely unsupported
         XCTAssertFalse(MathParser.isFullySupported(node))
-        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\cancelto"])
+        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\sideset"])
     }
 
     func testUnsupportedCommandsDedupesAndPreservesOrder() {

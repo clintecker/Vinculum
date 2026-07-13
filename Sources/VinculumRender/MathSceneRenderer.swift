@@ -29,6 +29,16 @@ public enum MathSceneRenderer {
                 CTLineDraw(line, ctx)
                 ctx.restoreGState()
 
+            case let .glyph(id, size, o, color):
+                // A MATH-table delimiter size variant, addressed by glyph ID.
+                guard let font = MathFont.ctFont(size: size) else { break }
+                ctx.saveGState()
+                ctx.setFillColor(cgColor(color, theme))
+                var g = CGGlyph(id)
+                var pos = CGPoint(x: origin.x + o.x, y: origin.y + o.y)
+                CTFontDrawGlyphs(font, &g, &pos, 1, ctx)
+                ctx.restoreGState()
+
             case let .rule(r, color):
                 ctx.saveGState()
                 ctx.setFillColor(cgColor(color, theme))
