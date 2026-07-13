@@ -11,7 +11,7 @@ extension MathParser {
             return true
         case .row(let children):
             return children.allSatisfy(isFullySupported)
-        case .fraction(let n, let d):
+        case .fraction(let n, let d), .cfrac(let n, let d, _):
             return isFullySupported(n) && isFullySupported(d)
         case .radical(let degree, let radicand):
             return (degree.map(isFullySupported) ?? true) && isFullySupported(radicand)
@@ -70,7 +70,7 @@ extension MathParser {
                 break
             case .row(let children):
                 children.forEach(walk)
-            case .fraction(let n, let d):
+            case .fraction(let n, let d), .cfrac(let n, let d, _):
                 walk(n); walk(d)
             case .radical(let degree, let radicand):
                 degree.map(walk); walk(radicand)

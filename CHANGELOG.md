@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.0 — 2026-07-13
+
+True **`\cfrac`** continued fractions. Parts now lay out at full display size
+(no per-level shrink) with the denominator aligned — `\cfrac[l]` / `\cfrac[r]`
+/ default center. New `.cfrac(numerator:denominator:align:)` node, isolated
+from the shared `\frac`/`\genfrac` path. Goldens for the nested continued
+fraction regenerated (now full-size at every level).
+
 ## 0.19.0 — 2026-07-13
 
 Operator & atom-class machinery (Batch 12).

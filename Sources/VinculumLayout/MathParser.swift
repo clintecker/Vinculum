@@ -172,7 +172,7 @@ public enum MathParser {
     private static func commandNode(_ name: String, _ tokens: inout ArraySlice<Token>) -> MathNode {
         // Structural commands.
         switch name {
-        case "frac", "tfrac", "dfrac", "cfrac":
+        case "frac", "tfrac", "dfrac":
             let numerator = parseAtom(&tokens) ?? .row([])
             let denominator = parseAtom(&tokens) ?? .row([])
             let frac = MathNode.fraction(numerator: numerator, denominator: denominator)
@@ -181,6 +181,23 @@ public enum MathParser {
             case "tfrac": return .mathStyle(base: frac, display: false)
             default: return frac
             }
+
+        case "cfrac":
+            var align: CfracAlign = .center        // amsmath default is centered
+            if tokens.first == .character("[") {
+                tokens.removeFirst()
+                var s = ""
+                while let t = tokens.first, t != .character("]") {
+                    if case .character(let ch) = t { s.append(ch) }
+                    tokens.removeFirst()
+                }
+                if tokens.first == .character("]") { tokens.removeFirst() }
+                switch s.trimmingCharacters(in: .whitespaces) {
+                case "l": align = .left; case "r": align = .right; default: align = .center
+                }
+            }
+            return .cfrac(numerator: parseAtom(&tokens) ?? .row([]),
+                          denominator: parseAtom(&tokens) ?? .row([]), align: align)
 
         case "binom", "dbinom", "tbinom":
             let top = parseAtom(&tokens) ?? .row([])

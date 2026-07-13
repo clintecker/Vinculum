@@ -9,6 +9,9 @@ public indirect enum MathNode: Hashable, Sendable {
     /// Horizontal sequence.
     case row([MathNode])
     case fraction(numerator: MathNode, denominator: MathNode)
+    /// `\cfrac`: a continued fraction laid out at full display size (parts
+    /// don't shrink per level) with the denominator aligned left/center/right.
+    case cfrac(numerator: MathNode, denominator: MathNode, align: CfracAlign)
     case radical(degree: MathNode?, radicand: MathNode)
     case scripts(base: MathNode, subscript: MathNode?, superscript: MathNode?)
     /// Auto-sized fences around a body: ( ) [ ] { } | ‖.
@@ -61,6 +64,9 @@ public indirect enum MathNode: Hashable, Sendable {
     /// (the PRD rule: unknown input degrades, never errors).
     case unsupported(String)
 }
+
+/// `\cfrac` denominator alignment (`\cfrac[l]`/`[r]`/`[c]`).
+public enum CfracAlign: Hashable, Sendable { case left, center, right }
 
 /// A `.decorated` treatment: a frame, reserved (invisible) space, or a
 /// strike-through.

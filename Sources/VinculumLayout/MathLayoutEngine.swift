@@ -58,6 +58,9 @@ public struct MathLayoutEngine {
         case .fraction(let numerator, let denominator):
             return fractionBox(numerator, denominator, size: s, display: display)
 
+        case .cfrac(let num, let den, let align):
+            return cfracBox(num, den, align: align, size: s)
+
         case .radical(let degree, let radicand):
             return radicalBox(degree, radicand, size: s, display: display)
 
@@ -177,7 +180,7 @@ public struct MathLayoutEngine {
         case .functionName: return .largeOperator
         case .limitsOperator(let base): return atomClass(of: base)
         case .classified(_, let cls): return cls
-        case .fraction, .radical, .delimited, .fenced, .row, .matrix: return .ordinary
+        case .fraction, .cfrac, .radical, .delimited, .fenced, .row, .matrix: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary

@@ -10,6 +10,42 @@ extension MathLayoutEngine {
                    size: size, display: display)
     }
 
+    /// `\cfrac`: a continued fraction. Parts are laid out at FULL display size
+    /// (so nesting doesn't shrink) with the denominator aligned; the numerator
+    /// is always centered.
+    func cfracBox(_ num: MathNode, _ den: MathNode, align: CfracAlign, size: CGFloat) -> MathBox {
+        var numEngine = self; numEngine.cramped = false
+        var denEngine = self; denEngine.cramped = true
+        let topBox = numEngine.box(for: num, size: size, display: true)      // full size + display
+        let bottomBox = denEngine.box(for: den, size: size, display: true)
+
+        let ruleThickness = max(1, size * MathConstants.fractionRuleThickness)
+        let axis = size * MathConstants.axisHeight
+        let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
+        var shiftUp = size * MathConstants.fractionNumeratorShiftUp * 1.35
+        var shiftDown = size * MathConstants.fractionDenominatorShiftDown * 1.35
+        let minGap = size * MathLayout.Fraction.ruleGap
+        let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
+        if numClear < minGap { shiftUp += minGap - numClear }
+        let denClear = (axis - ruleThickness / 2) - (bottomBox.ascent - shiftDown)
+        if denClear < minGap { shiftDown += minGap - denClear }
+
+        let inset = size * MathLayout.Fraction.ruleInset
+        func placeX(_ b: MathBox, _ a: CfracAlign) -> CGFloat {
+            switch a {
+            case .center: return (width - b.width) / 2
+            case .left:   return inset
+            case .right:  return width - b.width - inset
+            }
+        }
+        var elements: [MathElement] = [rule(x: inset, y: axis - ruleThickness / 2,
+                                            width: width - inset * 2, height: ruleThickness)]
+        elements += topBox.placed(at: CGPoint(x: placeX(topBox, .center), y: shiftUp))
+        elements += bottomBox.placed(at: CGPoint(x: placeX(bottomBox, align), y: -shiftDown))
+        return MathBox(width: width, ascent: shiftUp + topBox.ascent,
+                       descent: shiftDown + bottomBox.descent, elements: elements)
+    }
+
     /// `\binom` and ruleless stacks: numerator over denominator with an
     /// optional rule and optional enclosing fences.
     func genfracBox(_ top: MathNode, _ bottom: MathNode, hasRule: Bool,

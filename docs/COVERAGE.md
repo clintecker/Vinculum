@@ -20,7 +20,7 @@ Legend: ✅ native render · ⚠️ accepted but semantics not fully honored ·
 | Command | Status | Example | Note |
 | --- | :---: | --- | --- |
 | `\frac` | ✅ | `\frac{a}{b}` | Ruled, axis-aligned |
-| `\cfrac` | ✅ | `\cfrac{1}{1+\cfrac{1}{x}}` | Renders as a plain nested fraction (no cfrac left/right alignment) |
+| `\cfrac` | ✅ | `\cfrac{1}{1+\cfrac{1}{x}}` | Full-size continued fraction; `[l]`/`[r]` denominator alignment |
 | `\binom` | ✅ | `\binom{n}{k}` | Ruleless, paren-fenced |
 | `\dfrac` / `\tfrac` | ✅ | `\dfrac{a}{b}` | Force display / text style regardless of the ambient context |
 | `\dbinom` / `\tbinom` | ✅ | `\dbinom{n}{k}` | Force display / text style |
@@ -265,7 +265,6 @@ so a definition in one block applies everywhere; later definitions win
 
 Honest list of what degrades to a source fallback (or is silently ignored):
 
-- **True `\cfrac` alignment** — renders as a plain nested fraction.
 - **Discrete delimiter variants** — auto-sized fences scale the base glyph
   continuously rather than stepping through the font's MATH-table size variants
   and extensible assemblies, so a very tall fence has slightly heavy strokes.

@@ -508,9 +508,12 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(right, ")")
     }
 
-    func testCfracIsAFraction() {
-        guard case .fraction = MathParser.parse("\\cfrac{1}{x}") else {
-            return XCTFail("expected fraction")
+    func testCfracIsItsOwnNode() {
+        guard case .cfrac(_, _, .center) = MathParser.parse("\\cfrac{1}{x}") else {
+            return XCTFail("expected .cfrac with default center alignment")
+        }
+        guard case .cfrac(_, _, .left) = MathParser.parse("\\cfrac[l]{1}{x}") else {
+            return XCTFail("expected left-aligned cfrac")
         }
     }
 
