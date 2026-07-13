@@ -101,6 +101,9 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "entanglement-entropy", latex: #"S(\rho_A) = -\operatorname{tr}\left(\rho_A \log_2 \rho_A\right)"#, expectation: .mustRender),
         .init(name: "schmidt-decomposition", latex: #"|\psi\rangle_{AB} = \sum_i \sqrt{\lambda_i}\; |i\rangle_A \otimes |i\rangle_B"#, expectation: .mustRender),
         .init(name: "density-matrix", latex: #"\rho = \sum_i p_i\, |\psi_i\rangle\langle\psi_i|"#, expectation: .mustRender),
+        // Batch 3 — TeX fidelity: unary-sign spacing, cramped scripts
+        .init(name: "unary-signs", latex: #"x = -1, \quad (-a)(-b) = ab"#, expectation: .mustRender),
+        .init(name: "cramped-scripts", latex: #"\frac{1}{n^2} + \sqrt{a^2 + b^2}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

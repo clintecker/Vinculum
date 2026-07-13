@@ -18,6 +18,10 @@ public enum MathConstants {
     public static let scriptPercentScaleDown: CGFloat = 0.70
     public static let scriptScriptPercentScaleDown: CGFloat = 0.50
     public static let superscriptShiftUp: CGFloat = 0.363
+    /// TeX's σ15 (sup3): the lower superscript shift used in cramped style —
+    /// under a radical, in a denominator, or on a subscript. This is what makes
+    /// the exponent in √(x²) or the denominator of a fraction ride lower.
+    public static let superscriptShiftUpCramped: CGFloat = 0.289
     public static let subscriptShiftDown: CGFloat = 0.247
     public static let radicalRuleThickness: CGFloat = 0.040
     public static let radicalVerticalGap: CGFloat = 0.148

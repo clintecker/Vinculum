@@ -7,10 +7,16 @@ extension MathLayoutEngine {
     /// which differ only in the target height they pass.
     func stretchedFence(_ glyph: String, targetHeight: CGFloat, around bodyBox: MathBox, size: CGFloat) -> MathBox {
         guard !glyph.isEmpty else { return .empty }
+        let axis = size * MathConstants.axisHeight
+        // Size the fence to cover the body symmetrically about the axis (TeX
+        // measures each side from the axis, not the baseline), so an
+        // off-baseline body still gets a fence tall enough on both ends.
+        let half = max(bodyBox.ascent - axis, bodyBox.descent + axis, targetHeight / 2)
         let probe = glyphBox(glyph, size: size, italic: false)
-        let scale = max(1, targetHeight / max(probe.height, 1))
+        let scale = max(1, 2 * half / max(probe.height, 1))
         let scaled = glyphBox(glyph, size: size * scale, italic: false)
-        let offset = (bodyBox.ascent - bodyBox.descent) / 2 - (scaled.ascent - scaled.descent) / 2
+        // Center the fence's midline on the axis, not the body midline.
+        let offset = axis - (scaled.ascent - scaled.descent) / 2
         return MathBox(width: scaled.width, ascent: scaled.ascent + offset, descent: scaled.descent - offset,
                        elements: scaled.placed(at: CGPoint(x: 0, y: offset)))
     }

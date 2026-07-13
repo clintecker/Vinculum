@@ -82,6 +82,43 @@ final class MathLayoutTests: XCTestCase {
         XCTAssertGreaterThan(big.height, plain.height * 1.4, "\\Big enlarges the delimiter")
     }
 
+    func testUnaryMinusAfterRelationIsReclassified() {
+        // x = -1 : the minus after a relation is unary → Ord (tight spacing).
+        let out = MathLayoutEngine.reclassifyBinaries([.ordinary, .relation, .binary, .ordinary])
+        XCTAssertEqual(out[2], .ordinary)
+    }
+
+    func testLeadingBinaryIsUnary() {
+        XCTAssertEqual(MathLayoutEngine.reclassifyBinaries([.binary, .ordinary])[0], .ordinary)
+    }
+
+    func testBinaryBetweenOrdinariesStaysBinary() {
+        XCTAssertEqual(MathLayoutEngine.reclassifyBinaries([.ordinary, .binary, .ordinary])[1], .binary)
+    }
+
+    func testBinaryBeforeRelationBecomesOrdinary() {
+        // `+ =` : the binary left of a relation becomes Ord.
+        let out = MathLayoutEngine.reclassifyBinaries([.ordinary, .binary, .relation, .ordinary])
+        XCTAssertEqual(out[1], .ordinary)
+    }
+
+    func testCrampedSuperscriptRidesLower() {
+        // The same z^2 laid out in cramped style is shorter — the exponent
+        // sits lower (superscriptShiftUpCramped < superscriptShiftUp). Uses a
+        // low-ink measurer so the nominal shift, not the tall-base clamp,
+        // decides the height.
+        let lowInk: MathTextMeasurer = { text, size, _ in
+            GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.7, descent: size * 0.2,
+                         inkAscent: size * 0.4, inkDescent: 0)
+        }
+        let node = MathParser.parse("z^2")
+        var normal = MathLayoutEngine(measure: lowInk, baseSize: 10)
+        var cramped = MathLayoutEngine(measure: lowInk, baseSize: 10); cramped.cramped = true
+        let n = normal.box(for: node, size: 10, display: false)
+        let c = cramped.box(for: node, size: 10, display: false)
+        XCTAssertLessThan(c.ascent, n.ascent, "the cramped superscript rides lower")
+    }
+
     func testRadicalEmitsAStroke() {
         let s = engine().layout(MathParser.parse("\\sqrt{2}"))
         let strokes = s.elements.filter { if case .stroke = $0 { return true }; return false }

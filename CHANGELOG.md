@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.8.0 — 2026-07-12
+
+Deep TeX-fidelity batch (Batch 3) — the subtle metrics a typographer notices,
+straight from Appendix G. Rendering changes; goldens regenerated and each
+change verified by eye.
+
+- **Binary/unary reclassification** (TeXbook p.170). A `Bin` atom with no left
+  operand — at the start of a list or after Bin/Op/Rel/Open/Punct — is really a
+  unary sign and becomes `Ord`; a `Bin` just left of a Rel/Close/Punct does
+  too. So `x = -1` now sets a thick space after `=` and a tight unary minus,
+  instead of medium space around the minus.
+- **Cramped style.** Superscripts sit lower in cramped contexts — denominators,
+  radicands, and subscripts — using the font's σ15 (`superscriptShiftUpCramped`).
+  The exponent in `√(x²)` or a fraction's denominator now rides lower than in a
+  numerator, matching TeX. Threaded through the engine like `\color`
+  (numerator uncramped / denominator cramped; superscript uncramped / subscript
+  cramped; radicand cramped).
+- **TeX fraction shift-model.** Numerator and denominator are positioned by a
+  nominal baseline shift (the font's `fractionNumeratorShiftUp` /
+  `DenominatorShiftDown`, previously declared-but-unused), increased only as
+  needed to keep a minimum gap from the rule — so a short `1` and a deep
+  numerator share a stable baseline, instead of floating a fixed gap above the
+  bar.
+- **Axis-centered delimiters.** Auto-sized `\left…\right` fences are now
+  centered on the math axis and sized to cover the body symmetrically about it
+  (TeX measures each side from the axis), so an off-baseline body gets a fence
+  tall enough on both ends. (Discrete size-variant selection is a follow-up —
+  see COVERAGE.md.)
+
++11 tests (99 total). No new commands — pure fidelity.
+
 ## 0.7.0 — 2026-07-12
 
 Common-commands batch (Batch 2 of the typesetting roadmap) — the constructs

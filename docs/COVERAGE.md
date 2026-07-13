@@ -262,7 +262,9 @@ Honest list of what degrades to a source fallback (or is silently ignored):
   `\hline`/`\cline` are consumed but not applied.
 - **`\operatorname*` limit stacking** (parses, but renders upright),
   **`\cancel`**, **`\not`**.
-- **Cramped-style script lowering** — the cramped style is not modeled.
+- **Discrete delimiter variants** — auto-sized fences scale the base glyph
+  continuously rather than stepping through the font's MATH-table size variants
+  and extensible assemblies, so a very tall fence has slightly heavy strokes.
 - **Additional big operators** — `\iiint \coprod \bigsqcup \bigvee \bigwedge
   \bigoplus \bigotimes \bigodot` are not in the symbol table.
 

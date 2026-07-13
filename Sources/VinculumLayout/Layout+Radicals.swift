@@ -6,7 +6,9 @@ extension MathLayoutEngine {
     /// upstroke → overline) with the body under the vinculum and the optional
     /// degree tucked into the crook.
     func radicalBox(_ degree: MathNode?, _ radicand: MathNode, size: CGFloat, display: Bool) -> MathBox {
-        let body = box(for: radicand, size: size, display: display)
+        // The radicand is cramped (an exponent under the root rides lower).
+        var radicandEngine = self; radicandEngine.cramped = true
+        let body = radicandEngine.box(for: radicand, size: size, display: display)
         let ruleThickness = max(1, size * MathConstants.radicalRuleThickness)
         let gap = size * MathConstants.radicalVerticalGap
         let signWidth = size * MathLayout.Radical.signWidth

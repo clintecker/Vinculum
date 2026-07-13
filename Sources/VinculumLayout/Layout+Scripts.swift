@@ -15,15 +15,20 @@ extension MathLayoutEngine {
         }
         let baseBox = box(for: base, size: size, display: display)
         let scriptSize = size * MathConstants.scriptPercentScaleDown
-        let supBox = sup.map { box(for: $0, size: scriptSize, display: false) }
-        let subBox = sub.map { box(for: $0, size: scriptSize, display: false) }
+        // A superscript is uncramped; a subscript is cramped (TeX sup_style /
+        // sub_style), so nested exponents inside a subscript ride lower.
+        var supEngine = self; supEngine.cramped = false
+        var subEngine = self; subEngine.cramped = true
+        let supBox = sup.map { supEngine.box(for: $0, size: scriptSize, display: false) }
+        let subBox = sub.map { subEngine.box(for: $0, size: scriptSize, display: false) }
 
-        // TeX Appendix G: take the nominal shift, but raise it so the script
-        // clears a tall base's ink — an exponent on (…)² rides above the paren,
-        // not through it — and keep a minimum gap between a coexisting super-
-        // and subscript so they can't collide.
-        let supRaise = max(size * MathConstants.superscriptShiftUp,
-                           baseBox.inkAscent - scriptSize * 0.25)
+        // TeX Appendix G: take the nominal shift (lower in cramped style), but
+        // raise it so the script clears a tall base's ink — an exponent on (…)²
+        // rides above the paren, not through it — and keep a minimum gap
+        // between a coexisting super- and subscript so they can't collide.
+        let supNominal = size * (cramped ? MathConstants.superscriptShiftUpCramped
+                                         : MathConstants.superscriptShiftUp)
+        let supRaise = max(supNominal, baseBox.inkAscent - scriptSize * 0.25)
         var subDrop = max(size * MathConstants.subscriptShiftDown,
                           baseBox.descent + scriptSize * 0.15)
         if let supBox, let subBox {

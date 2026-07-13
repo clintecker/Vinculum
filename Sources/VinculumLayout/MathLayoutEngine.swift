@@ -12,6 +12,11 @@ public struct MathLayoutEngine {
     /// The active `\color` override for the current subtree; `nil` primitives
     /// take the renderer's theme ink.
     var colorOverride: MathColor?
+    /// TeX "cramped" style: set under a radical, in a denominator, and on a
+    /// subscript. In cramped style superscripts are shifted up less, so an
+    /// exponent inside √(x²) or a denominator rides lower. Propagated by
+    /// sub-context copies of the engine, like `colorOverride`.
+    var cramped = false
 
     public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat) {
         self.measure = measure
@@ -134,12 +139,14 @@ public struct MathLayoutEngine {
         for child in children {
             boxes.append((box(for: child, size: size, display: display), atomClass(of: child)))
         }
+        let classes = Self.reclassifyBinaries(boxes.map(\.cls))
 
         var width: CGFloat = 0, ascent: CGFloat = 0, descent: CGFloat = 0
         var placements: [(MathBox, CGFloat)] = []
         var previous: MathAtomClass?
 
-        for (box, cls) in boxes {
+        for (i, entry) in boxes.enumerated() {
+            let box = entry.box, cls = classes[i]
             if let previous, let cls {
                 width += spacing(between: previous, and: cls) * size
             }
@@ -171,6 +178,31 @@ public struct MathLayoutEngine {
         case .bigDelimiter(_, _, let cls): return cls
         case .space, .unsupported: return nil
         }
+    }
+
+    /// TeX's binary/unary reclassification (TeXbook p.170): a Bin atom with no
+    /// valid left operand (at the start, or after Bin/Op/Rel/Open/Punct) is
+    /// really a unary sign, so it becomes Ord; and a Bin immediately left of a
+    /// Rel/Close/Punct becomes Ord too. This is what makes `x = -1` set a thick
+    /// space after `=` and a tight unary minus, not a medium space around it.
+    /// `nil` classes (spacing/unsupported) don't participate or reset state.
+    static func reclassifyBinaries(_ input: [MathAtomClass?]) -> [MathAtomClass?] {
+        var classes = input
+        var prevIdx: Int?
+        for i in classes.indices {
+            guard let c = classes[i] else { continue }
+            if c == .binary {
+                let p = prevIdx.flatMap { classes[$0] }
+                if p == nil || p == .binary || p == .largeOperator
+                    || p == .relation || p == .opening || p == .punctuation {
+                    classes[i] = .ordinary
+                }
+            } else if c == .relation || c == .closing || c == .punctuation {
+                if let pi = prevIdx, classes[pi] == .binary { classes[pi] = .ordinary }
+            }
+            prevIdx = i
+        }
+        return classes
     }
 
     /// TeX inter-atom spacing (in ems): thin 3/18 · medium 4/18 · thick 5/18.
