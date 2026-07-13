@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.13.0 — 2026-07-12
+
+Math-in-text and symbol fill-in (Batch 8).
+
+- **Math inside `\text{}`.** `$…$` segments in a text body now render as math:
+  `\text{$n$ terms}` gives an italic `n` then upright " terms";
+  `\text{for all $\epsilon>0$}` embeds the inequality. (Closes the gap the
+  stress-test surfaced where `$n$` rendered literally.)
+- **More symbols:** `\land \lor \gets \colon \rightleftharpoons \triangleq
+  \coloneqq \bigstar \dotsb \dotsc \dotsm` — with correct atom classes
+  (`\colon` is punctuation, `\land`/`\lor` binary).
+
++1 test (109 total).
+
 ## 0.12.0 — 2026-07-12
 
 Vector / over-arrows (Batch 7).

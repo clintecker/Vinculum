@@ -150,6 +150,15 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(rule?.toColumn, 2)
     }
 
+    func testTextWithEmbeddedMathParsesMath() {
+        // \text{$n$ terms} → italic math n, then upright " terms".
+        guard case .row(let parts) = MathParser.parse(#"\text{$n$ terms}"#) else {
+            return XCTFail("expected a row of math + text")
+        }
+        XCTAssertEqual(parts.first, .symbol("n", .ordinary, style: .italic))
+        XCTAssertEqual(parts.last, .functionName(" terms"))
+    }
+
     func testHspaceParsesEmLength() {
         guard case .space(let w) = MathParser.parse("\\hspace{2em}") else { return XCTFail("expected space") }
         XCTAssertEqual(w, 2.0, accuracy: 0.001)

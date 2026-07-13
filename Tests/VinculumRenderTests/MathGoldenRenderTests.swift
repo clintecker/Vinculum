@@ -117,6 +117,9 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "smash-strut", latex: #"\frac{\smash{\sqrt{2}}}{2} + \mathstrut x"#, expectation: .mustRender),
         // Batch 7 — vector / over-arrows
         .init(name: "vector-arrows", latex: #"\overrightarrow{AB} + \overleftarrow{CD} = \overleftrightarrow{PQ}, \quad \underrightarrow{xy}"#, expectation: .mustRender),
+        // Batch 8 — math inside \text, logic symbols
+        .init(name: "math-in-text", latex: #"\overbrace{x_1 + \cdots + x_n}^{\text{$n$ terms}} \quad \text{for all $\epsilon > 0$}"#, expectation: .mustRender),
+        .init(name: "logic-symbols", latex: #"p \land q \lor \neg r \implies (a \le b \colon a \in S)"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

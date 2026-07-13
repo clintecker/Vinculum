@@ -39,6 +39,12 @@ extension MathParser {
         "bigsqcup": ("⨆", .largeOperator), "bigvee": ("⋁", .largeOperator),
         "bigwedge": ("⋀", .largeOperator), "bigoplus": ("⨁", .largeOperator),
         "bigotimes": ("⨂", .largeOperator), "bigodot": ("⨀", .largeOperator),
+        // Logic / misc additions.
+        "land": ("∧", .binary), "lor": ("∨", .binary),
+        "gets": ("←", .relation), "rightleftharpoons": ("⇌", .relation),
+        "triangleq": ("≜", .relation), "coloneqq": ("≔", .relation),
+        "colon": (":", .punctuation), "bigstar": ("★", .ordinary),
+        "dotsb": ("⋯", .ordinary), "dotsc": ("…", .ordinary), "dotsm": ("⋯", .ordinary),
         // Binary operators.
         "pm": ("±", .binary), "mp": ("∓", .binary), "times": ("×", .binary),
         "div": ("÷", .binary), "cdot": ("⋅", .binary), "ast": ("∗", .binary),

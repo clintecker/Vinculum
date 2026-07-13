@@ -192,7 +192,7 @@ public enum MathParser {
             // The tokenizer captured the body verbatim (spaces preserved).
             if case .rawText(let s)? = tokens.first {
                 tokens.removeFirst()
-                return .functionName(s)
+                return textWithEmbeddedMath(s)
             }
             return .row([])
 
@@ -465,6 +465,25 @@ public enum MathParser {
             ? .array(ArraySpec(alignments: columnAligns, columnRules: columnRules, rowRules: rowRules))
             : style
         return .matrix(rows: rows, left: left, right: right, style: finalStyle)
+    }
+
+    /// Splits a `\text{…}` body on `$` so embedded math renders as math:
+    /// `\text{$n$ terms}` → the italic variable `n` followed by upright " terms".
+    private static func textWithEmbeddedMath(_ s: String) -> MathNode {
+        guard s.contains("$") else { return .functionName(s) }
+        var parts: [MathNode] = []
+        var inMath = false
+        var buf = ""
+        func flush() {
+            guard !buf.isEmpty else { return }
+            parts.append(inMath ? parse(buf) : .functionName(buf))
+            buf = ""
+        }
+        for ch in s {
+            if ch == "$" { flush(); inMath.toggle() } else { buf.append(ch) }
+        }
+        flush()
+        return parts.count == 1 ? parts[0] : .row(parts)
     }
 
     /// Parses an `array` column spec like `l|c|r` into per-column alignment and
