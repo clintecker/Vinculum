@@ -153,7 +153,9 @@ extension MathLayoutEngine {
             case .aligned: x = col % 2 == 0 ? colX[col] + (colWidth[col] - box.width) : colX[col]
             case .centered, .substack: x = colX[col] + (colWidth[col] - box.width) / 2
             case .array(let spec):
-                switch col < spec.alignments.count ? spec.alignments[col] : .center {
+                // Out-of-range columns take the last spec entry, so a single
+                // uniform alignment (matrix*[r]) covers every column.
+                switch col < spec.alignments.count ? spec.alignments[col] : (spec.alignments.last ?? .center) {
                 case .left: x = colX[col]
                 case .right: x = colX[col] + (colWidth[col] - box.width)
                 case .center: x = colX[col] + (colWidth[col] - box.width) / 2

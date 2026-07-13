@@ -133,6 +133,10 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "symbols-relations", latex: #"a \leqslant b \lll c \precsim d, \quad x \nleq y \nsim z \ncong w"#, expectation: .mustRender),
         .init(name: "symbols-arrows", latex: #"p \rightsquigarrow q \twoheadrightarrow r, \quad A \leftrightarrows B, \quad u \rightharpoonup v \leftrightharpoons w"#, expectation: .mustRender),
         .init(name: "symbols-ops", latex: #"a \ltimes b \rtimes c, \quad x \boxdot y \circledast z \dotplus w, \quad \hslash \, \measuredangle \, \blacktriangle"#, expectation: .mustRender),
+        // Batch 13 — environment fixes
+        .init(name: "alignat-env", latex: #"\begin{alignat}{2} x &= 1 & \quad y &= 2 \\ a &= 30 & \quad b &= 4 \end{alignat}"#, expectation: .mustRender),
+        .init(name: "matrix-star-right", latex: #"\begin{pmatrix*}[r] -1 & 2 \\ 30 & -4 \end{pmatrix*}"#, expectation: .mustRender),
+        .init(name: "multline-env", latex: #"\begin{multline} a + b + c + d \\ + e + f + g + h \end{multline}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

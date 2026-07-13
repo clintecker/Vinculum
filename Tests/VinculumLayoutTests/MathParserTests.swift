@@ -159,6 +159,26 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(parts.last, .functionName(" terms"))
     }
 
+    func testAlignatConsumesColumnCount() {
+        // \begin{alignat}{2} must consume the {2}; it used to leak as cell 1.
+        guard case .matrix(let rows, _, _, _) =
+                MathParser.parse(#"\begin{alignat}{2} x &= 1 \end{alignat}"#) else {
+            return XCTFail("expected a matrix")
+        }
+        XCTAssertEqual(rows.first?.first, .symbol("x", .ordinary, style: .italic),
+                       "first cell is x, not the count 2")
+    }
+
+    func testStarredMatrixTakesAlignmentBracket() {
+        // pmatrix*[r] → array-style right alignment, and the [r] is consumed.
+        guard case .matrix(let rows, "(", ")", .array(let spec)) =
+                MathParser.parse(#"\begin{pmatrix*}[r] a & b \\ c & d \end{pmatrix*}"#) else {
+            return XCTFail("expected an array-styled pmatrix")
+        }
+        XCTAssertEqual(spec.alignments, [.right])
+        XCTAssertEqual(rows.first?.first, .symbol("a", .ordinary, style: .italic))
+    }
+
     func testMiddleProducesFenced() {
         guard case .fenced(let fences, let segments) = MathParser.parse(#"\left( a \middle| b \right)"#) else {
             return XCTFail("expected a fenced node")

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.18.0 — 2026-07-12
+
+Environment fixes (Batch 13) — two real parser bugs + two new environments.
+
+- **`alignat{n}` bug fixed.** The mandatory `{n}` column-count argument was not
+  consumed, so it leaked into the first cell. Now consumed (like `alignedat`).
+- **`matrix*[r]` / `pmatrix*[r]` bug fixed.** The optional `[l|c|r]` alignment
+  bracket leaked as literal `[ r ]` into cell 1. Now consumed and applied —
+  uniform column alignment via the array path (great for signed numeric
+  matrices). The `.array` alignment falls back to the last spec entry, so one
+  entry covers all columns.
+- **`gathered`** and **`multline`/`multline*`** now lay out aligned (were
+  falling through to a centered grid).
+
++2 tests (115 total).
+
 ## 0.17.0 — 2026-07-12
 
 Symbol sweep (Batch 11) — **157 new symbols** with correct TeX atom classes

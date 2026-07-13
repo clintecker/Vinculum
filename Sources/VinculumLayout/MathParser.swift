@@ -460,19 +460,20 @@ public enum MathParser {
     /// bare centered grid so the content survives.
     private static func parseEnvironment(_ tokens: inout ArraySlice<Token>) -> MathNode {
         let env = readBraceName(&tokens)
-        let base = env.hasSuffix("*") ? String(env.dropLast()) : env
+        let starred = env.hasSuffix("*")
+        let base = starred ? String(env.dropLast()) : env
 
-        // `array` carries a column spec (l/c/r + `|` rules); `alignedat` a
-        // column count we don't need.
+        // `array` carries a column spec (l/c/r + `|` rules); `alignedat`/
+        // `alignat` a column count we don't need.
         var columnAligns: [ArraySpec.Align] = []
         var columnRules: Set<Int> = []
         if base == "array" {
             (columnAligns, columnRules) = parseColumnSpec(readBraceName(&tokens))
-        } else if base == "alignedat" {
-            _ = readBraceName(&tokens)
+        } else if base == "alignedat" || base == "alignat" {
+            _ = readBraceName(&tokens)          // consume the {n} count (was leaking into cell 1)
         }
 
-        let (left, right, style): (String, String, MathMatrixStyle)
+        var (left, right, style): (String, String, MathMatrixStyle)
         switch base {
         case "pmatrix": (left, right, style) = ("(", ")", .centered)
         case "bmatrix": (left, right, style) = ("[", "]", .centered)
@@ -481,9 +482,25 @@ public enum MathParser {
         case "Vmatrix": (left, right, style) = ("‖", "‖", .centered)
         case "cases":   (left, right, style) = ("{", "", .cases)
         case "smallmatrix": (left, right, style) = ("", "", .substack)   // script-size grid
-        case "aligned", "align", "alignedat", "alignat", "split", "gather":
+        case "aligned", "align", "alignedat", "alignat", "split",
+             "gather", "gathered", "multline":
             (left, right, style) = ("", "", .aligned)
         default:        (left, right, style) = ("", "", .centered)   // matrix, array, …
+        }
+
+        // Starred matrix variants (`pmatrix*[r]`, `matrix*[l]`, …) carry an
+        // optional column-alignment bracket. Consume it (it used to leak into
+        // the first cell) and apply it uniformly via the array alignment path.
+        if starred, tokens.first == .character("[") {
+            tokens.removeFirst()
+            var spec = ""
+            while let t = tokens.first, t != .character("]") {
+                if case .character(let ch) = t { spec.append(ch) }
+                tokens.removeFirst()
+            }
+            if tokens.first == .character("]") { tokens.removeFirst() }
+            let a: ArraySpec.Align = spec.contains("r") ? .right : spec.contains("l") ? .left : .center
+            if style == .centered { style = .array(ArraySpec(alignments: [a], columnRules: [], rowRules: [])) }
         }
 
         var rows: [[MathNode]] = []
