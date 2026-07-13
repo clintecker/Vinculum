@@ -346,8 +346,15 @@ public enum MathParser {
         let env = readBraceName(&tokens)
         let base = env.hasSuffix("*") ? String(env.dropLast()) : env
 
-        // `array` and `alignedat` carry a column-spec / count argument.
-        if base == "array" || base == "alignedat" { _ = readBraceName(&tokens) }
+        // `array` carries a column spec (l/c/r + `|` rules); `alignedat` a
+        // column count we don't need.
+        var columnAligns: [ArraySpec.Align] = []
+        var columnRules: Set<Int> = []
+        if base == "array" {
+            (columnAligns, columnRules) = parseColumnSpec(readBraceName(&tokens))
+        } else if base == "alignedat" {
+            _ = readBraceName(&tokens)
+        }
 
         let (left, right, style): (String, String, MathMatrixStyle)
         switch base {
@@ -363,6 +370,7 @@ public enum MathParser {
         }
 
         var rows: [[MathNode]] = []
+        var rowRules: [ArraySpec.RowRule] = []
         var row: [MathNode] = []
         var cell: [MathNode] = []
         func endCell() {
@@ -383,13 +391,21 @@ public enum MathParser {
             }
             if case .command("\\") = token { tokens.removeFirst(); endRow(); continue }
             if case .character("&") = token { tokens.removeFirst(); endCell(); continue }
-            // Row rules: consume rather than let them degrade the whole grid
-            // (\hline used to become an .unsupported leaf inside a cell,
-            // flipping the entire array to a source card). \cline{a-b} also
-            // carries a brace argument to drop.
+            // Row rules: `\hline` spans every column at the current boundary;
+            // `\cline{i-j}` spans columns i…j. Recorded (and drawn) for `array`;
+            // for other environments the ArraySpec is ignored so they're just
+            // consumed (previously they degraded the whole grid to a source card).
             if case .command(let c) = token, c == "hline" || c == "hdashline" || c == "cline" {
                 tokens.removeFirst()
-                if c == "cline" { _ = readBraceName(&tokens) }
+                if c == "cline" {
+                    let arg = readBraceName(&tokens)            // "i-j"
+                    if let dash = arg.firstIndex(of: "-"),
+                       let i = Int(arg[..<dash]), let j = Int(arg[arg.index(after: dash)...]) {
+                        rowRules.append(.init(boundary: rows.count, fromColumn: max(0, i - 1), toColumn: max(0, j - 1)))
+                    }
+                } else {
+                    rowRules.append(.init(boundary: rows.count, fromColumn: 0, toColumn: .max))
+                }
                 continue
             }
             if let atom = parseAtomWithScripts(&tokens) {
@@ -401,7 +417,28 @@ public enum MathParser {
         // Flush a trailing partial row (no closing `\\`).
         if !cell.isEmpty || !row.isEmpty { endRow() }
 
-        return .matrix(rows: rows, left: left, right: right, style: style)
+        let finalStyle: MathMatrixStyle = base == "array"
+            ? .array(ArraySpec(alignments: columnAligns, columnRules: columnRules, rowRules: rowRules))
+            : style
+        return .matrix(rows: rows, left: left, right: right, style: finalStyle)
+    }
+
+    /// Parses an `array` column spec like `l|c|r` into per-column alignment and
+    /// the set of column boundaries (0…n) that carry a vertical `|` rule.
+    private static func parseColumnSpec(_ spec: String) -> ([ArraySpec.Align], Set<Int>) {
+        var aligns: [ArraySpec.Align] = []
+        var rules: Set<Int> = []
+        for ch in spec {
+            switch ch {
+            case "l": aligns.append(.left)
+            case "c": aligns.append(.center)
+            case "r": aligns.append(.right)
+            case "|": rules.insert(aligns.count)          // boundary before the next column
+            case "p", "m", "b": aligns.append(.left)      // paragraph column → left
+            default: break                                // spaces, @{…}, >{…} ignored
+            }
+        }
+        return (aligns, rules)
     }
 
     /// `\substack{ line1 \\ line2 }` — a tight vertical stack, one cell per

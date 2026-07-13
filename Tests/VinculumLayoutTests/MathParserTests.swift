@@ -121,6 +121,35 @@ final class MathParserTests: XCTestCase {
         }
     }
 
+    func testArrayColumnSpecParsed() {
+        guard case .matrix(_, _, _, .array(let spec)) =
+                MathParser.parse(#"\begin{array}{l|cr} a & b & c \end{array}"#) else {
+            return XCTFail("expected an array-style matrix")
+        }
+        XCTAssertEqual(spec.alignments, [.left, .center, .right])
+        XCTAssertTrue(spec.columnRules.contains(1), "the | sits after column 0")
+        XCTAssertFalse(spec.columnRules.contains(0))
+    }
+
+    func testArrayHlineRecordedAtRowBoundary() {
+        guard case .matrix(_, _, _, .array(let spec)) =
+                MathParser.parse(#"\begin{array}{cc} a & b \\ \hline c & d \end{array}"#) else {
+            return XCTFail("expected an array")
+        }
+        XCTAssertEqual(spec.rowRules.count, 1)
+        XCTAssertEqual(spec.rowRules.first?.boundary, 1, "\\hline sits below row 0")
+    }
+
+    func testClineSpansColumnRange() {
+        guard case .matrix(_, _, _, .array(let spec)) =
+                MathParser.parse(#"\begin{array}{ccc} a & b & c \\ \cline{2-3} d & e & f \end{array}"#) else {
+            return XCTFail("expected an array")
+        }
+        let rule = spec.rowRules.first
+        XCTAssertEqual(rule?.fromColumn, 1)   // \cline{2-3} → 0-based 1…2
+        XCTAssertEqual(rule?.toColumn, 2)
+    }
+
     func testMathbbStaysRoman() {
         guard case .symbol(let glyph, _, let style) = MathParser.parse("\\mathbb{R}") else {
             return XCTFail("expected symbol")

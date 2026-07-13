@@ -111,24 +111,66 @@ extension MathLayoutEngine {
         var running: CGFloat = 0
         for c in 0..<columns { colX[c] = running; running += colWidth[c] + colGap }
 
+        // `array` extras: per-column alignment + drawn rules. Edge vertical
+        // rules need outer padding so the grid isn't clipped by them.
+        var arraySpec: ArraySpec?
+        if case .array(let s) = style { arraySpec = s }
+        let ruleT = size * MathConstants.defaultRuleThickness
+        let leftPad = (arraySpec?.columnRules.contains(0) ?? false) ? colGap / 2 : 0
+        let rightPad = (arraySpec?.columnRules.contains(columns) ?? false) ? colGap / 2 : 0
+        let totalWidth = gridWidth + leftPad + rightPad
+
         func cellOriginX(col: Int, box: MathBox) -> CGFloat {
+            let x: CGFloat
             switch style {
-            case .cases: return colX[col]
-            case .aligned: return col % 2 == 0 ? colX[col] + (colWidth[col] - box.width) : colX[col]
-            case .centered, .substack: return colX[col] + (colWidth[col] - box.width) / 2
+            case .cases: x = colX[col]
+            case .aligned: x = col % 2 == 0 ? colX[col] + (colWidth[col] - box.width) : colX[col]
+            case .centered, .substack: x = colX[col] + (colWidth[col] - box.width) / 2
+            case .array(let spec):
+                switch col < spec.alignments.count ? spec.alignments[col] : .center {
+                case .left: x = colX[col]
+                case .right: x = colX[col] + (colWidth[col] - box.width)
+                case .center: x = colX[col] + (colWidth[col] - box.width) / 2
+                }
             }
+            return x + leftPad
         }
 
         var elements: [MathElement] = []
+        var boundaryY = [CGFloat](repeating: 0, count: rows.count + 1)   // horizontal-rule Y per row boundary
+        boundaryY[0] = ascent
         var yTop = ascent
         for (r, boxes) in cellBoxes.enumerated() {
             let baseline = yTop - rowAscent[r]
             for (c, b) in boxes.enumerated() {
                 elements += b.placed(at: CGPoint(x: cellOriginX(col: c, box: b), y: baseline))
             }
-            yTop -= rowAscent[r] + rowDescent[r] + rowGap
+            let rowBottom = yTop - rowAscent[r] - rowDescent[r]
+            boundaryY[r + 1] = r < rows.count - 1 ? rowBottom - rowGap / 2 : rowBottom
+            yTop = rowBottom - rowGap
         }
-        let grid = MathBox(width: gridWidth, ascent: ascent, descent: descent, elements: elements)
+
+        if let spec = arraySpec {
+            for k in spec.columnRules {
+                let x: CGFloat = k <= 0 ? 0
+                    : k >= columns ? totalWidth - ruleT
+                    : leftPad + colX[k] - colGap / 2 - ruleT / 2
+                elements.append(rule(x: x, y: -descent, width: ruleT, height: ascent + descent))
+            }
+            for rr in spec.rowRules where rr.boundary >= 0 && rr.boundary <= rows.count {
+                let y = boundaryY[rr.boundary]
+                let x0: CGFloat, x1: CGFloat
+                if rr.toColumn == .max || (rr.fromColumn <= 0 && rr.toColumn >= columns - 1) {
+                    x0 = 0; x1 = totalWidth
+                } else {
+                    let from = max(0, min(rr.fromColumn, columns - 1))
+                    let to = max(0, min(rr.toColumn, columns - 1))
+                    x0 = leftPad + colX[from]; x1 = leftPad + colX[to] + colWidth[to]
+                }
+                elements.append(rule(x: x0, y: y - ruleT / 2, width: x1 - x0, height: ruleT))
+            }
+        }
+        let grid = MathBox(width: totalWidth, ascent: ascent, descent: descent, elements: elements)
 
         guard !left.isEmpty || !right.isEmpty else { return grid }
         return delimitedBoxAround(grid, left: left, right: right, size: size)

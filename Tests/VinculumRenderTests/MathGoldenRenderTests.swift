@@ -104,6 +104,10 @@ final class MathGoldenRenderTests: XCTestCase {
         // Batch 3 — TeX fidelity: unary-sign spacing, cramped scripts
         .init(name: "unary-signs", latex: #"x = -1, \quad (-a)(-b) = ab"#, expectation: .mustRender),
         .init(name: "cramped-scripts", latex: #"\frac{1}{n^2} + \sqrt{a^2 + b^2}"#, expectation: .mustRender),
+        // Batch 4 — array column specs + rules
+        .init(name: "array-augmented", latex: #"\left[ \begin{array}{cc|c} 1 & 0 & 3 \\ 0 & 1 & 5 \end{array} \right]"#, expectation: .mustRender),
+        .init(name: "array-bordered", latex: #"\begin{array}{|r|l|} \hline x & 1 \\ \hline y^2 & 2 \\ \hline \end{array}"#, expectation: .mustRender),
+        .init(name: "array-aligned-cols", latex: #"\begin{array}{lcr} 1 & 22 & 333 \\ 4444 & 5 & 66 \end{array}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

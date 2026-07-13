@@ -207,7 +207,7 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ✅ | Enlarge the delimiter 1.2–3×, with opening/closing/relation spacing |
 | `\pmod` / `\bmod` / `\pod` | ✅ | `a \equiv b \pmod{n}`, `a \bmod n` |
 | `\genfrac` (general 5-arg form) | ❌ | Not parsed (only `\binom` uses the node internally) |
-| `array` column specs & rules | ❌ | Renders as a bare centered grid; `\hline`/column spec consumed & ignored |
+| `array` column specs & rules | ✅ | `{l c r \| c}` alignment + `\|` vertical rules + `\hline`/`\cline` — augmented matrices, bordered tables |
 | `\operatorname*`, `\cancel`, `\not` | ❌ | `\operatorname*` parses (renders upright, no stacked limit yet); `\cancel`/`\not` degrade |
 | Cramped-style script lowering | ❌ | Not modeled |
 

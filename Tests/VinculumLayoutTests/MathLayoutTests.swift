@@ -119,6 +119,18 @@ final class MathLayoutTests: XCTestCase {
         XCTAssertLessThan(c.ascent, n.ascent, "the cramped superscript rides lower")
     }
 
+    func testArrayDrawsColumnAndRowRules() {
+        let e = engine()
+        let bare = e.layout(MathParser.parse(#"\begin{array}{cc} a & b \\ c & d \end{array}"#), display: false)
+        let ruled = e.layout(MathParser.parse(#"\begin{array}{|c|c|} \hline a & b \\ \hline c & d \\ \hline \end{array}"#), display: false)
+        func ruleCount(_ s: MathScene) -> Int {
+            s.elements.filter { if case .rule = $0 { return true }; return false }.count
+        }
+        XCTAssertEqual(ruleCount(bare), 0, "a bare array draws no rules")
+        // |c|c| = 3 vertical rules, three \hline = 3 horizontal → 6.
+        XCTAssertGreaterThanOrEqual(ruleCount(ruled), 6, "bordered array draws its rules")
+    }
+
     func testRadicalEmitsAStroke() {
         let s = engine().layout(MathParser.parse("\\sqrt{2}"))
         let strokes = s.elements.filter { if case .stroke = $0 { return true }; return false }

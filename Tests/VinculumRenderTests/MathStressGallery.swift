@@ -83,6 +83,12 @@ final class MathStressGallery: XCTestCase {
             #"|\psi\rangle_{AB} = \sum_i \sqrt{\lambda_i}\; |i\rangle_A \otimes |i\rangle_B"#,
             #"\langle \hat{O} \rangle = \operatorname{tr}\!\left(\rho\, \hat{O}\right)"#,
         ]),
+        ("Tables, arrays & linear systems", [
+            #"\begin{array}{c|c|c} a & b & a + b \\ \hline 0 & 0 & 0 \\ 0 & 1 & 1 \\ 1 & 1 & 2 \end{array}"#,
+            #"\left[ \begin{array}{ccc|c} 1 & 2 & 3 & 6 \\ 0 & 1 & 1 & 3 \\ 0 & 0 & 1 & 2 \end{array} \right]"#,
+            #"\begin{array}{|c|c|} \hline \text{in} & \text{out} \\ \hline 0 & 1 \\ 1 & 0 \\ \hline \end{array}"#,
+            #"\left( \begin{array}{rrr} 1 & -2 & 3 \\ -4 & 5 & -6 \\ 7 & -8 & 9 \end{array} \right)"#,
+        ]),
         ("TeXbook classics & torture", [
             #"\sqrt{1 + \sqrt{1 + \sqrt{1 + \sqrt{1 + \cdots}}}}"#,
             #"\cfrac{1}{1 + \cfrac{1}{2 + \cfrac{1}{3 + \cfrac{1}{4 + \cdots}}}}"#,

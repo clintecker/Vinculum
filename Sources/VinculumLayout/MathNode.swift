@@ -138,4 +138,33 @@ public enum MathMatrixStyle: Hashable, Sendable {
     case cases      // left-aligned columns (a `cases` list)
     case aligned    // alternating right/left, meeting at the `&` (aligned/align)
     case substack   // tight centered stack at script size (\substack)
+    case array(ArraySpec)   // \begin{array}{l|c|r} … with per-column align + rules
+}
+
+/// The parsed column specification of an `array` environment: per-column
+/// alignment, the vertical rules from `|` in the spec, and the horizontal
+/// rules from `\hline` / `\cline`.
+public struct ArraySpec: Hashable, Sendable {
+    public enum Align: Hashable, Sendable { case left, center, right }
+    /// Per-column alignment, in column order (`l`/`c`/`r`).
+    public var alignments: [Align]
+    /// Column-boundary indices (0…columns) carrying a vertical rule.
+    public var columnRules: Set<Int>
+    /// Horizontal rules across row boundaries.
+    public var rowRules: [RowRule]
+
+    /// A horizontal rule at row `boundary` (0 = top … rows = bottom), spanning
+    /// columns `from…to`. `\hline` spans every column; `\cline{i-j}` spans i…j.
+    public struct RowRule: Hashable, Sendable {
+        public var boundary: Int
+        public var fromColumn: Int
+        public var toColumn: Int
+        public init(boundary: Int, fromColumn: Int, toColumn: Int) {
+            self.boundary = boundary; self.fromColumn = fromColumn; self.toColumn = toColumn
+        }
+    }
+
+    public init(alignments: [Align], columnRules: Set<Int>, rowRules: [RowRule]) {
+        self.alignments = alignments; self.columnRules = columnRules; self.rowRules = rowRules
+    }
 }

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.9.0 — 2026-07-12
+
+Structural `array` (Batch 4) — completes the four-batch typesetting roadmap.
+
+- **Column specs** `{l c r}` are parsed into per-column alignment (previously
+  read and discarded), so array columns align left / center / right.
+- **Vertical rules** from `|` in the spec are drawn at the right boundaries,
+  including edge rules (with outer padding) and multiple interior rules.
+- **Horizontal rules** `\hline` (full width) and `\cline{i-j}` (column range)
+  are drawn at their row boundaries.
+- Together these give **augmented matrices** `[A | b]`, **bordered/truth
+  tables**, and rule-separated systems — e.g.
+  `\left[\begin{array}{ccc|c} … \end{array}\right]`.
+
+Modeled as a new `ArraySpec` carried by a `.array(ArraySpec)` `MathMatrixStyle`
+case, so `.matrix` layout stays shared. +6 tests (103 total); stress corpus
+grows to 59 equations (a "Tables, arrays & linear systems" page) at 100% native.
+
 ## 0.8.0 — 2026-07-12
 
 Deep TeX-fidelity batch (Batch 3) — the subtle metrics a typographer notices,

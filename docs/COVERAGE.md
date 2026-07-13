@@ -115,7 +115,7 @@ function-name set (`functionNames`).
 | `cases` | ✅ | `{`, left-aligned columns |
 | `aligned` / `align` / `alignat` / `split` / `gather` | ✅ | alignment at `&` |
 | `substack` | ✅ | tight centered stack (script size) |
-| `array` | ⚠️ | Renders as a **bare centered grid**; the `{ccc}` column spec is consumed and ignored |
+| `array` | ✅ | `{l c r \| c}` per-column alignment + `\|` vertical rules + `\hline` / `\cline{i-j}` — augmented matrices `[A\|b]`, bordered/truth tables |
 
 Row/column rules `\hline`, `\hdashline`, `\cline{a-b}` are **consumed and
 ignored** (so they don't flip the whole grid to a fallback), but no rule is
@@ -258,8 +258,6 @@ Honest list of what degrades to a source fallback (or is silently ignored):
 
 - **`\genfrac`** — the general 5-argument fraction form is not parsed.
 - **True `\cfrac` alignment** — renders as a plain nested fraction.
-- **`array` column specs & rules** — grid renders centered; `{ccc}` and
-  `\hline`/`\cline` are consumed but not applied.
 - **`\operatorname*` limit stacking** (parses, but renders upright),
   **`\cancel`**, **`\not`**.
 - **Discrete delimiter variants** — auto-sized fences scale the base glyph
