@@ -48,6 +48,24 @@ final class MathLayoutTests: XCTestCase {
         XCTAssertEqual(color, MathColor.resolve("red"))
     }
 
+    func testIntegralKeepsSideScriptsButSumStacksInDisplay() {
+        // In display, ∑ stacks its limits (taller than wide) while ∫ keeps them
+        // to the side (wider, shorter) — TeX's \limits vs \nolimits defaults.
+        let sum = engine().layout(MathParser.parse("\\sum_{i=1}^{n}"), display: true)
+        let int = engine().layout(MathParser.parse("\\int_{0}^{1}"), display: true)
+        XCTAssertGreaterThan(sum.height, sum.width, "∑ stacks its limits")
+        XCTAssertGreaterThan(int.width, int.height, "∫ keeps side scripts")
+    }
+
+    func testNamedOperatorLimitStacksInDisplay() {
+        // \lim_{x} stacks the limit underneath in display (it's a function name,
+        // which used to miss the limits path).
+        let e = engine()
+        let stacked = e.layout(MathParser.parse("\\lim_{x}"), display: true)
+        let inline  = e.layout(MathParser.parse("\\lim_{x}"), display: false)
+        XCTAssertGreaterThan(stacked.height, inline.height, "the limit moves under the operator")
+    }
+
     func testRadicalEmitsAStroke() {
         let s = engine().layout(MathParser.parse("\\sqrt{2}"))
         let strokes = s.elements.filter { if case .stroke = $0 { return true }; return false }

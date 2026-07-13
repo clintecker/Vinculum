@@ -46,7 +46,7 @@ Legend: ✅ native render · ⚠️ accepted but semantics not fully honored ·
 | Both | ✅ | `a_{i,j}^{(k)}` |
 | Nested | ✅ | `x^{2^{n}}` |
 | Stacked limits (display) | ✅ | `\sum_{i=1}^{n}` — symbol operators stack in display |
-| Primes as raised glyphs | ❌ | `f'` — `'` stays an ordinary apostrophe, not a raised prime (use `f^{\prime}`) |
+| Primes as raised glyphs | ✅ | `f'`, `f''` render as raised, coalesced primes (`′`); `f'^2` merges |
 
 ---
 
@@ -60,11 +60,10 @@ scripts inline:
 ```
 
 Named function operators — `\lim`, `\max`, `\min`, `\sup`, `\inf`, `\det`,
-`\gcd`, `\limsup`, `\liminf`, `\argmin`, `\argmax` — render upright, but ⚠️
-their limit currently sits at the lower-right (like a subscript) rather than
-*underneath* in display style. TeX puts `\lim_{x\to0}` under the operator;
-Vinculum doesn't yet (they parse to function names, which the stacked-limits
-path doesn't cover). On the roadmap; see the "Not yet" section.
+`\gcd`, `\limsup`, `\liminf`, `\argmin`, `\argmax` — render upright and ✅
+stack their limit *underneath* in display style (`\lim_{x\to0}`), matching
+TeX. Integrals (`\int`, `\oint`) correctly keep their scripts to the side even
+in display (`\nolimits`), while `\sum`-class operators stack.
 
 ❌ Not in the table (degrade): `\iiint`, `\bigsqcup`, `\bigvee`, `\bigwedge`,
 `\bigoplus`, `\bigotimes`, `\bigodot`, `\coprod`.
@@ -207,7 +206,7 @@ rest of the group) form is ❌ **not** supported — use the braced form.
 | `\mathrm` | ✅ | Upright |
 | `\operatorname` | ✅ | Upright custom operator |
 | Named functions | ✅ | `\sin \cos \tan \log \ln \exp \lim \det \gcd \max \min …` |
-| Spaces inside `\text{…}` | ❌ | The math tokenizer drops literal spaces — use `\ ` (backslash-space): `\text{if\ } x` |
+| Spaces inside `\text{…}` | ✅ | Interior spaces preserved (`\text{if } x`); nested braces kept |
 | `\operatorname*{…}` | ❌ | The `*` becomes a stray operator; limit-taking form not honored |
 | `\pmod` / `\bmod` | ❌ | `\pmod` degrades; `mod` alone is a function name |
 
@@ -263,8 +262,6 @@ Honest list of what degrades to a source fallback (or is silently ignored):
 - **Explicit delimiter sizing** — `\big \Big \bigg \Bigg` (and `l`/`r`/`m`
   variants) are transparent; the fence is not enlarged.
 - **True `\cfrac` alignment** — renders as a plain nested fraction.
-- **Spaces inside `\text{}`** — dropped by the math tokenizer (use `\ `).
-- **Primes as raised glyphs** — `'` is an ordinary apostrophe; use `^{\prime}`.
 - **`array` column specs & rules** — grid renders centered; `{ccc}` and
   `\hline`/`\cline` are consumed but not applied.
 - **`\pmod` / `\bmod`**, **`\operatorname*`**, **`\cancel`**, **`\not`**.

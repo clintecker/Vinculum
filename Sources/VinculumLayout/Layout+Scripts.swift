@@ -7,16 +7,30 @@ extension MathLayoutEngine {
     /// right of the base.
     func scriptsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?,
                     size: CGFloat, display: Bool) -> MathBox {
-        if display, case .symbol(_, .largeOperator, _) = base {
-            return limitsBox(base, sub: sub, sup: sup, size: size)
+        if display, takesDisplayLimits(base) {
+            // Symbol operators (∑, ∏) enlarge; named ones (lim, max) stay text-size.
+            let enlarge: Bool
+            if case .symbol(_, .largeOperator, _) = base { enlarge = true } else { enlarge = false }
+            return limitsBox(base, sub: sub, sup: sup, size: size, enlarge: enlarge)
         }
         let baseBox = box(for: base, size: size, display: display)
         let scriptSize = size * MathConstants.scriptPercentScaleDown
         let supBox = sup.map { box(for: $0, size: scriptSize, display: false) }
         let subBox = sub.map { box(for: $0, size: scriptSize, display: false) }
 
-        let supRaise = size * MathConstants.superscriptShiftUp
-        let subDrop = size * MathConstants.subscriptShiftDown
+        // TeX Appendix G: take the nominal shift, but raise it so the script
+        // clears a tall base's ink — an exponent on (…)² rides above the paren,
+        // not through it — and keep a minimum gap between a coexisting super-
+        // and subscript so they can't collide.
+        let supRaise = max(size * MathConstants.superscriptShiftUp,
+                           baseBox.inkAscent - scriptSize * 0.25)
+        var subDrop = max(size * MathConstants.subscriptShiftDown,
+                          baseBox.descent + scriptSize * 0.15)
+        if let supBox, let subBox {
+            let minGap = size * 4 * MathConstants.defaultRuleThickness
+            let gap = (supRaise - supBox.descent) - (subBox.ascent - subDrop)
+            if gap < minGap { subDrop += minGap - gap }
+        }
         let scriptsWidth = max(supBox?.width ?? 0, subBox?.width ?? 0)
         let width = baseBox.width + scriptsWidth + size * MathConstants.spaceAfterScript
 
@@ -35,8 +49,8 @@ extension MathLayoutEngine {
 
     /// ∑/∫-style stacked limits: the operator enlarged, superscript centered
     /// above, subscript centered below.
-    func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?, size: CGFloat) -> MathBox {
-        let opBox = box(for: base, size: size * MathLayout.displayOperatorScale, display: false)
+    func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?, size: CGFloat, enlarge: Bool) -> MathBox {
+        let opBox = box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size, display: false)
         let scriptSize = size * MathConstants.scriptPercentScaleDown
         let supBox = sup.map { box(for: $0, size: scriptSize, display: false) }
         let subBox = sub.map { box(for: $0, size: scriptSize, display: false) }
@@ -58,5 +72,28 @@ extension MathLayoutEngine {
                                                   y: -opBox.descent - gap - subBox.ascent))
         }
         return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
+    }
+
+    // Integral-family glyphs default to \nolimits in TeX: their scripts stay to
+    // the side even in display style (∫₀¹, not a stacked lower/upper limit).
+    private static let integralGlyphs: Set<Character> = ["∫", "∬", "∭", "⨌", "∮", "∯", "∰", "∱", "∲", "∳"]
+    // Named operators that DO take stacked limits (unlike \sin, \log, \cos …).
+    private static let limitFunctionNames: Set<String> = [
+        "lim", "max", "min", "sup", "inf", "det", "gcd", "Pr",
+        "limsup", "liminf", "injlim", "projlim",
+        "varinjlim", "varprojlim", "varliminf", "varlimsup", "argmax", "argmin"]
+
+    /// Whether an operator stacks its scripts as over/under limits in display
+    /// style. Symbol operators do (∑, ∏, ⋃) except integrals; among the upright
+    /// function names, only the lim/max family does.
+    func takesDisplayLimits(_ base: MathNode) -> Bool {
+        switch base {
+        case let .symbol(glyph, .largeOperator, _):
+            return !(glyph.count == 1 && Self.integralGlyphs.contains(glyph[glyph.startIndex]))
+        case let .functionName(name):
+            return Self.limitFunctionNames.contains(name)
+        default:
+            return false
+        }
     }
 }

@@ -30,6 +30,40 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(style, .bold)
     }
 
+    func testTextPreservesInteriorSpaces() {
+        // \text{if } must keep its trailing space (the tokenizer strips math
+        // whitespace, so text bodies are captured verbatim).
+        guard case .functionName(let s) = MathParser.parse("\\text{if x}") else {
+            return XCTFail("expected functionName")
+        }
+        XCTAssertEqual(s, "if x")
+    }
+
+    func testPrimeBecomesRaisedSuperscript() {
+        // f' → f^{′}, not a baseline apostrophe.
+        guard case .scripts(let base, let sub, let sup) = MathParser.parse("f'") else {
+            return XCTFail("expected scripts")
+        }
+        XCTAssertEqual(base, .symbol("f", .ordinary, style: .italic))
+        XCTAssertNil(sub)
+        XCTAssertEqual(sup, .symbol("\u{2032}", .ordinary, style: .roman))
+    }
+
+    func testDoublePrimeCoalesces() {
+        guard case .scripts(_, _, .some(.symbol(let g, _, _))) = MathParser.parse("x''") else {
+            return XCTFail("expected scripts with a prime superscript")
+        }
+        XCTAssertEqual(g, "\u{2032}\u{2032}")
+    }
+
+    func testPrimeThenExplicitExponent() {
+        // f'^2 → superscript is the prime followed by the 2.
+        guard case .scripts(_, _, .some(.row(let sup))) = MathParser.parse("f'^2") else {
+            return XCTFail("expected scripts with a composite superscript")
+        }
+        XCTAssertEqual(sup.first, .symbol("\u{2032}", .ordinary, style: .roman))
+    }
+
     func testMathbbStaysRoman() {
         guard case .symbol(let glyph, _, let style) = MathParser.parse("\\mathbb{R}") else {
             return XCTFail("expected symbol")

@@ -10,7 +10,13 @@ extension MathParser {
         case groupClose        // }
         case superscriptMark   // ^
         case subscriptMark     // _
+        case rawText(String)   // the verbatim body of \text{…} (spaces kept)
     }
+
+    /// Commands whose brace body is upright TEXT, not math — their interior
+    /// spaces must survive the whitespace-stripping tokenizer, so the group is
+    /// captured verbatim here rather than re-tokenized.
+    static let rawTextCommands: Set<String> = ["text", "mathrm", "operatorname", "textrm"]
 
     struct Tokenizer {
         let input: [Character]
@@ -36,6 +42,23 @@ extension MathParser {
                     }
                     tokens.append(.command(name))
                     i = j
+                    // Capture a text-command's brace body verbatim (spaces and
+                    // nested braces preserved), so \text{if } keeps its space.
+                    if MathParser.rawTextCommands.contains(name), i < input.count, input[i] == "{" {
+                        var depth = 0, raw = ""
+                        while i < input.count {
+                            let c = input[i]
+                            if c == "{" {
+                                depth += 1
+                                if depth == 1 { i += 1; continue }   // drop the outer opener
+                            } else if c == "}" {
+                                depth -= 1
+                                if depth == 0 { i += 1; break }       // consume the outer closer
+                            }
+                            raw.append(c); i += 1
+                        }
+                        tokens.append(.rawText(raw))
+                    }
                 case "{": tokens.append(.groupOpen); i += 1
                 case "}": tokens.append(.groupClose); i += 1
                 case "^": tokens.append(.superscriptMark); i += 1

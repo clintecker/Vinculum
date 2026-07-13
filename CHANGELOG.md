@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.6.0 — 2026-07-12
+
+Everyday-correctness batch (from the typesetting review) — the fidelity gaps
+that bite common writing. Rendering changes; goldens regenerated and visually
+verified.
+
+- **Named operators stack their limits.** `\lim`, `\max`, `\min`, `\sup`,
+  `\inf`, `\det`, `\gcd`, `\limsup`, … now put their limit *underneath* in
+  display style (`\lim_{x\to0}`), like TeX. They parse to function names,
+  which the stacked-limits path previously missed.
+- **Integrals keep side-scripts.** `\int`, `\oint`, `\iint` no longer
+  over-stack in display — they default to `\nolimits` (scripts to the side),
+  while `\sum`-class operators still stack. Limit-taking is now decided per
+  operator, not by node shape.
+- **Primes render as raised glyphs.** `f'`, `f''`, `f'''` become raised,
+  coalesced primes (`′`) instead of baseline apostrophes; `f'^2` merges the
+  prime with the explicit exponent.
+- **Spaces survive inside `\text{…}`.** `\text`, `\mathrm`, `\operatorname`,
+  `\textrm` bodies are captured verbatim by the tokenizer, so `\text{if } x`
+  keeps its space (and nested braces).
+- **Scripts clear tall bases and can't collide.** Super/subscript shifts now
+  rise to clear a tall nucleus's ink (an exponent on `(…)²` rides above the
+  paren) and a minimum gap is kept between a coexisting super- and subscript
+  (TeX Appendix G).
+
+Internal: the `^`/`_`/prime attachment is now one shared helper (was
+duplicated across `parseRow` and `parseAtomWithScripts`). +6 tests (83 total).
+
 ## 0.5.0 — 2026-07-12
 
 Performance, platform-fitness, and robustness pass, informed by a four-lens

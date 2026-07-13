@@ -37,20 +37,8 @@ public enum MathParser {
                 tokens.removeFirst()
                 break
             }
-            guard var node = parseAtom(&tokens) else { continue }
-
-            // Attach any ^/_ scripts to the atom just parsed.
-            var sub: MathNode?
-            var sup: MathNode?
-            while let mark = tokens.first, mark == .superscriptMark || mark == .subscriptMark {
-                tokens.removeFirst()
-                let script = parseAtom(&tokens) ?? .row([])
-                if mark == .superscriptMark { sup = script } else { sub = script }
-            }
-            if sub != nil || sup != nil {
-                node = .scripts(base: node, subscript: sub, superscript: sup)
-            }
-            nodes.append(node)
+            guard let node = parseAtom(&tokens) else { continue }
+            nodes.append(attachScriptsAndPrimes(node, &tokens))
         }
         return nodes
     }
@@ -76,7 +64,36 @@ public enum MathParser {
 
         case .command(let name):
             return commandNode(name, &tokens)
+
+        case .rawText(let s):
+            // Only appears right after a text command (consumed there); a stray
+            // one degrades to upright text rather than vanishing.
+            return .functionName(s)
         }
+    }
+
+    /// Attaches trailing primes (`f'` → `f^{′}`) and any `^`/`_` scripts to a
+    /// just-parsed atom. Shared by `parseRow` and `parseAtomWithScripts` so the
+    /// two paths can't drift.
+    private static func attachScriptsAndPrimes(_ node: MathNode, _ tokens: inout ArraySlice<Token>) -> MathNode {
+        // Primes bind before scripts: a run of ' becomes a superscript of ′.
+        var primes = 0
+        while tokens.first == .character("'") { tokens.removeFirst(); primes += 1 }
+
+        var sub: MathNode?
+        var sup: MathNode?
+        while let mark = tokens.first, mark == .superscriptMark || mark == .subscriptMark {
+            tokens.removeFirst()
+            let script = parseAtom(&tokens) ?? .row([])
+            if mark == .superscriptMark { sup = script } else { sub = script }
+        }
+        if primes > 0 {
+            let primeGlyphs = MathNode.symbol(String(repeating: "\u{2032}", count: primes), .ordinary, style: .roman)
+            // f'^2 → the primes lead, then the explicit exponent.
+            sup = sup.map { .row([primeGlyphs, $0]) } ?? primeGlyphs
+        }
+        guard sub != nil || sup != nil else { return node }
+        return .scripts(base: node, subscript: sub, superscript: sup)
     }
 
     private static func characterNode(_ ch: Character) -> MathNode {
@@ -159,16 +176,10 @@ public enum MathParser {
             return .delimited(left: leftDelim, body: body.count == 1 ? body[0] : .row(body), right: rightDelim)
 
         case "text", "mathrm", "operatorname", "textrm":
-            if tokens.first == .groupOpen {
+            // The tokenizer captured the body verbatim (spaces preserved).
+            if case .rawText(let s)? = tokens.first {
                 tokens.removeFirst()
-                var text = ""
-                while let t = tokens.first, t != .groupClose {
-                    tokens.removeFirst()
-                    if case .character(let ch) = t { text.append(ch) }
-                    if case .command(let c) = t, c == " " { text.append(" ") }
-                }
-                if tokens.first == .groupClose { tokens.removeFirst() }
-                return .functionName(text)
+                return .functionName(s)
             }
             return .row([])
 
@@ -287,18 +298,8 @@ public enum MathParser {
 
     /// An atom plus any attached scripts — needed inside \left…\right.
     private static func parseAtomWithScripts(_ tokens: inout ArraySlice<Token>) -> MathNode? {
-        guard var node = parseAtom(&tokens) else { return nil }
-        var sub: MathNode?
-        var sup: MathNode?
-        while let mark = tokens.first, mark == .superscriptMark || mark == .subscriptMark {
-            tokens.removeFirst()
-            let script = parseAtom(&tokens) ?? .row([])
-            if mark == .superscriptMark { sup = script } else { sub = script }
-        }
-        if sub != nil || sup != nil {
-            node = .scripts(base: node, subscript: sub, superscript: sup)
-        }
-        return node
+        guard let node = parseAtom(&tokens) else { return nil }
+        return attachScriptsAndPrimes(node, &tokens)
     }
 
     /// Reads a brace-delimited literal name like `{pmatrix}` or `{3}`.

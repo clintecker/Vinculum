@@ -187,8 +187,8 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | Fractions `\frac`, `\cfrac` | ✅ | `\cfrac` lays out as a plain nested fraction |
 | Roots `\sqrt`, `\sqrt[n]{}` | ✅ | Optional degree |
 | Sub/superscripts `^` `_` | ✅ | Nested, both, on any atom |
-| Big operators with limits | ✅ | `\sum \prod \int \iint \oint \bigcup \bigcap` stack limits in display |
-| Named operators `\lim \max \min \sup` | ⚠️ | Render upright, but the limit sits lower-right, not underneath, in display (roadmap) |
+| Big operators with limits | ✅ | `\sum \prod \bigcup \bigcap` stack limits in display; `\int \oint` keep side-scripts (TeX `\nolimits`) |
+| Named operators `\lim \max \min \sup` | ✅ | Stack their limit underneath in display (`\lim_{x\to0}`) |
 | Symbols & Greek (~200 commands) | ✅ | Correct TeX atom classes → real inter-atom spacing |
 | Matrix environments | ✅ | `pmatrix bmatrix Bmatrix vmatrix Vmatrix matrix`, `cases`, `aligned`/`align`/`gather`/`split`, `substack` |
 | Math alphabets | ✅ | `\mathbb \mathcal \mathscr \mathfrak \mathsf \mathtt \mathbf \boldsymbol` (Letterlike holes handled) |
@@ -198,7 +198,8 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | `\xrightarrow` / `\xleftarrow` | ✅ | Stretchy, with over `{}` and under `[]` labels |
 | `\boxed`, `\phantom` family | ✅ | `\phantom \hphantom \vphantom` |
 | `\color` / `\textcolor` | ✅ | Braced `{name}{body}` form; named + `#rrggbb` |
-| `\text \mathrm \textrm \operatorname` | ✅ | Upright; **literal spaces are dropped** — use `\ ` |
+| `\text \mathrm \textrm \operatorname` | ✅ | Upright; interior spaces preserved (`\text{if } x`) |
+| Primes `f'`, `f''` | ✅ | Render as raised primes, coalesced |
 | Direct Unicode math (`∫ ∑ ≤ α`) | ✅ | Classed like its command spelling |
 | `\newcommand \renewcommand \def` | ✅ | Document-scoped, `#1…#9`, recursion-capped |
 | Spacing `\, \: \; \! \quad \qquad` | ✅ | |
@@ -206,7 +207,6 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | `\big \Big \bigg \Bigg` sizing | ⚠️ | Parsed transparently; the delimiter is **not enlarged** |
 | `\genfrac` (general 5-arg form) | ❌ | Not parsed (only `\binom` uses the node internally) |
 | `array` column specs & rules | ❌ | Renders as a bare centered grid; `\hline`/column spec consumed & ignored |
-| Primes as raised glyphs (`f'`) | ❌ | `'` stays an ordinary apostrophe |
 | `\pmod`, `\operatorname*`, `\cancel`, `\not` | ❌ | Degrade to source fallback |
 | Cramped-style script lowering | ❌ | Not modeled |
 
