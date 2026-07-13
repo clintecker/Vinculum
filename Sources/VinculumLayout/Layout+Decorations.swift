@@ -2,6 +2,32 @@ import Foundation
 
 extension MathLayoutEngine {
 
+    /// `\colorbox{bg}{…}` / `\fcolorbox{border}{bg}{…}`: a filled background
+    /// rectangle behind the content, with an optional stroked border.
+    func colorboxBox(_ base: MathNode, background: String, border: String?,
+                     size: CGFloat, display: Bool) -> MathBox {
+        let baseBox = box(for: base, size: size, display: display)
+        let pad = size * MathLayout.Box.padding
+        let width = baseBox.width + pad * 2
+        let ascent = baseBox.ascent + pad
+        let descent = baseBox.descent + pad
+        var elements: [MathElement] = []
+        if let bg = MathColor.resolve(background) {   // filled background, drawn first (behind)
+            let bgRect = CGRect(origin: CGPoint(x: 0, y: -descent),
+                                size: CGSize(width: width, height: ascent + descent))
+            elements.append(MathElement.rule(bgRect, color: bg))
+        }
+        elements += baseBox.placed(at: CGPoint(x: pad, y: 0))
+        if let border, let bc = MathColor.resolve(border) {
+            let line = max(1, size * MathConstants.defaultRuleThickness)
+            let rx = line / 2, ry = -descent + line / 2, rw = width - line, rh = ascent + descent - line
+            elements.append(.stroke(path: [.move(CGPoint(x: rx, y: ry)), .line(CGPoint(x: rx + rw, y: ry)),
+                                           .line(CGPoint(x: rx + rw, y: ry + rh)), .line(CGPoint(x: rx, y: ry + rh)),
+                                           .close], width: line, cap: .butt, join: .miter, color: bc))
+        }
+        return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
+    }
+
     /// `\boxed` (a stroked frame with padding) and the `\phantom` family
     /// (reserve space, draw nothing).
     func decoratedBox(_ base: MathNode, decoration: MathDecoration,

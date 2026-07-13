@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.22.0 — 2026-07-13
+
+Box & rule decorations (Batch 15).
+
+- **`\fbox`** — framed box (like `\boxed`).
+- **`\colorbox{bg}{…}`** / **`\fcolorbox{border}{bg}{…}`** — filled background
+  box, optionally framed (new `.colorbox` node; background rule drawn behind
+  the content).
+- **`\rule{w}{h}`** — a solid filled rectangle at explicit em/pt lengths (new
+  `.ruleBox` node).
+- **`\raisebox{shift}{…}`** — vertically shift the content (new `.raised`
+  node).
+
+`\sideset` and `\mathchoice` remain a low-frequency tail. +3 nodes.
+
 ## 0.21.0 — 2026-07-13
 
 Over/under constructs & accents (Batch 14).

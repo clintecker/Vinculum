@@ -390,8 +390,26 @@ public enum MathParser {
         case "substack":
             return parseSubstack(&tokens)
 
-        case "boxed":
+        case "boxed", "fbox":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .boxed)
+        case "rule":
+            if tokens.first == .character("[") {                 // optional [raise] — skip
+                while let t = tokens.first, t != .character("]") { tokens.removeFirst() }
+                if tokens.first == .character("]") { tokens.removeFirst() }
+            }
+            let w = readLength(&tokens, muDefault: false)
+            let h = readLength(&tokens, muDefault: false)
+            return .ruleBox(width: w, height: h)
+        case "raisebox":
+            let shift = readLength(&tokens, muDefault: false)
+            return .raised(base: parseAtom(&tokens) ?? .row([]), shift: shift)
+        case "colorbox":
+            let bg = readBraceName(&tokens)
+            return .colorbox(base: parseAtom(&tokens) ?? .row([]), background: bg, border: nil)
+        case "fcolorbox":
+            let border = readBraceName(&tokens)
+            let bg = readBraceName(&tokens)
+            return .colorbox(base: parseAtom(&tokens) ?? .row([]), background: bg, border: border)
         case "cancel":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .cancel)
         case "bcancel":

@@ -142,6 +142,8 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "stateful-color", latex: #"{\color{red} a + b} + \color{blue} c \cdot d"#, expectation: .mustRender),
         // Batch 14 — over/under brackets & parens, \widecheck
         .init(name: "over-brackets", latex: #"\overbracket{a + b + c}^{k} \quad \underbracket{x + y}_{m} \quad \overparen{p + q} \quad \underparen{u + v} \quad \widecheck{ABC}"#, expectation: .mustRender),
+        // Batch 15 — boxes: \fbox, \colorbox, \fcolorbox, \rule, \raisebox
+        .init(name: "boxes", latex: #"\fbox{a+b} \quad \colorbox{yellow}{x^2} \quad \fcolorbox{red}{gray}{y+z} \quad a \rule{1.5em}{0.5pt} b \quad \raisebox{0.4em}{w}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

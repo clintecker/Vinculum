@@ -49,6 +49,19 @@ public struct MathLayoutEngine {
         case .classified(let base, _):
             return box(for: base, size: s, display: display)   // transparent; only the atom class changes
 
+        case .ruleBox(let w, let h):
+            let ww = CGFloat(w) * s, hh = CGFloat(h) * s
+            return MathBox(width: ww, ascent: hh, descent: 0, elements: [rule(x: 0, y: 0, width: ww, height: hh)])
+
+        case .raised(let base, let shift):
+            let b = box(for: base, size: s, display: display)
+            let dy = CGFloat(shift) * s
+            return MathBox(width: b.width, ascent: b.ascent + dy, descent: b.descent - dy,
+                           inkAscent: b.inkAscent + dy, elements: b.placed(at: CGPoint(x: 0, y: dy)))
+
+        case .colorbox(let base, let bg, let border):
+            return colorboxBox(base, background: bg, border: border, size: s, display: display)
+
         case .space(let ems):
             return MathBox(width: CGFloat(ems) * s, ascent: 0, descent: 0)
 
@@ -180,7 +193,9 @@ public struct MathLayoutEngine {
         case .functionName: return .largeOperator
         case .limitsOperator(let base): return atomClass(of: base)
         case .classified(_, let cls): return cls
-        case .fraction, .cfrac, .radical, .delimited, .fenced, .row, .matrix: return .ordinary
+        case .raised(let base, _): return atomClass(of: base)
+        case .fraction, .cfrac, .radical, .delimited, .fenced, .row, .matrix,
+             .ruleBox, .colorbox: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary

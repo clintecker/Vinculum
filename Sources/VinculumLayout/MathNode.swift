@@ -34,6 +34,13 @@ public indirect enum MathNode: Hashable, Sendable {
     /// `\mathop`, `\mathord`, `\mathopen`, `\mathclose`, `\mathpunct`. Layout is
     /// transparent; only the inter-atom spacing class changes.
     case classified(base: MathNode, atomClass: MathAtomClass)
+    /// `\rule{w}{h}` — a solid filled rectangle (em lengths).
+    case ruleBox(width: Double, height: Double)
+    /// `\raisebox{shift}{…}` — the base shifted up by `shift` ems.
+    case raised(base: MathNode, shift: Double)
+    /// `\colorbox{bg}{…}` / `\fcolorbox{border}{bg}{…}` — a background-filled
+    /// (and optionally framed) box. Colors are names/hex resolved at layout.
+    case colorbox(base: MathNode, background: String, border: String?)
     /// Explicit spacing (multiples of an em quad).
     case space(Double)
     /// An accent over (or rule under) a base: \hat \vec \bar \overline …

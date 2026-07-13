@@ -25,8 +25,10 @@ extension MathParser {
             return segments.allSatisfy(isFullySupported)
         case .limitsOperator(let base):
             return isFullySupported(base)
-        case .classified(let base, _):
+        case .classified(let base, _), .raised(let base, _), .colorbox(let base, _, _):
             return isFullySupported(base)
+        case .ruleBox:
+            return true
         case .matrix(let rows, _, _, _):
             return rows.allSatisfy { $0.allSatisfy(isFullySupported) }
         case .accent(let base, _):
@@ -82,8 +84,10 @@ extension MathParser {
                 segments.forEach(walk)
             case .limitsOperator(let base):
                 walk(base)
-            case .classified(let base, _):
+            case .classified(let base, _), .raised(let base, _), .colorbox(let base, _, _):
                 walk(base)
+            case .ruleBox:
+                break
             case .matrix(let rows, _, _, _):
                 rows.forEach { $0.forEach(walk) }
             case .accent(let base, _):
