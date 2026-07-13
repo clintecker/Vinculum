@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.16.0 — 2026-07-12
+
+Resolves three previously-deferred items (planned by a specialist squad).
+
+- **`\middle`.** `\left( … \middle| … \right)` splits the body into segments and
+  stretches every fence — left, each `\middle`, right — to the common height:
+  set-builder `\left\{ x \mid P \right\}`, divided forms, conditional
+  probability. New `.fenced(fences:segments:)` node; the no-`\middle` path still
+  emits `.delimited` unchanged (zero regression).
+- **`\operatorname*` limits.** A starred custom operator now stacks its scripts
+  as under/over limits in display (`\operatorname*{Fix}_x`, `\operatorname*{ess\,sup}`),
+  via a transparent `.limitsOperator` wrapper — no change to `.functionName`.
+- **`\tag{…}` / `\tag*{…}`** (+ `\notag`/`\nonumber` no-ops). The tag is appended
+  inline after a `\qquad` (`= r^2 \qquad (3.1)`). True flush-right / auto-numbering
+  are host concerns (need the column width) and remain out of scope by design.
+
++8 tests (113 total). New public node cases `.fenced`, `.limitsOperator`.
+
 ## 0.15.0 — 2026-07-12
 
 `\smallmatrix` (Batch 10) — script-size inline matrices, e.g.

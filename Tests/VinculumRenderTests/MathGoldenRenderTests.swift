@@ -125,6 +125,10 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "x-arrows-ext", latex: #"A \xLongrightarrow{\varphi} B \xhookrightarrow{\iota} C \xmapsto{f} D"#, expectation: .mustRender),
         // Batch 10 — smallmatrix
         .init(name: "smallmatrix", latex: #"\left( \begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix} \right) x = \left( \begin{smallmatrix} a \\ b \end{smallmatrix} \right)"#, expectation: .mustRender),
+        // Deferred items resolved — \middle, \operatorname* limits, \tag
+        .init(name: "middle-fence", latex: #"\left\{\, x \in \mathbb{R} \;\middle|\; x > 0 \,\right\} \quad \left( \frac{a}{b} \middle/ \frac{c}{d} \right)"#, expectation: .mustRender),
+        .init(name: "operatorname-star", latex: #"\operatorname*{Fix}_{x} T = x, \quad \operatorname*{argmax}_{\theta} \mathcal{L}(\theta)"#, expectation: .mustRender),
+        .init(name: "tag", latex: #"x^2 + y^2 = r^2 \tag{3.1}"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

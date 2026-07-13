@@ -43,6 +43,9 @@ public struct MathLayoutEngine {
         case .functionName(let name):
             return glyphBox(name, size: s, italic: false)
 
+        case .limitsOperator(let base):
+            return box(for: base, size: s, display: display)   // transparent; limits handled in scriptsBox
+
         case .space(let ems):
             return MathBox(width: CGFloat(ems) * s, ascent: 0, descent: 0)
 
@@ -60,6 +63,9 @@ public struct MathLayoutEngine {
 
         case .delimited(let left, let body, let right):
             return delimitedBox(left, body, right, size: s, display: display)
+
+        case .fenced(let fences, let segments):
+            return fencedBox(fences, segments, size: s, display: display)
 
         case .matrix(let rows, let left, let right, let style):
             return matrixBox(rows, left: left, right: right, style: style, size: s)
@@ -166,7 +172,8 @@ public struct MathLayoutEngine {
         switch node {
         case .symbol(_, let cls, _): return cls
         case .functionName: return .largeOperator
-        case .fraction, .radical, .delimited, .row, .matrix: return .ordinary
+        case .limitsOperator(let base): return atomClass(of: base)
+        case .fraction, .radical, .delimited, .fenced, .row, .matrix: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary

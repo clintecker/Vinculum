@@ -159,6 +159,39 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(parts.last, .functionName(" terms"))
     }
 
+    func testMiddleProducesFenced() {
+        guard case .fenced(let fences, let segments) = MathParser.parse(#"\left( a \middle| b \right)"#) else {
+            return XCTFail("expected a fenced node")
+        }
+        XCTAssertEqual(fences, ["(", "|", ")"])
+        XCTAssertEqual(segments.count, 2)
+    }
+
+    func testLeftRightWithoutMiddleStaysDelimited() {
+        // No \middle → the original .delimited path, unchanged.
+        guard case .delimited = MathParser.parse(#"\left( a \right)"#) else {
+            return XCTFail("expected .delimited")
+        }
+    }
+
+    func testOperatornameStarTakesLimits() {
+        guard case .limitsOperator = MathParser.parse(#"\operatorname*{Fix}"#) else {
+            return XCTFail("expected .limitsOperator")
+        }
+        // Plain \operatorname is NOT wrapped.
+        guard case .functionName = MathParser.parse(#"\operatorname{Fix}"#) else {
+            return XCTFail("expected a bare functionName")
+        }
+    }
+
+    func testTagAppendsParenthesizedNumber() {
+        guard case .row(let parts) = MathParser.parse(#"x = 1 \tag{3.1}"#) else {
+            return XCTFail("expected a row")
+        }
+        XCTAssertEqual(parts.last, .symbol(")", .closing, style: .roman))
+        XCTAssertTrue(parts.contains(.symbol("(", .opening, style: .roman)))
+    }
+
     func testHspaceParsesEmLength() {
         guard case .space(let w) = MathParser.parse("\\hspace{2em}") else { return XCTFail("expected space") }
         XCTAssertEqual(w, 2.0, accuracy: 0.001)

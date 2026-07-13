@@ -36,6 +36,32 @@ extension MathLayoutEngine {
                        elements: scaled.placed(at: CGPoint(x: 0, y: offset)))
     }
 
+    /// `\left … \middle| … \right`: segments split on `\middle`, every fence
+    /// (left, each middle, right) stretched to the common tallest-segment
+    /// height and centered on the math axis via `stretchedFence`.
+    func fencedBox(_ fences: [String], _ segments: [MathNode], size: CGFloat, display: Bool) -> MathBox {
+        let segBoxes = segments.map { box(for: $0, size: size, display: display) }
+        let bodyAscent = segBoxes.map(\.ascent).max() ?? 0
+        let bodyDescent = segBoxes.map(\.descent).max() ?? 0
+        let combined = MathBox(width: 0, ascent: bodyAscent, descent: bodyDescent)
+        let target = max(bodyAscent + bodyDescent, size)
+        let fenceBoxes = fences.map { stretchedFence($0, targetHeight: target, around: combined, size: size) }
+
+        var elements: [MathElement] = []
+        var x: CGFloat = 0, ascent: CGFloat = 0, descent: CGFloat = 0
+        for i in fenceBoxes.indices {
+            let f = fenceBoxes[i]
+            elements += f.placed(at: CGPoint(x: x, y: 0)); x += f.width
+            ascent = max(ascent, f.ascent); descent = max(descent, f.descent)
+            if i < segBoxes.count {
+                let b = segBoxes[i]
+                elements += b.placed(at: CGPoint(x: x, y: 0)); x += b.width
+                ascent = max(ascent, b.ascent); descent = max(descent, b.descent)
+            }
+        }
+        return MathBox(width: x, ascent: ascent, descent: descent, elements: elements)
+    }
+
     /// `\left…\right`: a body flanked by fences sized to its height.
     func delimitedBox(_ left: String, _ body: MathNode, _ right: String, size: CGFloat, display: Bool) -> MathBox {
         let bodyBox = box(for: body, size: size, display: display)

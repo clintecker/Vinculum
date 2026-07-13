@@ -13,12 +13,20 @@ public indirect enum MathNode: Hashable, Sendable {
     case scripts(base: MathNode, subscript: MathNode?, superscript: MathNode?)
     /// Auto-sized fences around a body: ( ) [ ] { } | ‖.
     case delimited(left: String, body: MathNode, right: String)
+    /// `\left … \middle| … \right`: fences with interior `\middle` delimiters,
+    /// all stretched to the common body height. `fences.count ==
+    /// segments.count + 1` (fences = [left, mid₀, …, right]).
+    case fenced(fences: [String], segments: [MathNode])
     /// A grid of cells from a `\begin{…}…\end{…}` environment — matrices,
     /// `cases`, `aligned`. `left`/`right` are the enclosing fences (empty for
     /// none); `style` selects column alignment.
     case matrix(rows: [[MathNode]], left: String, right: String, style: MathMatrixStyle)
     /// Upright function name (sin, log …).
     case functionName(String)
+    /// A `\operatorname*`-style operator that takes stacked limits in display
+    /// (a custom `\lim`-like operator). Transparent to layout except that
+    /// `takesDisplayLimits` is true for it.
+    case limitsOperator(base: MathNode)
     /// Explicit spacing (multiples of an em quad).
     case space(Double)
     /// An accent over (or rule under) a base: \hat \vec \bar \overline …

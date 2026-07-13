@@ -21,6 +21,10 @@ extension MathParser {
                 && (sup.map(isFullySupported) ?? true)
         case .delimited(_, let body, _):
             return isFullySupported(body)
+        case .fenced(_, let segments):
+            return segments.allSatisfy(isFullySupported)
+        case .limitsOperator(let base):
+            return isFullySupported(base)
         case .matrix(let rows, _, _, _):
             return rows.allSatisfy { $0.allSatisfy(isFullySupported) }
         case .accent(let base, _):
@@ -72,6 +76,10 @@ extension MathParser {
                 walk(base); sub.map(walk); sup.map(walk)
             case .delimited(_, let body, _):
                 walk(body)
+            case .fenced(_, let segments):
+                segments.forEach(walk)
+            case .limitsOperator(let base):
+                walk(base)
             case .matrix(let rows, _, _, _):
                 rows.forEach { $0.forEach(walk) }
             case .accent(let base, _):

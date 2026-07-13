@@ -23,9 +23,45 @@ public enum MathParser {
             return .unsupported(latex)
         }
 
-        var tokens = Tokenizer(latex).tokenize()[...]
-        let nodes = parseRow(&tokens, until: nil)
-        return nodes.count == 1 ? nodes[0] : .row(nodes)
+        var tokens = Tokenizer(latex).tokenize()
+        let tag = extractTag(&tokens)                 // pulls out \tag{…}/\tag*{…}
+        var slice = tokens[...]
+        let nodes = parseRow(&slice, until: nil)
+        let body: MathNode = nodes.count == 1 ? nodes[0] : .row(nodes)
+        guard let tag else { return body }
+        // Append the tag inline: `body \qquad (tag)` (or no parens for \tag*).
+        // True flush-right placement is a host concern (needs the column width).
+        if tag.starred {
+            return .row([body, .space(2.0), tag.node])
+        }
+        return .row([body, .space(2.0),
+                     .symbol("(", .opening, style: .roman), tag.node,
+                     .symbol(")", .closing, style: .roman)])
+    }
+
+    /// Removes a top-level `\tag{…}` / `\tag*{…}` from the token stream and
+    /// returns its parsed body (nil if none). Balanced-brace slice so
+    /// `\tag{\text{A}}` works.
+    private static func extractTag(_ tokens: inout [Token]) -> (node: MathNode, starred: Bool)? {
+        guard let idx = tokens.firstIndex(of: .command("tag")) else { return nil }
+        var i = idx + 1
+        var starred = false
+        if i < tokens.count, tokens[i] == .character("*") { starred = true; i += 1 }
+        guard i < tokens.count, tokens[i] == .groupOpen else {
+            tokens.remove(at: idx); return nil          // malformed \tag — just drop it
+        }
+        var depth = 0, j = i
+        var bodyTokens: [Token] = []
+        while j < tokens.count {
+            let t = tokens[j]
+            if t == .groupOpen { depth += 1; if depth == 1 { j += 1; continue } }
+            else if t == .groupClose { depth -= 1; if depth == 0 { j += 1; break } }
+            bodyTokens.append(t); j += 1
+        }
+        tokens.removeSubrange(idx..<j)
+        var slice = bodyTokens[...]
+        let tagNodes = parseRow(&slice, until: nil)
+        return (tagNodes.count == 1 ? tagNodes[0] : .row(tagNodes), starred)
     }
 
     // MARK: - Parser
@@ -187,28 +223,44 @@ public enum MathParser {
 
         case "left":
             let leftDelim = takeDelimiter(&tokens) ?? "("
-            var body: [MathNode] = []
+            var segments: [MathNode] = []
+            var middles: [String] = []
+            var current: [MathNode] = []
             var rightDelim = ")"
+            func flush() { segments.append(current.count == 1 ? current[0] : .row(current)); current = [] }
             while let t = tokens.first {
                 if case .command("right") = t {
                     tokens.removeFirst()
                     rightDelim = takeDelimiter(&tokens) ?? ")"
                     break
                 }
-                if let atom = parseAtomWithScripts(&tokens) { body.append(atom) }
+                if case .command("middle") = t {
+                    tokens.removeFirst()
+                    middles.append(takeDelimiter(&tokens) ?? "|")
+                    flush()
+                    continue
+                }
+                if let atom = parseAtomWithScripts(&tokens) { current.append(atom) }
+                else if tokens.first != nil { tokens.removeFirst() }   // never spin
             }
-            return .delimited(left: leftDelim, body: body.count == 1 ? body[0] : .row(body), right: rightDelim)
+            flush()
+            // No \middle → the original .delimited path, byte-for-byte unchanged.
+            if middles.isEmpty {
+                return .delimited(left: leftDelim, body: segments[0], right: rightDelim)
+            }
+            return .fenced(fences: [leftDelim] + middles + [rightDelim], segments: segments)
 
         case "text", "mathrm", "operatorname", "textrm":
-            // \operatorname* takes limits; consume the star (limit stacking for
-            // a custom operator is a follow-up — for now it renders upright).
-            if tokens.first == .character("*") { tokens.removeFirst() }
+            // \operatorname* takes stacked limits — capture the star and wrap.
+            var starred = false
+            if tokens.first == .character("*") { tokens.removeFirst(); starred = true }
             // The tokenizer captured the body verbatim (spaces preserved).
+            var result: MathNode = .row([])
             if case .rawText(let s)? = tokens.first {
                 tokens.removeFirst()
-                return textWithEmbeddedMath(s)
+                result = textWithEmbeddedMath(s)
             }
-            return .row([])
+            return starred ? .limitsOperator(base: result) : result
 
         case "mathbb", "mathcal", "mathscr", "mathfrak", "mathsf",
              "mathtt", "mathbf", "boldsymbol", "bm":
@@ -328,6 +380,7 @@ public enum MathParser {
         case "negmedspace": return .space(-4.0 / 18.0)
         case "negthickspace": return .space(-5.0 / 18.0)
         case "enspace": return .space(0.5)
+        case "notag", "nonumber": return .row([])   // no auto-numbering to suppress
         case "quad": return .space(1.0)
         case "qquad": return .space(2.0)
         case " ": return .space(6.0 / 18.0)

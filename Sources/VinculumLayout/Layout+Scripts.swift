@@ -97,6 +97,8 @@ extension MathLayoutEngine {
             return !(glyph.count == 1 && Self.integralGlyphs.contains(glyph[glyph.startIndex]))
         case let .functionName(name):
             return Self.limitFunctionNames.contains(name)
+        case .limitsOperator:
+            return true                       // \operatorname* always stacks
         default:
             return false
         }
