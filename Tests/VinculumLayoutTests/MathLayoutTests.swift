@@ -131,6 +131,22 @@ final class MathLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(ruleCount(ruled), 6, "bordered array draws its rules")
     }
 
+    func testLapBoxesHaveZeroWidth() {
+        // \mathrlap advances zero width; its content still draws.
+        let e = engine()
+        let lap = e.layout(MathParser.parse(#"\mathrlap{xyz}"#), display: false)
+        let plain = e.layout(MathParser.parse("xyz"), display: false)
+        XCTAssertEqual(lap.width, 0, accuracy: 0.001)
+        XCTAssertEqual(lap.elements.count, plain.elements.count, "content is still drawn")
+    }
+
+    func testSmashReportsZeroHeight() {
+        let e = engine()
+        let smashed = e.layout(MathParser.parse(#"\smash{\sqrt{2}}"#), display: false)
+        XCTAssertEqual(smashed.ascent, 0, accuracy: 0.001)
+        XCTAssertEqual(smashed.descent, 0, accuracy: 0.001)
+    }
+
     func testRadicalEmitsAStroke() {
         let s = engine().layout(MathParser.parse("\\sqrt{2}"))
         let strokes = s.elements.filter { if case .stroke = $0 { return true }; return false }

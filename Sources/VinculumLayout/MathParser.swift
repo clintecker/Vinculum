@@ -289,13 +289,35 @@ public enum MathParser {
             return .styled(base: body, color: color)
 
         // Spacing.
-        case ",": return .space(3.0 / 18.0)
-        case ":": return .space(4.0 / 18.0)
-        case ";": return .space(5.0 / 18.0)
-        case "!": return .space(-3.0 / 18.0)   // negative thin space
+        case ",", "thinspace": return .space(3.0 / 18.0)
+        case ":", "medspace", ">": return .space(4.0 / 18.0)
+        case ";", "thickspace": return .space(5.0 / 18.0)
+        case "!", "negthinspace": return .space(-3.0 / 18.0)   // negative thin space
+        case "negmedspace": return .space(-4.0 / 18.0)
+        case "negthickspace": return .space(-5.0 / 18.0)
+        case "enspace": return .space(0.5)
         case "quad": return .space(1.0)
         case "qquad": return .space(2.0)
         case " ": return .space(6.0 / 18.0)
+
+        // Explicit lengths. \hspace/\kern take em/pt; \mspace/\mkern take mu.
+        case "hspace", "kern":
+            return .space(readLength(&tokens, muDefault: false))
+        case "mspace", "mkern":
+            return .space(readLength(&tokens, muDefault: true))
+
+        // Struts, smashing, and lap (overlap) boxes.
+        case "mathstrut":
+            return .decorated(base: .symbol("(", .opening, style: .roman), decoration: .vphantom)
+        case "smash":
+            if tokens.first == .character("[") {   // \smash[t]/[b] — treat as plain smash
+                while let t = tokens.first, t != .character("]") { tokens.removeFirst() }
+                if tokens.first == .character("]") { tokens.removeFirst() }
+            }
+            return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .smash)
+        case "mathrlap": return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .rlap)
+        case "mathllap": return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .llap)
+        case "mathclap": return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .clap)
 
         // Manual delimiter sizing: \big( … \Bigg]. The prefix sets the target
         // height; the l/r/m suffix sets the spacing class.
@@ -493,6 +515,44 @@ public enum MathParser {
         case "r": return .closing
         case "m": return .relation
         default: return .ordinary
+        }
+    }
+
+    /// Reads a length argument (`{1em}`, `{18mu}`, or an unbraced `18mu`) and
+    /// returns it as an em fraction. `muDefault` picks the unit when none is
+    /// given (`\mkern`/`\mspace` default to mu, `\hspace`/`\kern` to pt).
+    private static func readLength(_ tokens: inout ArraySlice<Token>, muDefault: Bool) -> Double {
+        var s: String
+        if tokens.first == .groupOpen {
+            s = readBraceName(&tokens)
+        } else {
+            s = ""
+            while let t = tokens.first, case .character(let ch) = t,
+                  ch.isNumber || ch == "." || ch == "-" || ch == "+" {
+                s.append(ch); tokens.removeFirst()
+            }
+            var unit = 0                                  // units are 2 letters (em/mu/pt/ex)
+            while unit < 2, let t = tokens.first, case .character(let ch) = t, ch.isLetter {
+                s.append(ch); tokens.removeFirst(); unit += 1
+            }
+        }
+        return lengthToEm(s, muDefault: muDefault)
+    }
+
+    private static func lengthToEm(_ raw: String, muDefault: Bool) -> Double {
+        var num = "", unit = ""
+        for ch in raw {
+            if ch.isNumber || ch == "." || ch == "-" || ch == "+" { num.append(ch) }
+            else if ch.isLetter { unit.append(ch) }
+        }
+        guard let v = Double(num) else { return 0 }
+        switch unit.lowercased() {
+        case "em": return v
+        case "mu": return v / 18.0
+        case "ex": return v * 0.43
+        case "pt": return v / 10.0
+        case "": return muDefault ? v / 18.0 : v / 10.0
+        default:  return v / 10.0                          // cm/mm/in — rare inline, approximated
         }
     }
 

@@ -61,6 +61,10 @@ public enum MathDecoration: Hashable, Sendable {
     case bcancel      // \bcancel — a backward diagonal strike (╲)
     case xcancel      // \xcancel — both diagonals (╳)
     case negation     // \not — a short negation slash centered on the atom
+    case smash        // \smash — keep width, report zero height & depth
+    case rlap         // \mathrlap — zero width, content overhangs to the right
+    case llap         // \mathllap — zero width, content overhangs to the left
+    case clap         // \mathclap — zero width, content centered on the point
 }
 
 /// How an `.overUnder` decoration is drawn between base and annotations.

@@ -112,6 +112,9 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "big-operators-ext", latex: #"\bigoplus_{i=1}^{n} V_i \quad \coprod_j X_j \quad \iiint_V f\, dV"#, expectation: .mustRender),
         .init(name: "cancel", latex: #"\frac{\cancel{a}\, b}{\cancel{a}} = b, \quad \xcancel{x^2}"#, expectation: .mustRender),
         .init(name: "not-relations", latex: #"a \not= b, \quad x \not\in A, \quad P \not\subset Q"#, expectation: .mustRender),
+        // Batch 6 — explicit spacing, smash, struts, lap
+        .init(name: "explicit-spacing", latex: #"a \hspace{1em} b \quad p \mkern18mu q \quad x \thinspace y"#, expectation: .mustRender),
+        .init(name: "smash-strut", latex: #"\frac{\smash{\sqrt{2}}}{2} + \mathstrut x"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

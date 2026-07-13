@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.0 — 2026-07-12
+
+Spacing & box commands (Batch 6).
+
+- **Named spaces:** `\thinspace \medspace \thickspace \negthinspace
+  \negmedspace \negthickspace \enspace \>`.
+- **Explicit lengths:** `\hspace{…}` / `\kern…` (em/pt) and `\mspace{…}` /
+  `\mkern…` (mu), parsed braced or unbraced (`\mkern18mu`), converted to em.
+- **`\smash`** (keep width, zero height/depth), **`\mathstrut`** (invisible
+  paren-height strut), and the lap boxes **`\mathrlap` / `\mathllap` /
+  `\mathclap`** (zero-width right/left/center overlap).
+
+New `MathDecoration` cases `.smash`/`.rlap`/`.llap`/`.clap`. +5 tests
+(108 total).
+
 ## 0.10.0 — 2026-07-12
 
 Coverage expansion (Batch 5) — beyond the original roadmap.

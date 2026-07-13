@@ -58,6 +58,21 @@ extension MathLayoutEngine {
                                     .line(CGPoint(x: cx + halfW, y: axis + halfH))], width: t))
             return MathBox(width: baseBox.width, ascent: max(baseBox.ascent, axis + halfH),
                            descent: baseBox.descent, inkAscent: baseBox.inkAscent, elements: elements)
+
+        case .smash:
+            // Draw the content but report zero height/depth so it overlaps.
+            return MathBox(width: baseBox.width, ascent: 0, descent: 0, elements: baseBox.elements)
+
+        case .rlap:  // zero-width, content overhangs right (drawn at x = 0)
+            return MathBox(width: 0, ascent: baseBox.ascent, descent: baseBox.descent, elements: baseBox.elements)
+
+        case .llap:  // zero-width, content overhangs left
+            return MathBox(width: 0, ascent: baseBox.ascent, descent: baseBox.descent,
+                           elements: baseBox.placed(at: CGPoint(x: -baseBox.width, y: 0)))
+
+        case .clap:  // zero-width, content centered on the point
+            return MathBox(width: 0, ascent: baseBox.ascent, descent: baseBox.descent,
+                           elements: baseBox.placed(at: CGPoint(x: -baseBox.width / 2, y: 0)))
         }
     }
 }

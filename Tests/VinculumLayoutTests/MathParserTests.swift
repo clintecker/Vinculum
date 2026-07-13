@@ -150,6 +150,26 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(rule?.toColumn, 2)
     }
 
+    func testHspaceParsesEmLength() {
+        guard case .space(let w) = MathParser.parse("\\hspace{2em}") else { return XCTFail("expected space") }
+        XCTAssertEqual(w, 2.0, accuracy: 0.001)
+    }
+
+    func testMspaceParsesMuBraced() throws {
+        let space = try XCTUnwrap(spaceWidth(in: "a\\mspace{18mu}b"))   // 18mu = 1em
+        XCTAssertEqual(space, 1.0, accuracy: 0.001)
+    }
+
+    func testMkernParsesMuUnbraced() throws {
+        let space = try XCTUnwrap(spaceWidth(in: "a\\mkern18mu b"))
+        XCTAssertEqual(space, 1.0, accuracy: 0.001)
+    }
+
+    private func spaceWidth(in latex: String) -> Double? {
+        guard case .row(let parts) = MathParser.parse(latex) else { return nil }
+        return parts.compactMap { if case .space(let w) = $0 { return w } else { return nil } }.first
+    }
+
     func testMathbbStaysRoman() {
         guard case .symbol(let glyph, _, let style) = MathParser.parse("\\mathbb{R}") else {
             return XCTFail("expected symbol")

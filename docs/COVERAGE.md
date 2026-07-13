@@ -216,13 +216,20 @@ rest of the group) form is ❌ **not** supported — use the braced form.
 
 | Command | Width |
 | --- | --- |
-| `\,` | thin (3/18 em) |
-| `\:` | medium (4/18 em) |
-| `\;` | thick (5/18 em) |
-| `\!` | negative thin (−3/18 em) |
+| `\,` / `\thinspace` | thin (3/18 em) |
+| `\:` / `\>` / `\medspace` | medium (4/18 em) |
+| `\;` / `\thickspace` | thick (5/18 em) |
+| `\!` / `\negthinspace` | negative thin (−3/18 em) |
+| `\negmedspace` / `\negthickspace` | −4/18 · −5/18 em |
 | `\ ` (backslash-space) | 6/18 em |
-| `\quad` | 1 em |
-| `\qquad` | 2 em |
+| `\enspace` | 1/2 em |
+| `\quad` / `\qquad` | 1 em · 2 em |
+| `\hspace{…}` / `\kern…` | explicit em/pt length |
+| `\mspace{…}` / `\mkern…` | explicit mu length (braced or unbraced) |
+
+**Boxes:** `\smash` (keep width, zero height/depth), `\mathstrut` (invisible
+paren-height strut), `\mathrlap` / `\mathllap` / `\mathclap` (zero-width
+right/left/center overlap), `\phantom` / `\hphantom` / `\vphantom`, `\boxed`.
 
 ---
 
