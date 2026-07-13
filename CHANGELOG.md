@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.5.0 — 2026-07-12
+
+Performance, platform-fitness, and robustness pass, informed by a four-lens
+expert review (Apple-platform architecture, performance, Swift/API quality,
+typesetting correctness).
+
+**Performance** (realistic load = a live editor re-projecting hundreds of
+equations per keystroke):
+- **Cache lookup now precedes parsing.** The render cache key is fully
+  determined by the arguments, so a hit — positive *or* negative — costs no
+  parse or layout. Previously every cache hit re-parsed the LaTeX (~15× on a
+  matrix), and unsupported input re-parsed on every re-projection forever;
+  unsupported/degenerate results are now remembered as negative entries.
+- **Glyph measurement is memoized.** The parser emits one node per character,
+  so an N×N matrix of identical entries re-measured each glyph N² times
+  (~95% redundant, ~200 CoreText calls for an 8×8 of 15 unique glyphs). A
+  shared, lock-guarded `(text, size, mono)` cache turns those into dictionary
+  hits (~5× on matrix/large-expression cold renders).
+- **CTFont creation is cached** by size (used by both measurement and drawing).
+
+**Platform fitness:**
+- **Tintable template images.** When a scene has no explicit `\color`, the
+  attachment is emitted as a template image, so selected math inverts with the
+  surrounding run and dark-mode adapts without a host re-render. Colored math
+  stays baked. (`MathScene.hasExplicitColor` is new public API.)
+- **iOS dynamic-ink correctness.** Rasterization pins the trait style so a
+  dynamic `UIColor` ink resolves to the variant matching the theme's canvas,
+  matching the macOS path.
+- **Bounded render cache** (count + pixel-byte cost) instead of memory-pressure
+  eviction only.
+- **Consistent color across platforms.** `\color` builds its `CGColor` directly
+  in sRGB, so AppKit and UIKit render an identical color.
+
+**Robustness / quality:**
+- The accent parser no longer force-unwraps `MathAccent(command:)` — it
+  degrades to `.unsupported` if the case list and initializer ever drift,
+  honoring the never-crash contract every other command already follows.
+- Removed a dead `max` branch in the fraction descent and an orphaned doc
+  comment; zero build warnings.
+
+Public API additions: `MathScene.hasExplicitColor`, `MathElement.color`.
+
 ## 0.4.0 — 2026-07-12
 
 **Every magic number is now a named font parameter.** Following Knuth's rule

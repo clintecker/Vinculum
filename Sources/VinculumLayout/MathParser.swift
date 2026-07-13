@@ -183,8 +183,12 @@ public enum MathParser {
         case "hat", "check", "tilde", "bar", "vec", "dot", "ddot", "breve",
              "mathring", "acute", "grave", "widehat", "widetilde",
              "overline", "underline":
+            // The case list and MathAccent.init? must agree; rather than trust
+            // that (a force-unwrap would violate the never-crash contract),
+            // degrade to .unsupported if they ever drift.
+            guard let accent = MathAccent(command: name) else { return .unsupported("\\" + name) }
             let base = parseAtom(&tokens) ?? .row([])
-            return .accent(base: base, accent: MathAccent(command: name)!)
+            return .accent(base: base, accent: accent)
 
         case "overset", "stackrel":
             // \overset{over}{base}; \stackrel is the same with a relation base.

@@ -95,6 +95,13 @@ public enum MathElement: Sendable {
     /// A stroked path — radical signs, braces, arrows, box borders.
     case stroke(path: [PathOp], width: CGFloat, cap: StrokeCap, join: StrokeJoin, color: MathColor?)
 
+    /// The explicit `\color` this primitive carries, or `nil` for theme ink.
+    public var color: MathColor? {
+        switch self {
+        case let .glyphs(_, _, _, _, c), let .rule(_, c), let .stroke(_, _, _, _, c): return c
+        }
+    }
+
     /// The same element translated by `d` (used to place a sub-box).
     func translated(by d: CGPoint) -> MathElement {
         switch self {
@@ -128,6 +135,11 @@ public struct MathScene: Sendable {
     public var elements: [MathElement]
 
     public var height: CGFloat { ascent + descent }
+
+    /// True if any primitive carries an explicit `\color`. When false the whole
+    /// scene is theme ink, so a renderer can emit a tintable template image
+    /// (which inverts under selection and adapts to appearance for free).
+    public var hasExplicitColor: Bool { elements.contains { $0.color != nil } }
 
     public init(width: CGFloat, ascent: CGFloat, descent: CGFloat, elements: [MathElement]) {
         self.width = width; self.ascent = ascent; self.descent = descent; self.elements = elements

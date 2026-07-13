@@ -24,10 +24,21 @@ enum MathFont {
 
     static var isAvailable: Bool { cgFont != nil }
 
+    // A tiny size→CTFont memo. Both measurement and drawing ask for the math
+    // font at a handful of sizes (base, script, scriptscript, display) over and
+    // over; `CTFontCreateWithGraphicsFont` isn't free, so cache it. Guarded by a
+    // lock (the measurer runs off-main); the value set is naturally small.
+    nonisolated(unsafe) private static var ctFontCache: [CGFloat: CTFont] = [:]
+    private static let ctFontLock = NSLock()
+
     /// A CTFont for the math font at `size`, or nil (caller falls back).
     static func ctFont(size: CGFloat) -> CTFont? {
         guard let cgFont else { return nil }
-        return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
+        ctFontLock.lock(); defer { ctFontLock.unlock() }
+        if let cached = ctFontCache[size] { return cached }
+        let font = CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
+        ctFontCache[size] = font
+        return font
     }
 }
 // The MATH-table constants moved to VinculumLayout's `MathConstants` (they're

@@ -24,8 +24,9 @@ extension MathLayoutEngine {
         let axis = size * MathConstants.axisHeight
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
         let ascent = axis + ruleThickness / 2 + gap + topBox.height
-        let descent = max(-(axis - ruleThickness / 2 - gap - bottomBox.height),
-                          bottomBox.height + gap - axis)
+        // Mirror of `ascent` about the axis: the denominator's bottom sits
+        // gap + half-rule below the axis, plus its own height.
+        let descent = bottomBox.height + gap - axis + ruleThickness / 2
 
         var elements: [MathElement] = []
         if hasRule {

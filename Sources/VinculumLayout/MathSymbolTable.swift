@@ -115,9 +115,6 @@ extension MathParser {
         "#": ("#", .ordinary),
     ]
 
-    /// True when the parse tree contains no `.unsupported` leaves — the
-    /// renderer uses this to decide native rendering vs. styled fallback.
-
     /// Reverse of `symbolTable`: glyph → atom class, so a directly-typed
     /// Unicode math character is classed like its command spelling.
     static let glyphAtomClass: [String: MathAtomClass] = {

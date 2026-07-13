@@ -59,13 +59,18 @@ public enum MathSceneRenderer {
         }
     }
 
+    // MathColor is already sRGB components, so build the CGColor directly in the
+    // sRGB space — identical on every platform (NSColor(srgbRed:) and
+    // UIColor(red:) disagree: the latter is device/extended RGB).
+    private static let sRGB = CGColorSpace(name: CGColorSpace.sRGB)
+
     private static func cgColor(_ color: MathColor?, _ theme: MathTheme) -> CGColor {
         guard let color else { return resolvedCGColor(theme.ink) }
-        #if canImport(AppKit)
-        return PlatformColor(srgbRed: color.red, green: color.green, blue: color.blue, alpha: color.alpha).cgColor
-        #else
-        return PlatformColor(red: color.red, green: color.green, blue: color.blue, alpha: color.alpha).cgColor
-        #endif
+        if let sRGB, let cg = CGColor(colorSpace: sRGB,
+                                      components: [color.red, color.green, color.blue, color.alpha]) {
+            return cg
+        }
+        return resolvedCGColor(theme.ink)
     }
 }
 
