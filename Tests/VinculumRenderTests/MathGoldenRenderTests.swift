@@ -83,6 +83,14 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "colored", latex: #"\color{#cc2222}{x} + \textcolor{#2244cc}{y} = \color{#00aa88}{z}"#, expectation: .mustRender),
         // Phase 4 — arrays with \hline no longer degrade (content survives)
         .init(name: "array-hline", latex: #"\begin{array}{cc} a & b \\ \hline c & d \end{array}"#, expectation: .mustRender),
+        // Stress corpus — the hardest CLEAN real-world expressions, promoted from
+        // MathStressGallery to lock their rendering against regression.
+        .init(name: "stress-nested-radical", latex: #"\sqrt{1 + \sqrt{1 + \sqrt{1 + \sqrt{1 + \cdots}}}}"#, expectation: .mustRender),
+        .init(name: "stress-continued-fraction", latex: #"\cfrac{1}{1 + \cfrac{1}{2 + \cfrac{1}{3 + \cfrac{1}{4 + \cdots}}}}"#, expectation: .mustRender),
+        .init(name: "stress-qed-lagrangian", latex: #"\mathcal{L} = -\frac{1}{4} F_{\mu\nu} F^{\mu\nu} + \bar{\psi}\left(i\gamma^\mu D_\mu - m\right)\psi"#, expectation: .mustRender),
+        .init(name: "stress-einstein-field", latex: #"R_{\mu\nu} - \tfrac{1}{2} R\, g_{\mu\nu} + \Lambda g_{\mu\nu} = \frac{8\pi G}{c^4}\, T_{\mu\nu}"#, expectation: .mustRender),
+        .init(name: "stress-path-integral", latex: #"\langle x_f \mid x_i \rangle = \int \mathcal{D}[x(t)]\; e^{\,iS[x]/\hbar}"#, expectation: .mustRender),
+        .init(name: "stress-product-sum", latex: #"\prod_{j \ge 0} \left( \sum_{k \ge 0} a_{jk} z^k \right) = \sum_{n \ge 0} z^n \left( \sum_{\substack{k_0, k_1, \ldots \ge 0 \\ k_0 + k_1 + \cdots = n}} a_{0k_0} a_{1k_1} \cdots \right)"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {
