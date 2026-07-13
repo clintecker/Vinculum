@@ -189,7 +189,7 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | Sub/superscripts `^` `_` | ✅ | Nested, both, on any atom |
 | Big operators with limits | ✅ | `\sum \prod \bigcup \bigcap` stack limits in display; `\int \oint` keep side-scripts (TeX `\nolimits`) |
 | Named operators `\lim \max \min \sup` | ✅ | Stack their limit underneath in display (`\lim_{x\to0}`) |
-| Symbols & Greek (~200 commands) | ✅ | Correct TeX atom classes → real inter-atom spacing |
+| Symbols & Greek (~400 commands) | ✅ | Correct TeX atom classes → real inter-atom spacing |
 | Matrix environments | ✅ | `pmatrix bmatrix Bmatrix vmatrix Vmatrix matrix`, `cases`, `aligned`/`align`/`gather`/`split`, `substack` |
 | Math alphabets | ✅ | `\mathbb \mathcal \mathscr \mathfrak \mathsf \mathtt \mathbf \boldsymbol` (Letterlike holes handled) |
 | Accents | ✅ | Point (`\hat \vec \bar \dot …`), stretchy (`\widehat \widetilde`), rules (`\overline \underline`) |

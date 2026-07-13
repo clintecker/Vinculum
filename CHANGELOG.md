@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.17.0 — 2026-07-12
+
+Symbol sweep (Batch 11) — **157 new symbols** with correct TeX atom classes
+(so inter-atom spacing is right), taking the table to ~400 commands.
+
+- **Relations:** `\leqslant \geqslant \eqsim \approxeq \lessapprox \gtrapprox
+  \lll \ggg \leqq \geqq \subseteqq \supseteqq \Subset \Supset \frown \smile
+  \vDash \Vdash \multimap \trianglelefteq \pitchfork …`
+- **Negations:** `\nleq \ngeq \nless \ngtr \nsim \ncong \nprec \nsucc \nvdash
+  \subsetneqq \lneq \gneq \lnsim \gnsim \ntrianglelefteq …`
+- **Arrows:** `\rightsquigarrow \twoheadrightarrow \dashrightarrow
+  \circlearrowleft \curvearrowright \leftrightarrows \Rrightarrow \longmapsto
+  \nrightarrow \looparrowright …`
+- **Harpoons:** `\leftharpoonup \rightharpoondown \upharpoonright
+  \leftrightharpoons …`
+- **Binary ops:** `\ltimes \rtimes \Cap \Cup \barwedge \veebar \boxdot
+  \circledast \dotplus \lessdot \gtrdot \intercal …`
+- **Letterlike:** `\hslash \Bbbk \digamma \varkappa \varrho \lozenge
+  \blacktriangle \measuredangle \sphericalangle \beth \gimel \daleth …`
+
++3 fixtures; all render with real font glyphs (no tofu).
+
 ## 0.16.0 — 2026-07-12
 
 Resolves three previously-deferred items (planned by a specialist squad).

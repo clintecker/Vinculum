@@ -129,6 +129,10 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "middle-fence", latex: #"\left\{\, x \in \mathbb{R} \;\middle|\; x > 0 \,\right\} \quad \left( \frac{a}{b} \middle/ \frac{c}{d} \right)"#, expectation: .mustRender),
         .init(name: "operatorname-star", latex: #"\operatorname*{Fix}_{x} T = x, \quad \operatorname*{argmax}_{\theta} \mathcal{L}(\theta)"#, expectation: .mustRender),
         .init(name: "tag", latex: #"x^2 + y^2 = r^2 \tag{3.1}"#, expectation: .mustRender),
+        // Batch 11 — extended symbols
+        .init(name: "symbols-relations", latex: #"a \leqslant b \lll c \precsim d, \quad x \nleq y \nsim z \ncong w"#, expectation: .mustRender),
+        .init(name: "symbols-arrows", latex: #"p \rightsquigarrow q \twoheadrightarrow r, \quad A \leftrightarrows B, \quad u \rightharpoonup v \leftrightharpoons w"#, expectation: .mustRender),
+        .init(name: "symbols-ops", latex: #"a \ltimes b \rtimes c, \quad x \boxdot y \circledast z \dotplus w, \quad \hslash \, \measuredangle \, \blacktriangle"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

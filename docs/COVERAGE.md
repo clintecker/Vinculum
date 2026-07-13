@@ -23,7 +23,7 @@ Legend: ✅ native render · ⚠️ accepted but semantics not fully honored ·
 | `\cfrac` | ✅ | `\cfrac{1}{1+\cfrac{1}{x}}` | Renders as a plain nested fraction (no cfrac left/right alignment) |
 | `\binom` | ✅ | `\binom{n}{k}` | Ruleless, paren-fenced |
 | `\dfrac` / `\tfrac` | ✅ | `\dfrac{a}{b}` | Force display / text style regardless of the ambient context |
-| `\dbinom` / `\tbinom` | ⚠️ | `\dbinom{n}{k}` | Same as `\binom`; forced size ignored |
+| `\dbinom` / `\tbinom` | ✅ | `\dbinom{n}{k}` | Force display / text style |
 | `\genfrac` | ✅ | `\genfrac{[}{]}{0pt}{}{n}{k}` | Custom delimiters, rule on/off (`0pt` = no rule), forced style (`0`=display) |
 
 ---
@@ -70,7 +70,7 @@ Extended set (all stack limits in display): `\iiint \iiiint \oiint \oiiint
 
 ---
 
-## Symbols & Greek (~200 commands)
+## Symbols & Greek (~400 commands)
 
 All carry correct TeX atom classes, so inter-atom spacing is real.
 
@@ -117,10 +117,10 @@ function-name set (`functionNames`).
 | `substack` | ✅ | tight centered stack (script size) |
 | `array` | ✅ | `{l c r \| c}` per-column alignment + `\|` vertical rules + `\hline` / `\cline{i-j}` — augmented matrices `[A\|b]`, bordered/truth tables |
 
-Row/column rules `\hline`, `\hdashline`, `\cline{a-b}` are **consumed and
-ignored** (so they don't flip the whole grid to a fallback), but no rule is
-drawn. Starred forms (`align*`, `pmatrix*`) are accepted (the `*` is
-stripped).
+In `array`, `\hline` / `\cline{a-b}` and `|` column rules **are drawn** (see
+Delimiter/array section). In the other environments they're consumed and
+ignored (they don't flip the grid to a fallback). Starred forms (`align*`,
+`pmatrix*`) are accepted (the `*` is stripped).
 
 ```latex
 \begin{pmatrix} a & b \\ c & d \end{pmatrix}
