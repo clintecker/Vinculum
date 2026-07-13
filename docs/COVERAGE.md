@@ -22,7 +22,7 @@ Legend: ✅ native render · ⚠️ accepted but semantics not fully honored ·
 | `\frac` | ✅ | `\frac{a}{b}` | Ruled, axis-aligned |
 | `\cfrac` | ✅ | `\cfrac{1}{1+\cfrac{1}{x}}` | Renders as a plain nested fraction (no cfrac left/right alignment) |
 | `\binom` | ✅ | `\binom{n}{k}` | Ruleless, paren-fenced |
-| `\dfrac` / `\tfrac` | ⚠️ | `\dfrac{a}{b}` | Parsed, but the forced display/text style is **ignored** — same as `\frac` |
+| `\dfrac` / `\tfrac` | ✅ | `\dfrac{a}{b}` | Force display / text style regardless of the ambient context |
 | `\dbinom` / `\tbinom` | ⚠️ | `\dbinom{n}{k}` | Same as `\binom`; forced size ignored |
 | `\genfrac` | ❌ | `\genfrac{(}{)}{0pt}{}{n}{k}` | The general 5-argument form is **not parsed** (the `genfrac` *node* exists internally, but only `\binom` produces it) |
 
@@ -207,8 +207,8 @@ rest of the group) form is ❌ **not** supported — use the braced form.
 | `\operatorname` | ✅ | Upright custom operator |
 | Named functions | ✅ | `\sin \cos \tan \log \ln \exp \lim \det \gcd \max \min …` |
 | Spaces inside `\text{…}` | ✅ | Interior spaces preserved (`\text{if } x`); nested braces kept |
-| `\operatorname*{…}` | ❌ | The `*` becomes a stray operator; limit-taking form not honored |
-| `\pmod` / `\bmod` | ❌ | `\pmod` degrades; `mod` alone is a function name |
+| `\operatorname*{…}` | ⚠️ | Parses and renders upright; the `*` limit-stacking is not honored yet |
+| `\pmod` / `\bmod` / `\pod` | ✅ | `a \equiv b \pmod{n}` → `(mod n)`; `\bmod` is a binary operator |
 
 ---
 
@@ -230,8 +230,8 @@ rest of the group) form is ❌ **not** supported — use the braced form.
 
 | Command | Status | Note |
 | --- | :---: | --- |
-| `\left … \right` | ✅ | Auto-sizes fences to the body: `( ) [ ]`, `\{ \}`, `\| \langle \rangle \lvert \rvert \lVert \Vert`, and `\left.`/`\right.` for a null fence. (`\lceil \rceil \lfloor \rfloor` work standalone but are **not** recognized as `\left`/`\right` fences — they fall back to `(`) |
-| `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ⚠️ | Parsed **transparently** — the following delimiter renders at normal size, not enlarged |
+| `\left … \right` | ✅ | Auto-sizes fences to the body: `( ) [ ]`, `\{ \}`, `\| \langle \rangle \lvert \rvert \lVert \Vert`, `\lceil \rceil \lfloor \rfloor`, arrows (`\uparrow`…), and `\left.`/`\right.` for a null fence |
+| `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ✅ | Enlarges the delimiter to 1.2 / 1.8 / 2.4 / 3.0× the base size; the suffix sets opening/closing/relation spacing |
 
 ---
 
@@ -257,14 +257,11 @@ so a definition in one block applies everywhere; later definitions win
 Honest list of what degrades to a source fallback (or is silently ignored):
 
 - **`\genfrac`** — the general 5-argument fraction form is not parsed.
-- **Forced fraction/binom style** — `\dfrac \tfrac \dbinom \tbinom` render but
-  ignore the forced display/text style.
-- **Explicit delimiter sizing** — `\big \Big \bigg \Bigg` (and `l`/`r`/`m`
-  variants) are transparent; the fence is not enlarged.
 - **True `\cfrac` alignment** — renders as a plain nested fraction.
 - **`array` column specs & rules** — grid renders centered; `{ccc}` and
   `\hline`/`\cline` are consumed but not applied.
-- **`\pmod` / `\bmod`**, **`\operatorname*`**, **`\cancel`**, **`\not`**.
+- **`\operatorname*` limit stacking** (parses, but renders upright),
+  **`\cancel`**, **`\not`**.
 - **Cramped-style script lowering** — the cramped style is not modeled.
 - **Additional big operators** — `\iiint \coprod \bigsqcup \bigvee \bigwedge
   \bigoplus \bigotimes \bigodot` are not in the symbol table.

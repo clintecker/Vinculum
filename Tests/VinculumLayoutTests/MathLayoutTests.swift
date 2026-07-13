@@ -66,6 +66,22 @@ final class MathLayoutTests: XCTestCase {
         XCTAssertGreaterThan(stacked.height, inline.height, "the limit moves under the operator")
     }
 
+    func testDfracForcesDisplaySizeInline() {
+        // \dfrac inline lays out at display size — taller than an inline \frac.
+        let e = engine()
+        let inlineFrac = e.layout(MathParser.parse("\\frac{a}{b}"), display: false)
+        let dfrac = e.layout(MathParser.parse("\\dfrac{a}{b}"), display: false)
+        XCTAssertGreaterThan(dfrac.height, inlineFrac.height, "\\dfrac forces the larger display style")
+    }
+
+    func testBigDelimiterEnlargesTheGlyph() {
+        // \Big( is markedly taller than a plain (.
+        let e = engine()
+        let plain = e.layout(MathParser.parse("("), display: false)
+        let big = e.layout(MathParser.parse("\\Big("), display: false)
+        XCTAssertGreaterThan(big.height, plain.height * 1.4, "\\Big enlarges the delimiter")
+    }
+
     func testRadicalEmitsAStroke() {
         let s = engine().layout(MathParser.parse("\\sqrt{2}"))
         let strokes = s.elements.filter { if case .stroke = $0 { return true }; return false }

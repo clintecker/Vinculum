@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.7.0 — 2026-07-12
+
+Common-commands batch (Batch 2 of the typesetting roadmap) — the constructs
+real math reaches for, prioritized by the stress-corpus coverage audit.
+
+- **`\pmod` / `\bmod` / `\pod`.** `a \equiv b \pmod{n}` renders `(mod n)` with
+  the correct leading space; `\bmod` is a binary operator (`a \bmod n`). These
+  were the *only* two commands the 46-equation stress corpus couldn't render —
+  the corpus now renders **100% natively**.
+- **`\dfrac` / `\tfrac` / `\dbinom` / `\tbinom` force their style.** A new
+  `.mathStyle` node forces display or text style regardless of context, so
+  `\dfrac` is large inline and `\tfrac` is small in a display block.
+- **`\big \Big \bigg \Bigg` (+ `l`/`r`/`m`) actually enlarge** the delimiter to
+  1.2 / 1.8 / 2.4 / 3.0× the base size, centered on the math axis, with the
+  suffix selecting opening/closing/relation spacing (new `.bigDelimiter` node).
+- **More `\left…\right` fences:** `\lceil \rceil \lfloor \rfloor`, `\uparrow`
+  `\downarrow` `\Uparrow` `\Downarrow` `\updownarrow`, and `\backslash` now
+  auto-size (previously fell back to `(`).
+- **`\operatorname*`** parses correctly (renders upright; `*` limit-stacking is
+  a follow-up) instead of degrading.
+
+**Quantum-information corpus + fixtures.** Added an entanglement page to the
+stress corpus (Bell/GHZ states, density matrices, the CHSH inequality with the
+Tsirelson bound, Schmidt decomposition, von Neumann entropy) and promoted
+several to golden fixtures. Corpus is now 55 equations at 100% native coverage.
+
++17 tests (94 total). New public node cases: `.mathStyle`, `.bigDelimiter`.
+
 ## 0.6.0 — 2026-07-12
 
 Everyday-correctness batch (from the typesetting review) — the fidelity gaps

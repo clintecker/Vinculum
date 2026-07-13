@@ -15,6 +15,21 @@ extension MathLayoutEngine {
                        elements: scaled.placed(at: CGPoint(x: 0, y: offset)))
     }
 
+    /// A lone `\big( … \Bigg]` delimiter: one glyph scaled to `factor × size`
+    /// and centered vertically on the math axis (not a body midline — there is
+    /// no body).
+    func bigDelimiterBox(_ glyph: String, factor: CGFloat, size: CGFloat) -> MathBox {
+        guard !glyph.isEmpty else { return .empty }
+        let probe = glyphBox(glyph, size: size, italic: false)
+        let scale = max(1, size * factor / max(probe.height, 1))
+        let scaled = glyphBox(glyph, size: size * scale, italic: false)
+        let axis = size * MathConstants.axisHeight
+        let offset = axis - (scaled.ascent - scaled.descent) / 2   // midpoint → axis
+        return MathBox(width: scaled.width, ascent: scaled.ascent + offset,
+                       descent: scaled.descent - offset,
+                       elements: scaled.placed(at: CGPoint(x: 0, y: offset)))
+    }
+
     /// `\left…\right`: a body flanked by fences sized to its height.
     func delimitedBox(_ left: String, _ body: MathNode, _ right: String, size: CGFloat, display: Bool) -> MathBox {
         let bodyBox = box(for: body, size: size, display: display)

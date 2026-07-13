@@ -139,12 +139,22 @@ public enum MathParser {
         case "frac", "tfrac", "dfrac", "cfrac":
             let numerator = parseAtom(&tokens) ?? .row([])
             let denominator = parseAtom(&tokens) ?? .row([])
-            return .fraction(numerator: numerator, denominator: denominator)
+            let frac = MathNode.fraction(numerator: numerator, denominator: denominator)
+            switch name {                          // \dfrac/\tfrac force the style
+            case "dfrac": return .mathStyle(base: frac, display: true)
+            case "tfrac": return .mathStyle(base: frac, display: false)
+            default: return frac
+            }
 
         case "binom", "dbinom", "tbinom":
             let top = parseAtom(&tokens) ?? .row([])
             let bottom = parseAtom(&tokens) ?? .row([])
-            return .genfrac(top: top, bottom: bottom, hasRule: false, left: "(", right: ")")
+            let binom = MathNode.genfrac(top: top, bottom: bottom, hasRule: false, left: "(", right: ")")
+            switch name {
+            case "dbinom": return .mathStyle(base: binom, display: true)
+            case "tbinom": return .mathStyle(base: binom, display: false)
+            default: return binom
+            }
 
         case "sqrt":
             // Optional degree: \sqrt[3]{x}
@@ -176,6 +186,9 @@ public enum MathParser {
             return .delimited(left: leftDelim, body: body.count == 1 ? body[0] : .row(body), right: rightDelim)
 
         case "text", "mathrm", "operatorname", "textrm":
+            // \operatorname* takes limits; consume the star (limit stacking for
+            // a custom operator is a follow-up — for now it renders upright).
+            if tokens.first == .character("*") { tokens.removeFirst() }
             // The tokenizer captured the body verbatim (spaces preserved).
             if case .rawText(let s)? = tokens.first {
                 tokens.removeFirst()
@@ -275,15 +288,26 @@ public enum MathParser {
         case "qquad": return .space(2.0)
         case " ": return .space(6.0 / 18.0)
 
-        // Manual delimiter sizing: we don't yet enlarge the fence, but the
-        // size prefix must be transparent — parse the delimiter that
-        // follows at normal size rather than degrading the whole
-        // expression (\big( used to become a source card).
+        // Manual delimiter sizing: \big( … \Bigg]. The prefix sets the target
+        // height; the l/r/m suffix sets the spacing class.
         case "big", "Big", "bigg", "Bigg",
              "bigl", "Bigl", "biggl", "Biggl",
              "bigr", "Bigr", "biggr", "Biggr",
              "bigm", "Bigm", "biggm", "Biggm":
-            return parseAtom(&tokens) ?? .row([])
+            guard let glyph = takeDelimiter(&tokens), !glyph.isEmpty else { return .row([]) }
+            return .bigDelimiter(glyph: glyph, factor: bigFactor(name), atomClass: bigClass(name))
+
+        case "pmod":
+            let n = parseAtom(&tokens) ?? .row([])
+            return .row([.space(0.6), .symbol("(", .opening, style: .roman),
+                         .symbol("mod", .ordinary, style: .roman), .space(3.0 / 18.0),
+                         n, .symbol(")", .closing, style: .roman)])
+        case "pod":
+            let n = parseAtom(&tokens) ?? .row([])
+            return .row([.space(0.6), .symbol("(", .opening, style: .roman),
+                         n, .symbol(")", .closing, style: .roman)])
+        case "bmod":
+            return .symbol("mod", .binary, style: .roman)
 
         default:
             if let (glyph, atomClass) = symbolTable[name] {
@@ -402,6 +426,30 @@ public enum MathParser {
         return .matrix(rows: rows, left: "", right: "", style: .substack)
     }
 
+    /// `\big`→1.2, `\Big`→1.8, `\bigg`→2.4, `\Bigg`→3.0 × base size (the
+    /// l/r/m suffix doesn't affect height).
+    private static func bigFactor(_ name: String) -> CGFloat {
+        var core = name
+        if let last = core.last, "lrm".contains(last) { core.removeLast() }
+        switch core {
+        case "Big": return 1.8
+        case "bigg": return 2.4
+        case "Bigg": return 3.0
+        default: return 1.2      // \big
+        }
+    }
+
+    /// The l/r/m suffix selects the spacing class: `\bigl(` opens, `\bigr)`
+    /// closes, `\bigm|` is a relation; a bare `\big` is ordinary.
+    private static func bigClass(_ name: String) -> MathAtomClass {
+        switch name.last {
+        case "l": return .opening
+        case "r": return .closing
+        case "m": return .relation
+        default: return .ordinary
+        }
+    }
+
     private static func takeDelimiter(_ tokens: inout ArraySlice<Token>) -> String? {
         guard let token = tokens.first else { return nil }
         tokens.removeFirst()
@@ -416,6 +464,16 @@ public enum MathParser {
             case "rangle": return "⟩"
             case "lvert", "rvert", "vert": return "|"
             case "lVert", "rVert", "Vert": return "‖"
+            case "lceil": return "⌈"
+            case "rceil": return "⌉"
+            case "lfloor": return "⌊"
+            case "rfloor": return "⌋"
+            case "uparrow": return "↑"
+            case "downarrow": return "↓"
+            case "updownarrow": return "↕"
+            case "Uparrow": return "⇑"
+            case "Downarrow": return "⇓"
+            case "backslash": return "\\"
             default: return nil
             }
         default:

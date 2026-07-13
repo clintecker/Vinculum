@@ -72,6 +72,17 @@ final class MathStressGallery: XCTestCase {
             #"\sum_{n \ge 0} F_n x^n = \frac{x}{1 - x - x^2}"#,
             #"\gcd(a, b) = \gcd(b,\, a \bmod b)"#,
         ]),
+        ("Quantum information & entanglement", [
+            #"|\Phi^{+}\rangle = \frac{1}{\sqrt{2}}\left(|00\rangle + |11\rangle\right)"#,
+            #"|\Psi^{-}\rangle = \frac{1}{\sqrt{2}}\left(|01\rangle - |10\rangle\right)"#,
+            #"\rho = \sum_i p_i\, |\psi_i\rangle\langle\psi_i|"#,
+            #"\rho_A = \operatorname{tr}_B\left(\rho_{AB}\right)"#,
+            #"S(\rho_A) = -\operatorname{tr}\left(\rho_A \log_2 \rho_A\right)"#,
+            #"\left| \langle AB \rangle + \langle AB' \rangle + \langle A'B \rangle - \langle A'B' \rangle \right| \le 2\sqrt{2}"#,
+            #"|\mathrm{GHZ}\rangle = \frac{1}{\sqrt{2}}\left(|000\rangle + |111\rangle\right)"#,
+            #"|\psi\rangle_{AB} = \sum_i \sqrt{\lambda_i}\; |i\rangle_A \otimes |i\rangle_B"#,
+            #"\langle \hat{O} \rangle = \operatorname{tr}\!\left(\rho\, \hat{O}\right)"#,
+        ]),
         ("TeXbook classics & torture", [
             #"\sqrt{1 + \sqrt{1 + \sqrt{1 + \sqrt{1 + \cdots}}}}"#,
             #"\cfrac{1}{1 + \cfrac{1}{2 + \cfrac{1}{3 + \cfrac{1}{4 + \cdots}}}}"#,

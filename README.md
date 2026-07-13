@@ -203,11 +203,12 @@ returns `nil`) — never a broken half-render. Full detail with examples in
 | Direct Unicode math (`∫ ∑ ≤ α`) | ✅ | Classed like its command spelling |
 | `\newcommand \renewcommand \def` | ✅ | Document-scoped, `#1…#9`, recursion-capped |
 | Spacing `\, \: \; \! \quad \qquad` | ✅ | |
-| `\dfrac` / `\tfrac` forced style | ⚠️ | Parses, but the forced display/text style is **ignored** |
-| `\big \Big \bigg \Bigg` sizing | ⚠️ | Parsed transparently; the delimiter is **not enlarged** |
+| `\dfrac` / `\tfrac` / `\dbinom` / `\tbinom` | ✅ | Force display/text style regardless of context |
+| `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ✅ | Enlarge the delimiter 1.2–3×, with opening/closing/relation spacing |
+| `\pmod` / `\bmod` / `\pod` | ✅ | `a \equiv b \pmod{n}`, `a \bmod n` |
 | `\genfrac` (general 5-arg form) | ❌ | Not parsed (only `\binom` uses the node internally) |
 | `array` column specs & rules | ❌ | Renders as a bare centered grid; `\hline`/column spec consumed & ignored |
-| `\pmod`, `\operatorname*`, `\cancel`, `\not` | ❌ | Degrade to source fallback |
+| `\operatorname*`, `\cancel`, `\not` | ❌ | `\operatorname*` parses (renders upright, no stacked limit yet); `\cancel`/`\not` degrade |
 | Cramped-style script lowering | ❌ | Not modeled |
 
 ⚠️ = accepted but semantics not fully honored. ❌ = degrades to fallback.

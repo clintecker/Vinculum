@@ -44,6 +44,11 @@ extension MathParser {
                     i = j
                     // Capture a text-command's brace body verbatim (spaces and
                     // nested braces preserved), so \text{if } keeps its space.
+                    // Also skip an optional `*` (\operatorname*), emitting it so
+                    // the parser can see the limit-taking star.
+                    if MathParser.rawTextCommands.contains(name) {
+                        if i < input.count, input[i] == "*" { tokens.append(.character("*")); i += 1 }
+                    }
                     if MathParser.rawTextCommands.contains(name), i < input.count, input[i] == "{" {
                         var depth = 0, raw = ""
                         while i < input.count {

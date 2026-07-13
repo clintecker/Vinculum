@@ -91,6 +91,16 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "stress-einstein-field", latex: #"R_{\mu\nu} - \tfrac{1}{2} R\, g_{\mu\nu} + \Lambda g_{\mu\nu} = \frac{8\pi G}{c^4}\, T_{\mu\nu}"#, expectation: .mustRender),
         .init(name: "stress-path-integral", latex: #"\langle x_f \mid x_i \rangle = \int \mathcal{D}[x(t)]\; e^{\,iS[x]/\hbar}"#, expectation: .mustRender),
         .init(name: "stress-product-sum", latex: #"\prod_{j \ge 0} \left( \sum_{k \ge 0} a_{jk} z^k \right) = \sum_{n \ge 0} z^n \left( \sum_{\substack{k_0, k_1, \ldots \ge 0 \\ k_0 + k_1 + \cdots = n}} a_{0k_0} a_{1k_1} \cdots \right)"#, expectation: .mustRender),
+        // Batch 2 — forced style, sized delimiters, \pmod/\bmod
+        .init(name: "dfrac-tfrac", latex: #"\dfrac{1}{2} + \tfrac{3}{4}"#, expectation: .mustRender),
+        .init(name: "big-sized", latex: #"\bigl( \frac{a}{b} \bigr) + \Big[ \sum_i x_i \Big]"#, expectation: .mustRender),
+        .init(name: "pmod-congruence", latex: #"a \equiv b \pmod{n}, \quad a \bmod n"#, expectation: .mustRender),
+        // Quantum information & entanglement
+        .init(name: "bell-state", latex: #"|\Phi^{+}\rangle = \frac{1}{\sqrt{2}}\left(|00\rangle + |11\rangle\right)"#, expectation: .mustRender),
+        .init(name: "chsh-inequality", latex: #"\left| \langle AB \rangle + \langle AB' \rangle + \langle A'B \rangle - \langle A'B' \rangle \right| \le 2\sqrt{2}"#, expectation: .mustRender),
+        .init(name: "entanglement-entropy", latex: #"S(\rho_A) = -\operatorname{tr}\left(\rho_A \log_2 \rho_A\right)"#, expectation: .mustRender),
+        .init(name: "schmidt-decomposition", latex: #"|\psi\rangle_{AB} = \sum_i \sqrt{\lambda_i}\; |i\rangle_A \otimes |i\rangle_B"#, expectation: .mustRender),
+        .init(name: "density-matrix", latex: #"\rho = \sum_i p_i\, |\psi_i\rangle\langle\psi_i|"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

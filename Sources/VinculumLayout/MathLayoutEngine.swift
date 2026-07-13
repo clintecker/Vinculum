@@ -79,6 +79,13 @@ public struct MathLayoutEngine {
             sub.colorOverride = MathColor.resolve(color) ?? colorOverride
             return sub.box(for: base, size: s, display: display)
 
+        case .mathStyle(let base, let forced):
+            // \dfrac/\tfrac: force the subtree's style regardless of context.
+            return box(for: base, size: s, display: forced)
+
+        case .bigDelimiter(let glyph, let factor, _):
+            return bigDelimiterBox(glyph, factor: factor, size: s)
+
         case .unsupported(let source):
             // Callers gate on isFullySupported; draw something sane regardless.
             return glyphBox(source, size: s * MathLayout.unsupportedSourceScale, italic: false, mono: true)
@@ -160,6 +167,8 @@ public struct MathLayoutEngine {
             return (kind == .rightarrow || kind == .leftarrow) ? .relation : .ordinary
         case .decorated(let base, _): return atomClass(of: base)
         case .styled(let base, _): return atomClass(of: base)
+        case .mathStyle(let base, _): return atomClass(of: base)
+        case .bigDelimiter(_, _, let cls): return cls
         case .space, .unsupported: return nil
         }
     }

@@ -35,6 +35,10 @@ extension MathParser {
             return isFullySupported(base)
         case .styled(let base, _):
             return isFullySupported(base)
+        case .mathStyle(let base, _):
+            return isFullySupported(base)
+        case .bigDelimiter:
+            return true
         }
     }
 
@@ -80,6 +84,10 @@ extension MathParser {
                 walk(base)
             case .styled(let base, _):
                 walk(base)
+            case .mathStyle(let base, _):
+                walk(base)
+            case .bigDelimiter:
+                break
             }
         }
         walk(node)

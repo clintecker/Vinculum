@@ -64,6 +64,63 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(sup.first, .symbol("\u{2032}", .ordinary, style: .roman))
     }
 
+    func testDfracForcesDisplayStyle() {
+        // \dfrac wraps its fraction in a display-forcing style node.
+        guard case .mathStyle(let base, let display) = MathParser.parse("\\dfrac{a}{b}") else {
+            return XCTFail("expected mathStyle")
+        }
+        XCTAssertTrue(display)
+        guard case .fraction = base else { return XCTFail("expected a fraction inside") }
+    }
+
+    func testTfracForcesTextStyle() {
+        guard case .mathStyle(_, let display) = MathParser.parse("\\tfrac{a}{b}") else {
+            return XCTFail("expected mathStyle")
+        }
+        XCTAssertFalse(display)
+    }
+
+    func testPlainFracInheritsStyle() {
+        // \frac is NOT wrapped — it inherits the ambient style.
+        guard case .fraction = MathParser.parse("\\frac{a}{b}") else {
+            return XCTFail("expected a bare fraction")
+        }
+    }
+
+    func testBigDelimiterCarriesFactorAndClass() {
+        // \bigl( is an opening delimiter enlarged 1.2×.
+        guard case .bigDelimiter(let glyph, let factor, let cls) = MathParser.parse("\\bigl(") else {
+            return XCTFail("expected bigDelimiter")
+        }
+        XCTAssertEqual(glyph, "(")
+        XCTAssertEqual(factor, 1.2, accuracy: 0.001)
+        XCTAssertEqual(cls, .opening)
+    }
+
+    func testBiggRightBracketIsClosingAndTaller() {
+        guard case .bigDelimiter(let glyph, let factor, let cls) = MathParser.parse("\\biggr]") else {
+            return XCTFail("expected bigDelimiter")
+        }
+        XCTAssertEqual(glyph, "]")
+        XCTAssertEqual(factor, 2.4, accuracy: 0.001)
+        XCTAssertEqual(cls, .closing)
+    }
+
+    func testPmodProducesParenthesizedMod() {
+        // \pmod{n} → a leading space, "(mod " n ")".
+        guard case .row(let parts) = MathParser.parse("\\pmod{n}") else {
+            return XCTFail("expected a row")
+        }
+        XCTAssertTrue(parts.contains(.symbol("mod", .ordinary, style: .roman)))
+        XCTAssertTrue(parts.contains(.symbol("(", .opening, style: .roman)))
+    }
+
+    func testBmodIsABinaryOperator() {
+        guard case .symbol("mod", .binary, _) = MathParser.parse("\\bmod") else {
+            return XCTFail("expected a binary mod symbol")
+        }
+    }
+
     func testMathbbStaysRoman() {
         guard case .symbol(let glyph, _, let style) = MathParser.parse("\\mathbb{R}") else {
             return XCTFail("expected symbol")
