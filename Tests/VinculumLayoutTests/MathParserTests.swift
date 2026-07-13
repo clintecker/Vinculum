@@ -159,6 +159,23 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(parts.last, .functionName(" terms"))
     }
 
+    func testMathbinForcesBinaryClass() {
+        guard case .classified(_, let cls) = MathParser.parse(#"\mathbin{\star}"#) else {
+            return XCTFail("expected .classified")
+        }
+        XCTAssertEqual(cls, .binary)
+    }
+
+    func testStatefulColorAppliesToRestOfGroup() {
+        // {\color{red} a + b} + c : the color wraps a+b (rest of the group).
+        guard case .row(let outer) = MathParser.parse(#"{\color{red} a + b} + c"#) else {
+            return XCTFail("expected a row")
+        }
+        guard case .styled(_, "red") = outer.first else {
+            return XCTFail("first element is the red-styled a+b")
+        }
+    }
+
     func testAlignatConsumesColumnCount() {
         // \begin{alignat}{2} must consume the {2}; it used to leak as cell 1.
         guard case .matrix(let rows, _, _, _) =

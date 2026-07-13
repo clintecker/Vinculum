@@ -137,6 +137,9 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "alignat-env", latex: #"\begin{alignat}{2} x &= 1 & \quad y &= 2 \\ a &= 30 & \quad b &= 4 \end{alignat}"#, expectation: .mustRender),
         .init(name: "matrix-star-right", latex: #"\begin{pmatrix*}[r] -1 & 2 \\ 30 & -4 \end{pmatrix*}"#, expectation: .mustRender),
         .init(name: "multline-env", latex: #"\begin{multline} a + b + c + d \\ + e + f + g + h \end{multline}"#, expectation: .mustRender),
+        // Batch 12 — atom-class overrides, \pmb, stateful \color
+        .init(name: "atom-class", latex: #"a \mathbin{\star} b \mathrel{\triangleq} c, \quad \pmb{v} = \mathbf{0}"#, expectation: .mustRender),
+        .init(name: "stateful-color", latex: #"{\color{red} a + b} + \color{blue} c \cdot d"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

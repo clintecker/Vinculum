@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.19.0 — 2026-07-13
+
+Operator & atom-class machinery (Batch 12).
+
+- **Atom-class overrides:** `\mathbin \mathrel \mathop \mathord \mathopen
+  \mathclose \mathpunct \mathinner` force the inter-atom spacing class of a
+  subexpression (new transparent `.classified` node; `\mathop` also takes
+  display limits).
+- **`\pmb`** (poor-man bold) → rendered bold.
+- **Stateful `\color{name}`** — the one-arg form now applies to the rest of the
+  current group (`{\color{red} a+b} + c`), in addition to the localized
+  `\color{name}{body}` / `\textcolor{name}{body}` forms.
+
+`\DeclareMathOperator` is a planned follow-up (needs a macro-table branch).
++2 tests (117 total).
+
 ## 0.18.0 — 2026-07-12
 
 Environment fixes (Batch 13) — two real parser bugs + two new environments.

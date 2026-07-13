@@ -267,6 +267,19 @@ public enum MathParser {
             let inner = parseAtom(&tokens) ?? .row([])
             return styledLetters(inner, command: name)
 
+        case "pmb":                              // poor-man bold ≈ bold
+            return styledLetters(parseAtom(&tokens) ?? .row([]), command: "mathbf")
+
+        // Atom-class overrides: force the inter-atom spacing class of a subexpr.
+        case "mathbin":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .binary)
+        case "mathrel":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .relation)
+        case "mathop":    return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .largeOperator)
+        case "mathord", "mathinner":
+                          return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .ordinary)
+        case "mathopen":  return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .opening)
+        case "mathclose": return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .closing)
+        case "mathpunct": return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .punctuation)
+
         case "begin":
             return parseEnvironment(&tokens)
 
@@ -364,13 +377,24 @@ public enum MathParser {
         case "vphantom":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .vphantom)
 
-        case "color", "textcolor":
-            // \color{name}{body} and \textcolor{name}{body} both take the
-            // color as a brace name then the body (we don't support the
-            // stateful \color{name}-applies-to-rest form).
+        case "textcolor":
+            // \textcolor{name}{body} — always localized to the body.
             let color = readBraceName(&tokens)
-            let body = parseAtom(&tokens) ?? .row([])
-            return .styled(base: body, color: color)
+            return .styled(base: parseAtom(&tokens) ?? .row([]), color: color)
+
+        case "color":
+            // \color{name}{body} (localized) OR stateful \color{name} — applies
+            // to the rest of the current group.
+            let color = readBraceName(&tokens)
+            if tokens.first == .groupOpen {
+                return .styled(base: parseAtom(&tokens) ?? .row([]), color: color)
+            }
+            var rest: [MathNode] = []
+            while let t = tokens.first, t != .groupClose {
+                guard let atom = parseAtomWithScripts(&tokens) else { break }
+                rest.append(atom)
+            }
+            return .styled(base: rest.count == 1 ? rest[0] : .row(rest), color: color)
 
         // Spacing.
         case ",", "thinspace": return .space(3.0 / 18.0)

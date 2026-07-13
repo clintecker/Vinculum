@@ -25,6 +25,8 @@ extension MathParser {
             return segments.allSatisfy(isFullySupported)
         case .limitsOperator(let base):
             return isFullySupported(base)
+        case .classified(let base, _):
+            return isFullySupported(base)
         case .matrix(let rows, _, _, _):
             return rows.allSatisfy { $0.allSatisfy(isFullySupported) }
         case .accent(let base, _):
@@ -79,6 +81,8 @@ extension MathParser {
             case .fenced(_, let segments):
                 segments.forEach(walk)
             case .limitsOperator(let base):
+                walk(base)
+            case .classified(let base, _):
                 walk(base)
             case .matrix(let rows, _, _, _):
                 rows.forEach { $0.forEach(walk) }

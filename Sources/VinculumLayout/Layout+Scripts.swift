@@ -99,6 +99,8 @@ extension MathLayoutEngine {
             return Self.limitFunctionNames.contains(name)
         case .limitsOperator:
             return true                       // \operatorname* always stacks
+        case let .classified(_, cls):
+            return cls == .largeOperator      // \mathop takes limits
         default:
             return false
         }

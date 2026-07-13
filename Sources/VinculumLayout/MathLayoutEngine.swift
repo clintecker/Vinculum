@@ -46,6 +46,9 @@ public struct MathLayoutEngine {
         case .limitsOperator(let base):
             return box(for: base, size: s, display: display)   // transparent; limits handled in scriptsBox
 
+        case .classified(let base, _):
+            return box(for: base, size: s, display: display)   // transparent; only the atom class changes
+
         case .space(let ems):
             return MathBox(width: CGFloat(ems) * s, ascent: 0, descent: 0)
 
@@ -173,6 +176,7 @@ public struct MathLayoutEngine {
         case .symbol(_, let cls, _): return cls
         case .functionName: return .largeOperator
         case .limitsOperator(let base): return atomClass(of: base)
+        case .classified(_, let cls): return cls
         case .fraction, .radical, .delimited, .fenced, .row, .matrix: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)

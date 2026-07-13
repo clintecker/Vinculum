@@ -27,6 +27,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// (a custom `\lim`-like operator). Transparent to layout except that
     /// `takesDisplayLimits` is true for it.
     case limitsOperator(base: MathNode)
+    /// A subexpression with a forced atom class: `\mathbin`, `\mathrel`,
+    /// `\mathop`, `\mathord`, `\mathopen`, `\mathclose`, `\mathpunct`. Layout is
+    /// transparent; only the inter-atom spacing class changes.
+    case classified(base: MathNode, atomClass: MathAtomClass)
     /// Explicit spacing (multiples of an em quad).
     case space(Double)
     /// An accent over (or rule under) a base: \hat \vec \bar \overline …
