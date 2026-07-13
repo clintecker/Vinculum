@@ -120,6 +120,9 @@ final class MathGoldenRenderTests: XCTestCase {
         // Batch 8 — math inside \text, logic symbols
         .init(name: "math-in-text", latex: #"\overbrace{x_1 + \cdots + x_n}^{\text{$n$ terms}} \quad \text{for all $\epsilon > 0$}"#, expectation: .mustRender),
         .init(name: "logic-symbols", latex: #"p \land q \lor \neg r \implies (a \le b \colon a \in S)"#, expectation: .mustRender),
+        // Batch 9 — \genfrac, extended stretchy arrows
+        .init(name: "genfrac-forms", latex: #"\genfrac{[}{]}{0pt}{}{n}{k} \quad \genfrac{(}{)}{}{}{a+b}{c}"#, expectation: .mustRender),
+        .init(name: "x-arrows-ext", latex: #"A \xLongrightarrow{\varphi} B \xhookrightarrow{\iota} C \xmapsto{f} D"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

@@ -24,7 +24,7 @@ Legend: ✅ native render · ⚠️ accepted but semantics not fully honored ·
 | `\binom` | ✅ | `\binom{n}{k}` | Ruleless, paren-fenced |
 | `\dfrac` / `\tfrac` | ✅ | `\dfrac{a}{b}` | Force display / text style regardless of the ambient context |
 | `\dbinom` / `\tbinom` | ⚠️ | `\dbinom{n}{k}` | Same as `\binom`; forced size ignored |
-| `\genfrac` | ❌ | `\genfrac{(}{)}{0pt}{}{n}{k}` | The general 5-argument form is **not parsed** (the `genfrac` *node* exists internally, but only `\binom` produces it) |
+| `\genfrac` | ✅ | `\genfrac{[}{]}{0pt}{}{n}{k}` | Custom delimiters, rule on/off (`0pt` = no rule), forced style (`0`=display) |
 
 ---
 
@@ -265,7 +265,6 @@ so a definition in one block applies everywhere; later definitions win
 
 Honest list of what degrades to a source fallback (or is silently ignored):
 
-- **`\genfrac`** — the general 5-argument fraction form is not parsed.
 - **True `\cfrac` alignment** — renders as a plain nested fraction.
 - **`\operatorname*` limit stacking** (parses, but renders upright).
 - **Discrete delimiter variants** — auto-sized fences scale the base glyph

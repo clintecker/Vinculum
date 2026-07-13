@@ -156,6 +156,20 @@ public enum MathParser {
             default: return binom
             }
 
+        case "genfrac":
+            // \genfrac{ldelim}{rdelim}{thickness}{style}{num}{denom}
+            let ldelim = readBraceName(&tokens), rdelim = readBraceName(&tokens)
+            let thickness = readBraceName(&tokens), styleArg = readBraceName(&tokens)
+            let num = parseAtom(&tokens) ?? .row([]), den = parseAtom(&tokens) ?? .row([])
+            let numeric = thickness.filter { $0.isNumber || $0 == "." }
+            let hasRule = thickness.isEmpty || (Double(numeric) ?? 1) != 0   // "0pt" → no rule
+            let gf = MathNode.genfrac(top: num, bottom: den, hasRule: hasRule, left: ldelim, right: rdelim)
+            switch styleArg {
+            case "0": return .mathStyle(base: gf, display: true)     // \displaystyle
+            case "1", "2", "3": return .mathStyle(base: gf, display: false)
+            default: return gf
+            }
+
         case "sqrt":
             // Optional degree: \sqrt[3]{x}
             var degree: MathNode?
@@ -256,8 +270,12 @@ public enum MathParser {
             }
             return .overUnder(base: body, over: nil, under: label, kind: .underbrace)
 
-        case "xrightarrow", "xleftarrow":
+        case "xrightarrow", "xleftarrow", "xLongrightarrow", "xLongleftarrow",
+             "xhookrightarrow", "xhookleftarrow", "xmapsto", "xrightharpoonup",
+             "xrightharpoondown", "xleftharpoonup", "xleftharpoondown",
+             "xleftrightarrow", "xrightleftharpoons":
             // \xrightarrow[under]{over} — optional [under], then {over}.
+            // All the variant arrows approximate to a stretchy left/right shaft.
             var under: MathNode?
             if tokens.first == .character("[") {
                 tokens.removeFirst()
@@ -269,8 +287,9 @@ public enum MathParser {
                 under = nodes.count == 1 ? nodes[0] : .row(nodes)
             }
             let over = parseAtom(&tokens) ?? .row([])
+            let leftish = name.contains("left") && !name.contains("rightleft")
             return .overUnder(base: .row([]), over: over, under: under,
-                              kind: name == "xrightarrow" ? .rightarrow : .leftarrow)
+                              kind: leftish ? .leftarrow : .rightarrow)
 
         case "substack":
             return parseSubstack(&tokens)

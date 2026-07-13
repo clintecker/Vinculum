@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.14.0 — 2026-07-12
+
+General fractions & arrow variants (Batch 9).
+
+- **`\genfrac{ldelim}{rdelim}{thickness}{style}{num}{denom}`** — the general
+  fraction form: custom delimiters, rule on/off (`0pt` → no rule, e.g. a
+  Legendre bracket `\genfrac{[}{]}{0pt}{}{n}{k}`), and forced style.
+- **More stretchy arrows:** `\xLongrightarrow \xLongleftarrow \xhookrightarrow
+  \xhookleftarrow \xmapsto \xrightharpoonup \xrightharpoondown \xleftharpoonup
+  \xleftharpoondown \xleftrightarrow \xrightleftharpoons` — all take `{over}` /
+  `[under]` labels (approximated to a stretchy left/right shaft).
+
++2 fixtures.
+
 ## 0.13.0 — 2026-07-12
 
 Math-in-text and symbol fill-in (Batch 8).
