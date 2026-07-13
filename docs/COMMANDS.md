@@ -15,6 +15,15 @@ This file is a lookup index, not a semantics spec. Where a command has a caveat
 (letters-only alphabets, gated delimiter variants, approximated arrows) it is
 noted inline.
 
+**Visual charts.** Every symbol and structural command is rendered to an image
+chart — a font-specimen grid per atom class (`sym-relations.png`,
+`sym-binary.png`, `sym-operators.png`, `sym-ordinary.png`, …), the function
+operators (`sym-functions.png`), and source-beside-render structural examples
+(`cmd-structural.png`). CI regenerates them on every push to `main` and
+publishes them to the [`gallery` branch](https://github.com/clintecker/Vinculum/tree/gallery),
+so they're always current — e.g.
+`https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-relations.png`.
+
 ---
 
 # Part 1 — Structural & layout commands

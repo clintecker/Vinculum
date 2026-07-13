@@ -70,6 +70,9 @@ jobs:
             swift test --filter GalleryGenerator/testGenerateGallery || true
           VINCULUM_STRESS_DIR=/tmp/vinc-gallery \
             swift test --filter MathStressGallery/testGenerateStressPages || true
+          # Comprehensive command charts: every symbol by atom class + structural examples.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter CommandGalleryGenerator/testGenerateCommandGallery || true
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery
