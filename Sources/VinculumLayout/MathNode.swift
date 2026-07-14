@@ -135,6 +135,17 @@ public enum MathAccent: Hashable, Sendable {
 
     public var isStretchy: Bool { self == .widehat || self == .widetilde || self == .widecheck }
 
+    /// The combining-mark spelling of a stretchy accent — the glyph whose
+    /// MATH-table horizontal variants provide the wider drawn cuts.
+    public var stretchyGlyph: String? {
+        switch self {
+        case .widehat: return "\u{0302}"     // combining circumflex
+        case .widetilde: return "\u{0303}"   // combining tilde
+        case .widecheck: return "\u{030C}"   // combining caron
+        default: return nil
+        }
+    }
+
     public init?(command: String) {
         switch command {
         case "hat": self = .hat

@@ -62,6 +62,29 @@ enum MathVariantTable {
         return DelimiterAssembly(placements: placements, width: width,
                                  height: solved.total * size)
     }
+
+    /// The widest HORIZONTAL variant of a combining accent not exceeding
+    /// `maxWidth` (TeX Rule 12's successor walk). Ink located via `inkLeft`
+    /// because combining marks draw behind their origin.
+    static func wideAccent(for accentGlyph: String, maxWidth: CGFloat, size: CGFloat,
+                           font: MathFont) -> DelimiterShape? {
+        guard let data = font.variantsData,
+              let ctFont = font.ctFont(size: size),
+              let baseID = font.glyphID(for: accentGlyph, size: size),
+              let con = data.horizontal[baseID] else { return nil }
+        var chosen: MathVariantsData.Variant?
+        for v in con.variants where v.advance * size <= maxWidth { chosen = v }
+        guard let chosen else { return nil }
+        var glyph = CGGlyph(chosen.glyphID)
+        var rect = CGRect.zero
+        CTFontGetBoundingRectsForGlyphs(ctFont, .horizontal, &glyph, &rect, 1)
+        guard rect.width > 0 else { return nil }
+        let metrics = GlyphMetrics(width: rect.width,
+                                   ascent: max(0, rect.maxY), descent: max(0, -rect.minY),
+                                   inkAscent: max(0, rect.maxY), inkDescent: rect.minY,
+                                   inkLeft: rect.minX)
+        return DelimiterShape(glyphID: chosen.glyphID, metrics: metrics)
+    }
 }
 
 /// The injected `MathDelimiterProvider` backed by `MathVariantTable`.
@@ -77,6 +100,13 @@ public enum CoreTextDelimiterProvider {
     public static func makeAssembly(font: MathFont = .latinModern) -> MathDelimiterAssemblyProvider {
         { glyph, minHeight, size in
             MathVariantTable.assembly(for: glyph, minHeight: minHeight, size: size, font: font)
+        }
+    }
+
+    /// Horizontal width variants for stretchy accents (\widehat family).
+    public static func makeAccentVariants(font: MathFont = .latinModern) -> MathAccentVariantProvider {
+        { glyph, maxWidth, size in
+            MathVariantTable.wideAccent(for: glyph, maxWidth: maxWidth, size: size, font: font)
         }
     }
 }

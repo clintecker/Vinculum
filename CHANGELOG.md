@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+Phase 5c + 8c + hardening: wide accents, error ranges, fuzz.
+
+- **Wide accents from the font** — `\widehat`/`\widetilde`/`\widecheck`
+  walk the MATH table's HORIZONTAL variant ladder (via the combining-mark
+  glyphs that carry it) and pick the widest drawn cut not exceeding the
+  accentee (TeX Rule 12's successor walk), centered on the attachment
+  point; scaling remains the headless fallback. `GlyphMetrics` gains
+  `inkLeft` (default 0) to place combining-mark ink.
+- **`MathParser.diagnostics(for:parsing:)`** — one `MathParseIssue` per
+  unsupported token in source order, each with the snippet, a message,
+  and its `Range<String.Index>` (duplicates map to successive
+  occurrences; macro-rewritten snippets report nil rather than a wrong
+  range). The editor squiggle substrate iosMath's message-only errors
+  can't provide.
+- **Deterministic fuzz suite** — 4,000 grammar/mutation inputs plus
+  depth attacks (5,000 open braces, 2,000 nested `\frac{`): the whole
+  pipeline never crashes, never emits non-finite geometry.
+
 Phase 9a: spoken math — VoiceOver reads the equation, a native-library
 first.
 

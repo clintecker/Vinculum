@@ -36,7 +36,33 @@ extension MathLayoutEngine {
         }
 
         guard let rawGlyph = accent.glyph else { return baseBox }
-        // Stretchy accents (\widehat/\widetilde) scale toward the CHAR width
+        let clearance = size * MathLayout.Accent.clearance
+        let baseAttach = glyphTypography(of: base, size: size)?.topAccentAttachment
+            ?? coreBox.width / 2
+        // Vertical: hug the ink, but never sink below the font's designed
+        // accent seat (AccentBaseHeight ≈ x-height).
+        let seat = max(baseBox.inkAscent, size * constants.accentBaseHeight)
+
+        // Stretchy accents first try the font's HORIZONTAL width variants
+        // (TeX Rule 12's successor walk): the widest drawn cut not exceeding
+        // the accentee, centered on its attachment point.
+        if accent.isStretchy, let stretchy = accent.stretchyGlyph,
+           let shape = accentVariants?(stretchy, coreBox.width, size) {
+            let m = shape.metrics
+            let accentBaselineY = seat + clearance - m.inkDescent
+            let ascent = max(baseBox.ascent, accentBaselineY + m.inkAscent)
+            var elements = baseBox.elements
+            // Center the variant's INK on the attachment point (combining
+            // marks draw behind their origin — inkLeft locates the ink).
+            let x = baseAttach - (m.inkLeft + m.width / 2)
+            elements.append(.glyph(id: shape.glyphID, size: size,
+                                   origin: CGPoint(x: x, y: accentBaselineY),
+                                   color: colorOverride))
+            return MathBox(width: baseBox.width, ascent: ascent, descent: baseBox.descent,
+                           inkAscent: baseBox.inkAscent, elements: elements)
+        }
+
+        // Scaling path: stretchy accents scale toward the CHAR width
         // (scripts don't widen the accent); point accents keep natural size.
         let accentSize = accent.isStretchy
             ? min(size * MathLayout.Accent.stretchyMax,
@@ -44,19 +70,13 @@ extension MathLayoutEngine {
             : size * MathLayout.Accent.pointScale
         let glyph = Self.mathVariant(rawGlyph, italic: false, bold: false)
         let m = measure(glyph, accentSize, false)
-        let clearance = size * MathLayout.Accent.clearance
 
         // Horizontal: attachment-point skew (strictly better than TeX's
         // \skewchar — the font states where each glyph's accent belongs).
-        let baseAttach = glyphTypography(of: base, size: size)?.topAccentAttachment
-            ?? coreBox.width / 2
         let accentAttach = typography?(glyph, accentSize)?.topAccentAttachment
             ?? m.width / 2
         let accentX = baseAttach - accentAttach
 
-        // Vertical: hug the ink, but never sink below the font's designed
-        // accent seat (AccentBaseHeight ≈ x-height).
-        let seat = max(baseBox.inkAscent, size * constants.accentBaseHeight)
         let accentBaselineY = seat + clearance - m.inkDescent
         let ascent = max(baseBox.ascent, accentBaselineY + m.inkAscent)
 

@@ -58,13 +58,26 @@ public struct GlyphMetrics: Sendable {
     public var inkAscent: CGFloat
     /// Bottom of the actual ink relative to the baseline (usually ≥ -descent).
     public var inkDescent: CGFloat
+    /// Left edge of the ink relative to the glyph origin — negative for
+    /// combining marks, whose ink is drawn behind the origin. 0 for normal
+    /// spacing glyphs.
+    public var inkLeft: CGFloat
 
     public init(width: CGFloat, ascent: CGFloat, descent: CGFloat,
-                inkAscent: CGFloat, inkDescent: CGFloat) {
+                inkAscent: CGFloat, inkDescent: CGFloat, inkLeft: CGFloat = 0) {
         self.width = width; self.ascent = ascent; self.descent = descent
         self.inkAscent = inkAscent; self.inkDescent = inkDescent
+        self.inkLeft = inkLeft
     }
 }
+
+/// Injected MATH-table horizontal accent variants: given a combining accent
+/// glyph and the accentee's width (points) at `size`, returns the WIDEST
+/// variant not exceeding it (TeX Rule 12's successor walk), or nil (caller
+/// scales). `metrics.width` is the ink width; `metrics.inkLeft` locates the
+/// ink relative to the glyph origin for centering.
+public typealias MathAccentVariantProvider =
+    @Sendable (_ accentGlyph: String, _ maxWidth: CGFloat, _ size: CGFloat) -> DelimiterShape?
 
 /// Measures a glyph run at `size`. `mono` selects the monospace fallback used
 /// for unsupported source; every other run is the math font. Style (italic/

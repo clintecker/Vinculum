@@ -87,7 +87,8 @@ public enum MathImageRenderer {
                                       delimiters: CoreTextDelimiterProvider.make(font: font),
                                       constants: font.constants,
                                       typography: CoreTextTypographyProvider.make(font: font),
-                                      delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: font))
+                                      delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: font),
+                                      accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: font))
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 

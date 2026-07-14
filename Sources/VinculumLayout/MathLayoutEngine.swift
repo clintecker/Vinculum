@@ -14,6 +14,9 @@ public struct MathLayoutEngine {
     /// Optional MATH-table glyph assembly for heights beyond the largest
     /// size variant; `nil` → fall through to scaling.
     let delimiterAssembly: MathDelimiterAssemblyProvider?
+    /// Optional MATH-table horizontal accent variants (wide hats/tildes);
+    /// `nil` → scale the spacing accent glyph.
+    let accentVariants: MathAccentVariantProvider?
     let baseSize: CGFloat
     /// The font's MATH-table constants. Defaults to Latin Modern Math's
     /// values (`.latinModern`) so headless hosts need no font; the renderer
@@ -35,10 +38,12 @@ public struct MathLayoutEngine {
                 delimiters: MathDelimiterProvider? = nil,
                 constants: MathFontConstants = .latinModern,
                 typography: MathGlyphTypographyProvider? = nil,
-                delimiterAssembly: MathDelimiterAssemblyProvider? = nil) {
+                delimiterAssembly: MathDelimiterAssemblyProvider? = nil,
+                accentVariants: MathAccentVariantProvider? = nil) {
         self.measure = measure
         self.delimiters = delimiters
         self.delimiterAssembly = delimiterAssembly
+        self.accentVariants = accentVariants
         self.baseSize = baseSize
         self.constants = constants
         self.typography = typography
