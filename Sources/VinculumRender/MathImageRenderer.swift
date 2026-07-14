@@ -63,8 +63,16 @@ public enum MathImageRenderer {
         #if canImport(AppKit)
         image.accessibilityDescription = speech
         #else
-        image.isAccessibilityElement = true
-        image.accessibilityLabel = speech
+        // UIImage's accessibility properties are MainActor-isolated;
+        // attachmentString is deliberately nonisolated (hosts pre-render
+        // off-main), so set them only when we're already on main.
+        // VinculumLabel/MathView carry the speech regardless.
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                image.isAccessibilityElement = true
+                image.accessibilityLabel = speech
+            }
+        }
         #endif
         let attachment = NSTextAttachment()
         attachment.image = image
