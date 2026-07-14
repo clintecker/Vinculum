@@ -12,7 +12,7 @@ final class MathTypesetterTests: XCTestCase {
     private let baseSize: CGFloat = 14
 
     private func engine() -> MathLayoutEngine {
-        MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: baseSize)
+        MathLayoutEngine.make(baseSize: baseSize)
     }
     private func scene(_ latex: String, display: Bool = false) -> MathScene {
         engine().layout(MathParser.parse(latex), display: display)

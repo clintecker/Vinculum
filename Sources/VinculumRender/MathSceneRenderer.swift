@@ -12,10 +12,11 @@ import VinculumLayout
 public enum MathSceneRenderer {
 
     /// Draws `scene` into a y-up context with its baseline origin at `origin`.
-    /// `font` must be the font the scene was measured with (glyph IDs and
-    /// metrics are font-specific).
+    /// `font` MUST be the font the scene was measured with — glyph IDs and
+    /// metrics are font-specific, so there is deliberately no default: a
+    /// mismatched font would silently draw wrong glyphs.
     public static func draw(_ scene: MathScene, theme: MathTheme, in ctx: CGContext,
-                            at origin: CGPoint, font: MathFont = .latinModern) {
+                            at origin: CGPoint, font: MathFont) {
         for element in scene.elements {
             switch element {
             case let .glyphs(text, size, mono, o, color):

@@ -75,19 +75,14 @@ public final class VinculumLabel: PlatformView {
     private var imageSize: CGSize = .zero
 
     private func refresh() {
-        let attributed = MathImageRenderer.attachmentString(
+        let result = MathImageRenderer.rendered(
             latex: latex, display: displayMode, mathTheme: mathTheme,
             baseSize: baseSize, font: font)
-        var image: PlatformImage?
-        attributed?.enumerateAttribute(
-            .attachment, in: NSRange(location: 0, length: attributed?.length ?? 0)) { value, _, _ in
-            if let a = value as? NSTextAttachment, let i = a.image { image = i }
-        }
-        isRendered = image != nil
-        imageView.setImage(image)
-        imageSize = image?.size ?? .zero
+        isRendered = result != nil
+        imageView.setImage(result?.image)
+        imageSize = result?.image.size ?? .zero
         // VoiceOver reads the equation itself.
-        let speech = isRendered ? MathSpeech.describe(MathParser.parse(latex)) : latex
+        let speech = result?.spokenDescription ?? latex
         #if canImport(AppKit)
         setAccessibilityElement(true)
         setAccessibilityRole(.staticText)

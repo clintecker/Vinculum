@@ -100,7 +100,7 @@ final class GalleryGenerator: XCTestCase {
     private struct Row { let label: String; let scene: MathScene; let labelLine: CTLine?; let labelW: CGFloat; let labelAsc: CGFloat; let labelDesc: CGFloat }
 
     private func poster(to url: URL, title: String, sections: [(String, [String])]) throws {
-        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 22)
+        let engine = MathLayoutEngine.make(baseSize: 22)
         let labelFont = CTFontCreateWithName("Menlo" as CFString, 12, nil)
         let headerFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 15, nil)
         let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 20, nil)
@@ -188,7 +188,7 @@ final class GalleryGenerator: XCTestCase {
                     draw(ll, x: margin + (labelColW - r.labelW), baseline: y, color: gray)
                 }
                 // Math left-aligned, baseline shared with the label.
-                MathSceneRenderer.draw(r.scene, theme: .light, in: ctx, at: CGPoint(x: boxX, y: y))
+                MathSceneRenderer.draw(r.scene, theme: .light, in: ctx, at: CGPoint(x: boxX, y: y), font: .latinModern)
                 y -= rowDesc + rowGap
             }
             y -= sectionGap

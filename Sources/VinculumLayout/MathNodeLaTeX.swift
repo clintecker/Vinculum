@@ -158,7 +158,9 @@ extension MathNode {
             return Self.overUnderLaTeX(base: base, over: over, under: under, kind: kind)
 
         case .decorated(let base, let decoration):
-            if decoration == .negation { return "\\not\(base.toLaTeX())" }
+            // Braced so a letter argument can't fuse into the command name
+            // (`\not a` must not serialize to `\nota`).
+            if decoration == .negation { return "\\not{\(base.toLaTeX())}" }
             let cmd: String
             switch decoration {
             case .boxed: cmd = "boxed"

@@ -18,13 +18,26 @@ public enum MathImageRenderer {
     // A cached result. A `nil` image is a NEGATIVE entry — LaTeX we already know
     // is unsupported or degenerate — so re-projecting it (every keystroke, in a
     // live editor) is a dictionary hit instead of a re-parse forever.
+    // INVARIANT: entries (image included) are immutable after publication to
+    // the cache — the image is shared across threads, so all mutation
+    // (isTemplate, accessibility) happens in buildEntry, pre-publication.
     private final class Entry {
         let image: PlatformImage?
         let descent: CGFloat
+        let speech: String
         let cost: Int
-        init(image: PlatformImage?, descent: CGFloat, cost: Int) {
-            self.image = image; self.descent = descent; self.cost = cost
+        init(image: PlatformImage?, descent: CGFloat, speech: String, cost: Int) {
+            self.image = image; self.descent = descent; self.speech = speech; self.cost = cost
         }
+    }
+
+    /// A rendered equation: the bitmap, the baseline descent (points below
+    /// the baseline the image extends), and the spoken description for
+    /// accessibility. What `VinculumLabel`/`MathView` build on.
+    public struct RenderedMath {
+        public let image: PlatformImage
+        public let descent: CGFloat
+        public let spokenDescription: String
     }
 
     // NSCache is documented thread-safe; the compiler can't prove it Sendable.
@@ -36,14 +49,16 @@ public enum MathImageRenderer {
         c.totalCostLimit = 32 * 1024 * 1024
         return c
     }()
-    /// An attachment string for the given LaTeX, or nil if unsupported.
-    public static func attachmentString(
+    /// The rendered equation for the given LaTeX, or nil if unsupported —
+    /// the image, its baseline descent, and the spoken description, all from
+    /// the cache when warm.
+    public static func rendered(
         latex: String,
         display: Bool,
         mathTheme: MathTheme,
         baseSize: CGFloat,
         font: MathFont = .latinModern
-    ) -> NSAttributedString? {
+    ) -> RenderedMath? {
         // The key is fully determined by the arguments, so check the cache
         // BEFORE parsing — a hit (positive OR negative) costs no parse/layout.
         let key = "\(font.name)|\(display ? "D" : "I")|\(mathTheme.fingerprint)|\(baseSize)|\(latex)" as NSString
@@ -55,29 +70,24 @@ public enum MathImageRenderer {
                                baseSize: baseSize, font: font)
             cache.setObject(entry, forKey: key, cost: entry.cost)
         }
-
         guard let image = entry.image else { return nil }
-        // Spoken-math description so VoiceOver reads the equation, not
-        // "image" (generated from the same tree that was typeset).
-        let speech = MathSpeech.describe(MathParser.parse(latex))
-        #if canImport(AppKit)
-        image.accessibilityDescription = speech
-        #else
-        // UIImage's accessibility properties are MainActor-isolated;
-        // attachmentString is deliberately nonisolated (hosts pre-render
-        // off-main), so set them only when we're already on main.
-        // VinculumLabel/MathView carry the speech regardless.
-        if Thread.isMainThread {
-            MainActor.assumeIsolated {
-                image.isAccessibilityElement = true
-                image.accessibilityLabel = speech
-            }
-        }
-        #endif
+        return RenderedMath(image: image, descent: entry.descent, spokenDescription: entry.speech)
+    }
+
+    /// An attachment string for the given LaTeX, or nil if unsupported.
+    public static func attachmentString(
+        latex: String,
+        display: Bool,
+        mathTheme: MathTheme,
+        baseSize: CGFloat,
+        font: MathFont = .latinModern
+    ) -> NSAttributedString? {
+        guard let r = rendered(latex: latex, display: display, mathTheme: mathTheme,
+                               baseSize: baseSize, font: font) else { return nil }
         let attachment = NSTextAttachment()
-        attachment.image = image
-        let imageSize = image.size
-        attachment.bounds = CGRect(x: 0, y: -entry.descent, width: imageSize.width, height: imageSize.height)
+        attachment.image = r.image
+        let imageSize = r.image.size
+        attachment.bounds = CGRect(x: 0, y: -r.descent, width: imageSize.width, height: imageSize.height)
         return NSAttributedString(attachment: attachment)
     }
 
@@ -86,17 +96,16 @@ public enum MathImageRenderer {
     private static func buildEntry(latex: String, display: Bool,
                                    mathTheme: MathTheme, baseSize: CGFloat,
                                    font: MathFont) -> Entry {
-        let negative = Entry(image: nil, descent: 0, cost: 1)
+        let negative = Entry(image: nil, descent: 0, speech: latex, cost: 1)
         let node = MathParser.parse(latex)
         guard MathParser.isFullySupported(node) else { return negative }
+        // Spoken-math description so VoiceOver reads the equation, not
+        // "image" — computed once here (same tree that gets typeset) and
+        // stamped on the image BEFORE the entry is published to the cache
+        // (the cached image is shared across threads; see Entry).
+        let speech = MathSpeech.describe(node)
 
-        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(font: font),
-                                      baseSize: display ? baseSize * 1.15 : baseSize,
-                                      delimiters: CoreTextDelimiterProvider.make(font: font),
-                                      constants: font.constants,
-                                      typography: CoreTextTypographyProvider.make(font: font),
-                                      delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: font),
-                                      accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: font))
+        let engine = MathLayoutEngine.make(font: font, baseSize: display ? baseSize * 1.15 : baseSize)
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 
@@ -117,6 +126,8 @@ public enum MathImageRenderer {
             return true
         }
         image.isTemplate = isTemplate
+        // Pre-publication accessibility stamp (see Entry invariant).
+        image.accessibilityDescription = speech
         #else
         let renderer = UIGraphicsImageRenderer(size: size)
         var image = renderer.image { rendererContext in
@@ -131,10 +142,22 @@ public enum MathImageRenderer {
             }
         }
         if isTemplate { image = image.withRenderingMode(.alwaysTemplate) }
+        // UIImage's accessibility setters are MainActor-isolated and this
+        // builder is deliberately nonisolated (hosts pre-render off-main),
+        // so stamp only when already on main — still pre-publication, so
+        // the cached image is never mutated after it's shared. The speech
+        // always travels on RenderedMath/VinculumLabel/MathView regardless.
+        if Thread.isMainThread {
+            let stamped = image
+            MainActor.assumeIsolated {
+                stamped.isAccessibilityElement = true
+                stamped.accessibilityLabel = speech
+            }
+        }
         #endif
 
         let cost = Int(size.width * size.height * 4) // ~bytes/point²; proportional
-        return Entry(image: image, descent: scene.descent + padding, cost: cost)
+        return Entry(image: image, descent: scene.descent + padding, speech: speech, cost: cost)
     }
 }
 #endif

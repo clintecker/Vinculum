@@ -21,12 +21,15 @@ extension MathLayoutEngine {
         } else {
             baseBox = coreBox
         }
-        let ruleThickness = max(1, size * constants.overbarRuleThickness)
-        let gap = size * constants.overbarVerticalGap
-
-        // Drawn rules: \overline above, \underline below.
+        // Drawn rules: \overline above, \underline below — each with ITS
+        // OWN font constants (they coincide in LM Math but not necessarily
+        // in other fonts; the underbar set was parsed-but-unread before).
         if accent == .overline || accent == .underline {
             let over = accent == .overline
+            let ruleThickness = max(1, size * (over ? constants.overbarRuleThickness
+                                                    : constants.underbarRuleThickness))
+            let gap = size * (over ? constants.overbarVerticalGap
+                                   : constants.underbarVerticalGap)
             let ascent = baseBox.ascent + (over ? gap + ruleThickness : 0)
             let descent = baseBox.descent + (over ? 0 : gap + ruleThickness)
             var elements = baseBox.elements

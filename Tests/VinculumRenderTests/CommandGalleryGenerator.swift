@@ -59,7 +59,7 @@ final class CommandGalleryGenerator: XCTestCase {
     // MARK: - Symbol grid (font-specimen tiles)
 
     private func symbolGrid(to url: URL, title: String, entries: [(label: String, latex: String)]) throws {
-        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 21)
+        let engine = MathLayoutEngine.make(baseSize: 21)
         let labelFont = CTFontCreateWithName("Menlo" as CFString, 9, nil)
         let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 20, nil)
 
@@ -99,7 +99,8 @@ final class CommandGalleryGenerator: XCTestCase {
             // glyph, baseline-aligned + centered
             let gx = cellX + (cellW - t.scene.width) / 2
             MathSceneRenderer.draw(t.scene, theme: .light, in: ctx,
-                                   at: CGPoint(x: gx, y: cellBottom + baselineFromBottom))
+                                   at: CGPoint(x: gx, y: cellBottom + baselineFromBottom),
+                                   font: .latinModern)
             // command label (mono), centered under the glyph
             drawLine(t.label, x: cellX + (cellW - t.labelW) / 2,
                      baseline: cellBottom + labelBaselineFromBottom, color: grayColor, in: ctx)
@@ -151,7 +152,7 @@ final class CommandGalleryGenerator: XCTestCase {
     // MARK: - Shared compositor primitives
 
     private func rowPoster(to url: URL, title: String, sections: [(String, [(String, String)])]) throws {
-        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 22)
+        let engine = MathLayoutEngine.make(baseSize: 22)
         let labelFont = CTFontCreateWithName("Menlo" as CFString, 11, nil)
         let headerFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 14, nil)
         let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 20, nil)
@@ -195,7 +196,7 @@ final class CommandGalleryGenerator: XCTestCase {
                 let asc = max(r.scene.ascent, 11), desc = max(r.scene.descent, 4)
                 y -= asc
                 drawLine(r.label, x: margin + (labelColW - r.labelW), baseline: y, color: grayColor, in: ctx)
-                MathSceneRenderer.draw(r.scene, theme: .light, in: ctx, at: CGPoint(x: boxX, y: y))
+                MathSceneRenderer.draw(r.scene, theme: .light, in: ctx, at: CGPoint(x: boxX, y: y), font: .latinModern)
                 y -= desc + rowGap
             }
             y -= secGap

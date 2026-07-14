@@ -185,7 +185,7 @@ final class MathStressGallery: XCTestCase {
     /// Lays the page's equations out centered and stacked on a white page,
     /// like a document — the "does dense real math hold up" view.
     private func renderPage(_ page: Page, to url: URL) throws {
-        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(), baseSize: 21)
+        let engine = MathLayoutEngine.make(baseSize: 21)
         let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 22, nil)
         let margin: CGFloat = 44, gap: CGFloat = 26
 
@@ -231,7 +231,7 @@ final class MathStressGallery: XCTestCase {
         for s in scenes {
             y -= s.ascent
             let x = margin + (contentWidth - s.width) / 2   // centered like a display equation
-            MathSceneRenderer.draw(s, theme: .light, in: ctx, at: CGPoint(x: x, y: y))
+            MathSceneRenderer.draw(s, theme: .light, in: ctx, at: CGPoint(x: x, y: y), font: .latinModern)
             y -= s.descent + gap
         }
 

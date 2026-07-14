@@ -25,27 +25,16 @@ public struct MathView: View {
     }
 
     public var body: some View {
-        if let image = renderedImage() {
+        if let r = MathImageRenderer.rendered(
+            latex: latex, display: display, mathTheme: theme, baseSize: baseSize, font: font) {
             #if canImport(AppKit)
-            Image(nsImage: image).renderingMode(image.isTemplate ? .template : .original)
-                .accessibilityLabel(MathSpeech.describe(MathParser.parse(latex)))
+            Image(nsImage: r.image).renderingMode(r.image.isTemplate ? .template : .original)
+                .accessibilityLabel(r.spokenDescription)
             #else
-            Image(uiImage: image)
-                .accessibilityLabel(MathSpeech.describe(MathParser.parse(latex)))
+            Image(uiImage: r.image)
+                .accessibilityLabel(r.spokenDescription)
             #endif
         }
-    }
-
-    private func renderedImage() -> PlatformImage? {
-        guard let attributed = MathImageRenderer.attachmentString(
-            latex: latex, display: display, mathTheme: theme, baseSize: baseSize, font: font)
-        else { return nil }
-        var image: PlatformImage?
-        attributed.enumerateAttribute(
-            .attachment, in: NSRange(location: 0, length: attributed.length)) { value, _, _ in
-            if let a = value as? NSTextAttachment, let i = a.image { image = i }
-        }
-        return image
     }
 
     // MARK: - Modifiers

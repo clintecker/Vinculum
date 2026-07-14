@@ -34,6 +34,7 @@ final class MathRoundTripTests: XCTestCase {
         #"\rule{1em}{0.5em} + \raisebox{0.5em}{up}"#,
         #"\mathbf{Av} + \mathrm{const} + \alpha\beta\gamma"#,
         #"a \not= b \quad \sum_{\substack{i < n \\ i > 0}} i"#,
+        #"\not a + \not\alpha + \not\subset"#,   // letter args must not fuse into \nota
         #"\begin{array}{l|c} a & b \\ \hline c & d \end{array}"#,
         #"\begin{aligned} a &= b \\ &= c \end{aligned}"#,
         #"\left\{ x \middle| x > 0 \right\}"#,

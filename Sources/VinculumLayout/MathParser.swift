@@ -2,11 +2,21 @@ import Foundation
 
 public enum MathParser {
 
-    /// Parser recursion depth tracks brace / environment nesting; adversarial
-    /// input ("{{{{…" ×10k) would otherwise overflow the stack. Past this
-    /// bound the whole expression degrades to styled source (PRD rule:
-    /// unknown input degrades, never crashes).
+    /// Recursion bound. Enforced twice: a linear pre-scan rejects extreme
+    /// brace/environment nesting up front, and a RUNTIME depth counter in
+    /// `parseAtom` bounds the recursion the pre-scan cannot see — commands
+    /// that take an atom argument without braces (`\sqrt\sqrt\sqrt…`) recurse
+    /// once per command with zero braces. Past the bound, input degrades to
+    /// `.unsupported` (PRD rule: unknown input degrades, never crashes).
     static let maxNestingDepth = 64
+
+    // Runtime recursion depth, thread-local so concurrent parses don't
+    // interfere (the parser is a static API used from multiple threads).
+    private static let depthKey = "VinculumMathParserDepth"
+    private static var currentDepth: Int {
+        get { Thread.current.threadDictionary[depthKey] as? Int ?? 0 }
+        set { Thread.current.threadDictionary[depthKey] = newValue }
+    }
 
     /// Parses a LaTeX math string. Unknown commands become `.unsupported`
     /// leaves; the parse itself never fails.
@@ -81,6 +91,23 @@ public enum MathParser {
 
     /// One atom: a group, a command, or a single character.
     private static func parseAtom(_ tokens: inout ArraySlice<Token>) -> MathNode? {
+        // The runtime half of the recursion bound (see maxNestingDepth):
+        // groups AND brace-free command arguments both pass through here.
+        // 2× the brace bound leaves room for legitimate mixed nesting.
+        let depth = currentDepth
+        guard depth < maxNestingDepth * 2 else {
+            // Consume one token so every caller still makes progress.
+            guard let token = tokens.first else { return nil }
+            tokens.removeFirst()
+            if case .command(let name) = token { return .unsupported("\\" + name) }
+            return .unsupported("…")
+        }
+        currentDepth = depth + 1
+        defer { currentDepth = depth }
+        return parseAtomBody(&tokens)
+    }
+
+    private static func parseAtomBody(_ tokens: inout ArraySlice<Token>) -> MathNode? {
         guard let token = tokens.first else { return nil }
         tokens.removeFirst()
 

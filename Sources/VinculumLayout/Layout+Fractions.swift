@@ -24,11 +24,12 @@ extension MathLayoutEngine {
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
         var shiftUp = size * constants.fractionNumeratorDisplayStyleShiftUp
         var shiftDown = size * constants.fractionDenominatorDisplayStyleShiftDown
-        let minGap = size * constants.fractionNumDisplayStyleGapMin
+        let numGapMin = size * constants.fractionNumDisplayStyleGapMin
+        let denGapMin = size * constants.fractionDenomDisplayStyleGapMin
         let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
-        if numClear < minGap { shiftUp += minGap - numClear }
+        if numClear < numGapMin { shiftUp += numGapMin - numClear }
         let denClear = (axis - ruleThickness / 2) - (bottomBox.ascent - shiftDown)
-        if denClear < minGap { shiftDown += minGap - denClear }
+        if denClear < denGapMin { shiftDown += denGapMin - denClear }
 
         let inset = size * MathLayout.Fraction.ruleInset
         func placeX(_ b: MathBox, _ a: CfracAlign) -> CGFloat {

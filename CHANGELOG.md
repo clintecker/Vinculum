@@ -1,5 +1,41 @@
 # Changelog
 
+## Unreleased
+
+Expert-review fixes (six-lens panel: decomposition, correctness,
+concurrency, cleanliness, DRY, dead code — findings tracked from the
+0.24.0 review).
+
+- **Fixed: parser stack overflow on brace-free recursive commands**
+  (`\sqrt\sqrt\sqrt…` ×10k crashed; the pre-scan guard only counted
+  braces). A thread-local runtime depth counter in `parseAtom` now bounds
+  ALL recursion; past it, input degrades to fallback. New fuzz probes pin
+  the class.
+- **Fixed: cached-image data race** — the Phase 9a accessibility stamp
+  mutated the shared cached image on every call from any thread. Speech
+  is now computed once per cache miss, stored on the entry, and stamped
+  pre-publication; cache hits no longer re-parse (restoring the cache's
+  contract) and `MathView` no longer parses twice per body evaluation.
+- **New `MathImageRenderer.rendered(latex:…) → RenderedMath`** — image +
+  baseline descent + spoken description; `VinculumLabel`/`MathView` build
+  on it instead of fishing images out of attachment strings.
+- **Fixed: CI galleries rendered through a crippled engine** — the
+  generators injected only a measurer, so the published posters showed
+  the pre-font-truth pipeline (scaled fences, polyline radicals, no
+  kerning). New `MathLayoutEngine.make(font:baseSize:)` factory is the
+  one way render-side code builds engines; adopted everywhere.
+- **Fixed: `\not a` round-tripped to `\nota`** (unsupported); negation
+  now serializes braced.
+- **Fixed: `\cfrac` used the numerator gap minimum for the denominator;
+  `\underline` used the overbar constants** — both invisible in Latin
+  Modern (equal values) but divergent in other fonts.
+- **Hardened: coverage format-2 parsing caps total expansion at 65,536
+  glyphs** — crafted range records could previously force a multi-GB
+  allocation before validation ran.
+- **Breaking: `MathSceneRenderer.draw` requires an explicit `font:`** —
+  the `.latinModern` default silently drew wrong glyphs for scenes
+  measured with any other font.
+
 ## 0.24.0 — 2026-07-14
 
 **The font-truth release.** Everything the OpenType MATH table knows,

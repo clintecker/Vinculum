@@ -439,7 +439,11 @@ public enum MathTableParser {
             for r in 0..<ranges {
                 let rec = start + 4 + 6 * r
                 guard let s = u16(b, rec), let e = u16(b, rec + 2),
-                      let startIndex = u16(b, rec + 4), s <= e else { return nil }
+                      let startIndex = u16(b, rec + 4), s <= e,
+                      // A font has at most 65536 glyphs; crafted overlapping
+                      // ranges could otherwise force a multi-GB expansion
+                      // before the callers' count checks ever run.
+                      byIndex.count + (e - s + 1) <= 0x1_0000 else { return nil }
                 for g in s...e { byIndex.append((startIndex + (g - s), UInt16(g))) }
             }
             return byIndex.sorted { $0.index < $1.index }.map(\.glyph)

@@ -189,7 +189,7 @@ let engine = MathLayoutEngine(
 let scene = engine.layout(node, display: true)   // MathScene: width/ascent/descent + primitives
 
 // Draw into any y-up CGContext (an image, a PDF page, a custom view):
-MathSceneRenderer.draw(scene, theme: .dark, in: cgContext, at: penPoint)
+MathSceneRenderer.draw(scene, theme: .dark, in: cgContext, at: penPoint, font: .latinModern)
 ```
 
 `MathImageRenderer.attachmentString` gives you the cached attachment.

@@ -83,4 +83,21 @@ final class MathFuzzTests: XCTestCase {
         exercise(String(repeating: "\\begin{pmatrix}", count: 1_000), engine: engine)
         exercise(String(repeating: "x^", count: 3_000), engine: engine)
     }
+
+    func testBraceFreeRecursiveCommandsDegradeGracefully() {
+        // Commands that take an atom argument recurse WITHOUT braces, so the
+        // brace pre-scan can't see the depth — a runtime counter must.
+        // (Expert review: \sqrt×10k crashed with SIGSEGV before the guard.)
+        let engine = MathLayoutEngine(measure: mock, baseSize: 10)
+        exercise(String(repeating: "\\sqrt", count: 20_000) + "{x}", engine: engine)
+        exercise(String(repeating: "\\hat", count: 20_000) + "{x}", engine: engine)
+        exercise(String(repeating: "\\not", count: 20_000) + "=", engine: engine)
+        exercise(String(repeating: "\\mathbf", count: 20_000) + "{x}", engine: engine)
+        exercise(String(repeating: "\\phantom", count: 20_000) + "{x}", engine: engine)
+
+        // Sane nesting still parses natively: 20 nested \sqrt is legitimate.
+        let sane = String(repeating: "\\sqrt{", count: 20) + "x"
+            + String(repeating: "}", count: 20)
+        XCTAssertTrue(MathParser.isFullySupported(MathParser.parse(sane)))
+    }
 }
