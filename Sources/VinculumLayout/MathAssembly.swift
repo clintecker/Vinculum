@@ -48,6 +48,25 @@ public struct MathVariantsData: Sendable {
         public init(variants: [Variant], assembly: MathGlyphAssembly?) {
             self.variants = variants; self.assembly = assembly
         }
+
+        /// The smallest variant reaching `target` (em) — with the shortfall
+        /// heuristic: when the fitting variant is a big jump up (≥1.3×) and
+        /// the previous one misses by ≤3%, prefer the smaller cut so a
+        /// radical hugs its radicand instead of towering over it.
+        public func bestVariant(forTarget target: CGFloat) -> Variant? {
+            var previous: Variant?
+            for v in variants {
+                if v.advance >= target {
+                    if let p = previous, v.advance >= p.advance * 1.3,
+                       p.advance >= target * 0.97 {
+                        return p
+                    }
+                    return v
+                }
+                previous = v
+            }
+            return nil
+        }
     }
     public let minConnectorOverlap: CGFloat
     public let vertical: [UInt16: Construction]

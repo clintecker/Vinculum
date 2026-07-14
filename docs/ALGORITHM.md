@@ -99,14 +99,15 @@ binary before Rel/Close/Punct likewise (TeXbook p.170 chart).
 Rule + gap from `overbarVerticalGap`/`underbarVerticalGap` and rule
 thickness constants (`Layout+Decorations.swift`); inner cramped.
 
-### Rule 11 — radicals — **Partial / Deviation (scheduled)**
-Radicand laid out cramped with `radicalVerticalGap` clearance and
-`radicalRuleThickness` vinculum — the *vertical* arithmetic is TeX-shaped.
-But the surd itself is a **hand-stroked polyline**
-(`Layout+Radicals.swift`, proportions in `MathLayout.Radical`), never the
-font's √ glyph, its size variants, or an assembly. Degree placement uses
-Vinculum proportions, not `RadicalKernBefore/AfterDegree` and the 60%
-raise. *Phase 5 adopts the real glyph; Phase 1 supplies its constants.*
+### Rule 11 — radicals — **Implemented (Phase 5b)**
+The surd is the font's √ glyph: size variants first (with the shortfall
+heuristic — a variant within 3% beats a ≥1.3× jump, so the sign hugs the
+radicand), then glyph assembly for very tall radicands, excess split into
+the clearance (Rule 11's ψ centering). The degree is placed by
+`RadicalKernBeforeDegree`/`RadicalKernAfterDegree` (the −0.556 em kern
+tucks the sign back over the degree) and the 60%
+`RadicalDegreeBottomRaisePercent`. The hand-stroked polyline survives only
+as the no-provider fallback (headless/Linux, mock-measurer tests).
 
 ### Rule 12 — accents — **Implemented (Phase 4, minus width variants)**
 Accent x comes from the font's `topAccentAttachment` points (base minus
@@ -226,7 +227,7 @@ fraction part-scales and side padding, delimiter step factors.
 | ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | 3 ✓ |
 | ~~Accent attachment points~~ **done** (width variants → 5) | 12 | 4 ✓ |
 | ~~No glyph assembly; scaled tall fences~~ **done** (fences) | 19 | 5 ✓ |
-| Polyline radical (font glyph + variants + assembly) | 11 | 5b |
+| ~~Polyline radical~~ **done** (polyline = headless fallback only) | 11 | 5b ✓ |
 | Operators scaled not variant-swapped; Rule 19 formula | 13, 19 | 6 |
 | `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | backlog |
 | Line breaking | 21 | 9 (stretch) |

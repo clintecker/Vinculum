@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+Phase 5b: the radical is the font's √ glyph.
+
+- **Font surd** — `\sqrt` draws Latin Modern's radical glyph via size
+  variants (nested radicals step through purpose-drawn cuts exactly like
+  TeX), assembling from parts beyond the largest variant; glyph excess
+  splits into the radicand clearance (Rule 11's ψ centering). The
+  hand-stroked polyline remains only as the headless/no-provider fallback.
+- **Shortfall heuristic** (`Construction.bestVariant`): a variant within
+  3% of the target beats a ≥1.3× jump, keeping signs snug — applied to
+  all delimiter variant selection.
+- **Font-true degree placement** — `RadicalKernBeforeDegree` (0.278 em),
+  `RadicalKernAfterDegree` (−0.556 em, tucking the sign back over the
+  degree), and the 60% bottom-raise replace the hand proportions in the
+  glyph path.
+- 4 new tests (`MathRadicalTests`); 10 radical goldens re-blessed.
+
 Phase 5a: glyph assembly — arbitrarily tall fences from font parts.
 
 - **`MathAssemblySolver`** (pure, Linux-tested): OpenType GlyphAssembly

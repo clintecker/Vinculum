@@ -34,20 +34,18 @@ enum MathVariantTable {
     /// The smallest vertical size variant of `baseGlyph` at point `size`
     /// whose height reaches `minHeight`, or nil.
     static func shape(for baseGlyph: String, minHeight: CGFloat, size: CGFloat) -> DelimiterShape? {
-        guard let (con, ctFont) = construction(for: baseGlyph, size: size) else { return nil }
-        for v in con.variants where v.advance * size >= minHeight {
-            var glyph = CGGlyph(v.glyphID)
-            var rect = CGRect.zero, adv = CGSize.zero
-            CTFontGetBoundingRectsForGlyphs(ctFont, .horizontal, &glyph, &rect, 1)
-            CTFontGetAdvancesForGlyphs(ctFont, .horizontal, &glyph, &adv, 1)
-            let width = adv.width > 0 ? adv.width : rect.maxX
-            let metrics = GlyphMetrics(width: width,
-                                       ascent: max(0, rect.maxY), descent: max(0, -rect.minY),
-                                       inkAscent: max(0, rect.maxY), inkDescent: rect.minY)
-            guard metrics.ascent + metrics.descent > 0, width > 0 else { return nil }
-            return DelimiterShape(glyphID: v.glyphID, metrics: metrics)
-        }
-        return nil
+        guard let (con, ctFont) = construction(for: baseGlyph, size: size),
+              let v = con.bestVariant(forTarget: minHeight / size) else { return nil }
+        var glyph = CGGlyph(v.glyphID)
+        var rect = CGRect.zero, adv = CGSize.zero
+        CTFontGetBoundingRectsForGlyphs(ctFont, .horizontal, &glyph, &rect, 1)
+        CTFontGetAdvancesForGlyphs(ctFont, .horizontal, &glyph, &adv, 1)
+        let width = adv.width > 0 ? adv.width : rect.maxX
+        let metrics = GlyphMetrics(width: width,
+                                   ascent: max(0, rect.maxY), descent: max(0, -rect.minY),
+                                   inkAscent: max(0, rect.maxY), inkDescent: rect.minY)
+        guard metrics.ascent + metrics.descent > 0, width > 0 else { return nil }
+        return DelimiterShape(glyphID: v.glyphID, metrics: metrics)
     }
 
     /// An assembled column of font parts reaching `minHeight`, or nil when
