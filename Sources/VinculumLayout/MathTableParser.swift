@@ -169,6 +169,13 @@ public struct MathGlyphInfo: Sendable {
             while i < correctionHeights.count && height >= correctionHeights[i] { i += 1 }
             return kernValues[i]
         }
+
+        /// The staircase with every height and kern multiplied by `factor` —
+        /// how em-relative table data becomes point values at a size.
+        public func scaled(by factor: CGFloat) -> KernStaircase {
+            KernStaircase(correctionHeights: correctionHeights.map { $0 * factor },
+                          kernValues: kernValues.map { $0 * factor })
+        }
     }
 
     /// The four corners of a glyph's cut-in kern data; absent corners are nil.

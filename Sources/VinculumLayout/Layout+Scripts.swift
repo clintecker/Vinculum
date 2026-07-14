@@ -24,32 +24,86 @@ extension MathLayoutEngine {
         let supBox = sup.map { supEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
         let subBox = sub.map { subEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
 
-        // TeX Appendix G: take the nominal shift (lower in cramped style), but
-        // raise it so the script clears a tall base's ink — an exponent on (…)²
-        // rides above the paren, not through it — and keep a minimum gap
-        // between a coexisting super- and subscript so they can't collide.
-        let supNominal = size * (cramped ? constants.superscriptShiftUpCramped
-                                         : constants.superscriptShiftUp)
-        let supRaise = max(supNominal, baseBox.inkAscent - scriptSize * 0.25)
-        var subDrop = max(size * constants.subscriptShiftDown,
-                          baseBox.descent + scriptSize * 0.15)
-        if let supBox, let subBox {
-            let minGap = size * 4 * constants.defaultRuleThickness
-            let gap = (supRaise - supBox.descent) - (subBox.ascent - subDrop)
-            if gap < minGap { subDrop += minGap - gap }
-        }
-        let scriptsWidth = max(supBox?.width ?? 0, subBox?.width ?? 0)
-        let width = baseBox.width + scriptsWidth + size * constants.spaceAfterScript
+        // Per-glyph typography of a glyph-run base: the italic correction δ
+        // separates the superscript from the subscript (Rules 17/18f), the
+        // kern staircases tuck scripts into the glyph's corners.
+        let typo = glyphTypography(of: base, size: size)
+        let delta = typo?.italicCorrection ?? 0
+        let isGlyphBase: Bool = {
+            switch base { case .symbol, .functionName: return true; default: return false }
+        }()
 
+        // 18a — nominal shifts. Character bases start from the style's shift
+        // constants; boxy bases (fractions, fenced groups) hang the scripts
+        // off their edges via the baseline-drop constants (u = h − q·script,
+        // v = d + r·script). The ink floors keep an exponent above (…)²'s
+        // paren regardless.
+        var supRaise = size * (cramped ? constants.superscriptShiftUpCramped
+                                       : constants.superscriptShiftUp)
+        var subDrop = size * constants.subscriptShiftDown
+        if !isGlyphBase {
+            supRaise = max(supRaise, baseBox.ascent - scriptSize * constants.superscriptBaselineDropMax)
+            subDrop = max(subDrop, baseBox.descent + scriptSize * constants.subscriptBaselineDropMin)
+        }
+        supRaise = max(supRaise, baseBox.inkAscent - scriptSize * 0.25)
+        subDrop = max(subDrop, baseBox.descent + scriptSize * 0.15)
+
+        // 18b/18c — the font's clamps: a superscript's bottom stays above
+        // SuperscriptBottomMin; a lone subscript's top below SubscriptTopMax.
+        if let supBox {
+            supRaise = max(supRaise, supBox.descent + size * constants.superscriptBottomMin)
+        }
+        if let subBox, supBox == nil {
+            subDrop = max(subDrop, subBox.ascent - size * constants.subscriptTopMax)
+        }
+
+        // 18d/18e — coexisting scripts: open the gap to SubSuperscriptGapMin
+        // by dropping the subscript, then if the superscript's bottom sank
+        // below its floor, shift the pair up together.
+        if let supBox, let subBox {
+            let gapMin = size * constants.subSuperscriptGapMin
+            let gap = (supRaise - supBox.descent) - (subBox.ascent - subDrop)
+            if gap < gapMin {
+                subDrop += gapMin - gap
+                let bottomMin = size * constants.superscriptBottomMaxWithSubscript
+                let deficit = bottomMin - (supRaise - supBox.descent)
+                if deficit > 0 { supRaise += deficit; subDrop -= deficit }
+            }
+        }
+
+        // Cut-in kerns: sample each staircase at the script's near edge.
+        var supKern: CGFloat = 0, subKern: CGFloat = 0
+        if let supBox, let stair = typo?.kernTopRight {
+            supKern = stair.kern(atHeight: supRaise - supBox.descent)
+        }
+        if let subBox, let stair = typo?.kernBottomRight {
+            subKern = stair.kern(atHeight: subBox.ascent - subDrop)
+        }
+
+        // 18f — horizontal split: on a large operator the subscript tucks
+        // LEFT under the overhang (∫'s δ is big); elsewhere the superscript
+        // moves right by δ. The \scriptspace analog trails the scripts.
+        let isLargeOp: Bool = {
+            if case .symbol(_, .largeOperator, _) = base { return true }; return false
+        }()
+        let supX = baseBox.width + (isLargeOp ? 0 : delta) + supKern
+        let subX = baseBox.width - (isLargeOp ? delta : 0) + subKern
+        var width = baseBox.width
         var ascent = baseBox.ascent
         var descent = baseBox.descent
-        if let supBox { ascent = max(ascent, supRaise + supBox.ascent) }
-        if let subBox { descent = max(descent, subDrop + subBox.descent) }
+        if let supBox {
+            width = max(width, supX + supBox.width)
+            ascent = max(ascent, supRaise + supBox.ascent)
+        }
+        if let subBox {
+            width = max(width, subX + subBox.width)
+            descent = max(descent, subDrop + subBox.descent)
+        }
+        width += size * constants.spaceAfterScript
 
         var elements = baseBox.elements
-        let scriptX = baseBox.width + size * constants.spaceAfterScript
-        if let supBox { elements += supBox.placed(at: CGPoint(x: scriptX, y: supRaise)) }
-        if let subBox { elements += subBox.placed(at: CGPoint(x: scriptX, y: -subDrop)) }
+        if let supBox { elements += supBox.placed(at: CGPoint(x: supX, y: supRaise)) }
+        if let subBox { elements += subBox.placed(at: CGPoint(x: subX, y: -subDrop)) }
         return MathBox(width: width, ascent: ascent, descent: descent,
                        inkAscent: baseBox.inkAscent, elements: elements)
     }
@@ -72,13 +126,16 @@ extension MathLayoutEngine {
         if let supBox { ascent += gap + supBox.height }
         if let subBox { descent += gap + subBox.height }
 
+        // TeX Rule 13a: the upper limit shifts right by δ/2 (half the italic
+        // correction), the lower limit left by δ/2, hugging the slant.
+        let delta = glyphTypography(of: base, size: size)?.italicCorrection ?? 0
         var elements = opBox.placed(at: CGPoint(x: (width - opBox.width) / 2, y: 0))
         if let supBox {
-            elements += supBox.placed(at: CGPoint(x: (width - supBox.width) / 2,
+            elements += supBox.placed(at: CGPoint(x: (width - supBox.width) / 2 + delta / 2,
                                                   y: opBox.ascent + gap + supBox.descent))
         }
         if let subBox {
-            elements += subBox.placed(at: CGPoint(x: (width - subBox.width) / 2,
+            elements += subBox.placed(at: CGPoint(x: (width - subBox.width) / 2 - delta / 2,
                                                   y: -opBox.descent - gap - subBox.ascent))
         }
         return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)

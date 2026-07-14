@@ -77,7 +77,8 @@ public enum MathImageRenderer {
 
         let engine = MathLayoutEngine(measure: measurer, baseSize: display ? baseSize * 1.15 : baseSize,
                                       delimiters: delimiterProvider,
-                                      constants: MathFont.constants)
+                                      constants: MathFont.constants,
+                                      typography: CoreTextTypographyProvider.make())
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 

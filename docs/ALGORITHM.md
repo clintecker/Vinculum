@@ -141,18 +141,28 @@ Remaining deviation: part-scales 0.9/0.8 (deliberate, see §1.3);
 
 ### Rule 16 — retype to Ord — **Implemented** via each builder returning a classed box consumed by the spacing walk.
 
-### Rule 17 — nucleus conversion + italic correction — **Partial**
-Nucleus layout and recursion: implemented. **Italic correction: ABSENT
-entirely** — no per-glyph δ anywhere; scripts attach at the advance width
-plus a flat `spaceAfterScript = 0.041 em`. *Phase 3 headline.*
+### Rule 17 — nucleus conversion + italic correction — **Implemented (Phase 3)**
+Per-glyph italic correction flows through the injected
+`MathGlyphTypographyProvider` (backed by the font's
+MathItalicsCorrectionInfo): the superscript shifts right by δ while the
+subscript stays at the advance; a large operator instead tucks its
+subscript δ left under the overhang (∫'s δ is 0.332 em in LM Math); and
+stacked limits split ±δ/2 (Rule 13a). The `\scriptspace` analog
+(`SpaceAfterScript`, the correct 0.056 em) now trails the scripts instead
+of preceding them. Remaining gap: no unconditional italic-correction kern
+between adjacent unscripted symbols (same as iosMath).
 
-### Rule 18 — scripts — **Partial**
-Implemented: `superscriptShiftUp`/`Cramped`, `subscriptShiftDown`, ink-
-clearance heuristics, cramped subscripts. ABSENT: σ₁₈/σ₁₉ composite-nucleus
-baseline drops, `SubSuperscriptGapMin`/`SuperscriptBottomMaxWithSubscript`
-collision resolution (18d–e), `SubscriptTopMax`/`SuperscriptBottomMin`
-clamps, the 18f italic-correction split between super and sub, and — beyond
-TeX — MathKernInfo cut-in kerning. *Phase 3.*
+### Rule 18 — scripts — **Implemented (Phase 3), exceeds iosMath**
+The full 18a–f ladder: style shift constants for character bases and the
+σ₁₈/σ₁₉ baseline drops (`Superscript/SubscriptBaselineDrop`) for composite
+nuclei, the `SuperscriptBottomMin`/`SubscriptTopMax` clamps (18b–c), the
+`SubSuperscriptGapMin` + `SuperscriptBottomMaxWithSubscript` collision
+resolution (18d–e), the δ split (18f), and — beyond TeX and beyond every
+native library — **MathKernInfo cut-in kerning**: scripts sample the base
+glyph's corner staircase at their near edge and tuck in by the kern. LM
+Math ships no kern data (staircases exercised with synthetic bytes); STIX
+Two in Phase 7 lights this up for real. Ink-clearance floors are retained
+so exponents clear tall bases' ink.
 
 ### Rule 19 — `\left…\right` — **Partial / Deviation**
 Auto-sizing exists; tall `( ) [ ] { }` step through MATH size variants
@@ -206,8 +216,8 @@ fraction part-scales and side padding, delimiter step factors.
 | --- | --- | --- |
 | ~~Constants not read from font~~ **done** | §1.3 | 1 ✓ |
 | ~~No style lattice / script spacing rule~~ **done** | §1.2, 3, 20 | 2 ✓ |
-| No italic correction | 17, 18f, 13 | 3 |
-| No cut-in kerning (beyond TeX; nobody native has it) | 18 | 3 |
+| ~~No italic correction~~ **done** | 17, 18f, 13 | 3 ✓ |
+| ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | 3 ✓ |
 | Accent attachment points, width variants | 12 | 4 |
 | No glyph assembly; polyline radical; scaled tall fences | 11, 19 | 5 |
 | Operators scaled not variant-swapped; Rule 19 formula | 13, 19 | 6 |

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+Phase 3: per-glyph script typography — italic correction and cut-in
+kerning. No native math library has the latter.
+
+- **Italic correction (Rules 17/18f/13a)** via a new injected
+  `MathGlyphTypographyProvider` (backed by the font's parsed
+  MathItalicsCorrectionInfo; `CoreTextTypographyProvider` on Apple,
+  optional/neutral headless): superscripts shift right by δ while
+  subscripts stay at the advance (`f^2_3` splits correctly), large
+  operators tuck the subscript δ LEFT under the overhang (`\int_a^b` —
+  ∫'s δ is 0.332 em), and stacked limits split ±δ/2.
+- **The full Rule 18 ladder**: σ₁₈/σ₁₉ baseline drops for composite nuclei
+  (fractions, fenced groups), `SuperscriptBottomMin`/`SubscriptTopMax`
+  clamps, and 18d–e collision resolution via `SubSuperscriptGapMin` +
+  `SuperscriptBottomMaxWithSubscript` (replacing the 4·ruleThickness
+  heuristic). `SpaceAfterScript` now trails the scripts (it preceded them).
+- **MathKernInfo cut-in kerning**: scripts sample the base glyph's corner
+  kern staircase at their near edge — mechanics live and tested with
+  synthetic data (LM Math ships no MathKernInfo; STIX Two, arriving with
+  multi-font support, does).
+- 7 new geometry tests (`MathScriptTypographyTests`); 19 goldens
+  re-blessed after visual review.
+
 Phase 2: the TeX style lattice — plus a long-standing fence-rendering bug
 found and fixed. (Phases 0–1 below.)
 

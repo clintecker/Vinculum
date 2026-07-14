@@ -16,6 +16,9 @@ public struct MathLayoutEngine {
     /// values (`.latinModern`) so headless hosts need no font; the renderer
     /// passes constants parsed from the live font (`MathTableParser`).
     let constants: MathFontConstants
+    /// Optional per-glyph typography (italic correction, accent attachment,
+    /// cut-in kerns); `nil` → neutral defaults (headless default).
+    let typography: MathGlyphTypographyProvider?
     /// The active `\color` override for the current subtree; `nil` primitives
     /// take the renderer's theme ink.
     var colorOverride: MathColor?
@@ -27,12 +30,30 @@ public struct MathLayoutEngine {
 
     public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
                 delimiters: MathDelimiterProvider? = nil,
-                constants: MathFontConstants = .latinModern) {
+                constants: MathFontConstants = .latinModern,
+                typography: MathGlyphTypographyProvider? = nil) {
         self.measure = measure
         self.delimiters = delimiters
         self.baseSize = baseSize
         self.constants = constants
+        self.typography = typography
         self.colorOverride = nil
+    }
+
+    /// Per-glyph typography of a node that renders as a single glyph run —
+    /// the italic correction and kern data scripts attach against. Composite
+    /// nodes (fractions, fenced bodies…) have none; transparents unwrap.
+    func glyphTypography(of node: MathNode, size: CGFloat) -> GlyphTypography? {
+        guard let typography else { return nil }
+        switch node {
+        case .symbol(let glyph, _, let style):
+            let rendered = Self.mathVariant(glyph, italic: style == .italic, bold: style == .bold)
+            return typography(rendered, size)
+        case .classified(let base, _), .limitsOperator(let base):
+            return glyphTypography(of: base, size: size)
+        default:
+            return nil
+        }
     }
 
     /// Lays `node` out at the engine's base size into a device-independent

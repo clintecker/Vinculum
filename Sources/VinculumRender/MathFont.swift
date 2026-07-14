@@ -38,6 +38,17 @@ enum MathFont {
         return parsed
     }()
 
+    /// Per-glyph MATH typography (italic corrections, accent attachments,
+    /// cut-in kerns), parsed once (Phase 3). Values are em fractions; the
+    /// typography provider scales them to point sizes. Nil when the table
+    /// is missing — layout uses neutral defaults.
+    static let glyphInfo: MathGlyphInfo? = {
+        guard let cgFont,
+              let table = cgFont.table(for: 0x4D41_5448 /* 'MATH' */) else { return nil }
+        return MathTableParser.glyphInfo(from: table as Data,
+                                         unitsPerEm: Int(cgFont.unitsPerEm))
+    }()
+
     // A tiny size→CTFont memo. Both measurement and drawing ask for the math
     // font at a handful of sizes (base, script, scriptscript, display) over and
     // over; `CTFontCreateWithGraphicsFont` isn't free, so cache it. Guarded by a

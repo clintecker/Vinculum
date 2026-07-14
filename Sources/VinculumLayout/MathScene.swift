@@ -90,6 +90,35 @@ public struct DelimiterShape: Sendable {
 public typealias MathDelimiterProvider =
     @Sendable (_ baseGlyph: String, _ minHeight: CGFloat, _ size: CGFloat) -> DelimiterShape?
 
+/// Per-glyph typography from the font's MATH `MathGlyphInfo` sub-table, in
+/// POINTS at the queried size: the italic correction (TeX Rules 17/18f),
+/// the top-accent attachment x (Rule 12), and the cut-in kern staircases
+/// for script positioning against the glyph's actual corner profile.
+public struct GlyphTypography: Sendable, Equatable {
+    public var italicCorrection: CGFloat
+    /// Distance from the glyph origin to the accent attachment point;
+    /// nil → center on the advance (the spec fallback).
+    public var topAccentAttachment: CGFloat?
+    public var kernTopRight: MathGlyphInfo.KernStaircase?
+    public var kernBottomRight: MathGlyphInfo.KernStaircase?
+
+    public init(italicCorrection: CGFloat = 0,
+                topAccentAttachment: CGFloat? = nil,
+                kernTopRight: MathGlyphInfo.KernStaircase? = nil,
+                kernBottomRight: MathGlyphInfo.KernStaircase? = nil) {
+        self.italicCorrection = italicCorrection
+        self.topAccentAttachment = topAccentAttachment
+        self.kernTopRight = kernTopRight
+        self.kernBottomRight = kernBottomRight
+    }
+}
+
+/// Injected per-glyph typography lookup: given the RENDERED glyph string
+/// (after math-alphanumeric remapping) and a point size, returns its
+/// typography in points, or nil (no data → neutral defaults). Optional,
+/// like the delimiter provider, so headless/Linux layout is unaffected.
+public typealias MathGlyphTypographyProvider = @Sendable (_ glyph: String, _ size: CGFloat) -> GlyphTypography?
+
 /// A segment of a stroked path, in scene coordinates (y-up).
 public enum PathOp: Sendable {
     case move(CGPoint)
