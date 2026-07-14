@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.24.0 — 2026-07-14
+
+**The font-truth release.** Everything the OpenType MATH table knows,
+Vinculum now uses: all 56 layout constants, per-glyph italic corrections,
+accent attachment points, cut-in kerning staircases, size-variant ladders,
+and glyph assemblies — parsed from the live font at load, for four bundled
+fonts or any OTF you supply. Plus the TeX style lattice, drop-in views,
+LaTeX round-trip, locatable parse diagnostics, spoken math for VoiceOver,
+and a fuzz-hardened pipeline. The phase-by-phase story is below; the
+rule-by-rule audit lives in docs/ALGORITHM.md.
 
 Phase 5c + 8c + hardening: wide accents, error ranges, fuzz.
 
