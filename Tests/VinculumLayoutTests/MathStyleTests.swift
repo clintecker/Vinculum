@@ -90,6 +90,29 @@ final class MathStyleTests: XCTestCase {
         XCTAssertEqual(sizes, [7])
     }
 
+    func testForcedDisplayInsideTextFractionCannotOvershootBaseSize() {
+        // Review finding: \displaystyle inside a text-style fraction rendered
+        // BIGGER than the surrounding text (0.8·s part size × 1/0.7 style
+        // ratio ≈ 1.14·s). Forced styles must scale from the enclosing
+        // full-size anchor, so nothing exceeds it.
+        let scene = standardMockEngine().layout(
+            MathParser.parse(#"\frac{{\displaystyle x}}{y} + z"#))
+        var maxGlyphSize: CGFloat = 0
+        for e in scene.elements {
+            if case let .glyphs(_, size, _, _, _) = e { maxGlyphSize = max(maxGlyphSize, size) }
+        }
+        XCTAssertLessThanOrEqual(maxGlyphSize, 10.001,
+                                 "forced display style must not exceed the base size")
+        // And the forced-display x IS restored to the fraction's own anchor
+        // (8 = the part size), not left at the script-descended 5.7ish.
+        let xSize = scene.elements.compactMap { e -> CGFloat? in
+            if case let .glyphs("𝑥", size, _, _, _) = e { return size }
+            return nil
+        }.first
+        XCTAssertEqual(xSize ?? -1, 8, accuracy: 0.001,
+                       "\\displaystyle returns to the enclosing anchor size")
+    }
+
     func testDisplaystyleCommandRestoresDisplayInScripts() {
         // \genfrac's style argument 3 forces scriptscript: parts shrink.
         guard case .mathStyle(_, let style) = MathParser.parse(

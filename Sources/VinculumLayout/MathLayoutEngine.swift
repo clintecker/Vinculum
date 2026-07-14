@@ -33,6 +33,14 @@ public struct MathLayoutEngine {
     /// exponent inside √(x²) or a denominator rides lower. Propagated by
     /// sub-context copies of the engine, like `colorOverride`.
     var cramped = false
+    /// The size the current material would have at TEXT/DISPLAY style — the
+    /// anchor a FORCED style (`\displaystyle` et al.) scales from. Fraction
+    /// parts, radical degrees, and substacks move the anchor with their own
+    /// part scales, so `\displaystyle` inside a text fraction returns to the
+    /// fraction's full size and can never overshoot the surrounding text
+    /// (an expert-review layout bug: 0.8·s × 1/0.7 ≈ 1.14·s). Set at init;
+    /// propagated by sub-context copies, like `cramped`.
+    var styleAnchorSize: CGFloat = 0
 
     public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
                 delimiters: MathDelimiterProvider? = nil,
@@ -48,6 +56,7 @@ public struct MathLayoutEngine {
         self.constants = constants
         self.typography = typography
         self.colorOverride = nil
+        self.styleAnchorSize = baseSize
     }
 
     /// Per-glyph typography of a node that renders as a single glyph run —
@@ -166,11 +175,14 @@ public struct MathLayoutEngine {
 
         case .mathStyle(let base, let forced):
             // \dfrac/\tfrac/\genfrac style/\displaystyle…: force the
-            // subtree's style — and the size that style implies (so
-            // \scriptstyle shrinks and \displaystyle inside a script grows
-            // back to full size).
-            let factor = forced.sizeFactor(constants) / style.sizeFactor(constants)
-            return box(for: base, size: s * factor, style: forced)
+            // subtree's style — and the size that style implies, scaled from
+            // the enclosing full-size ANCHOR (not the running size, whose
+            // relationship to the style is deliberately loosened by the
+            // fraction part-scale): \scriptstyle shrinks, \displaystyle
+            // inside a script returns to full size, and nothing can ever
+            // exceed the anchor.
+            return box(for: base, size: styleAnchorSize * forced.sizeFactor(constants),
+                       style: forced)
 
         case .bigDelimiter(let glyph, let factor, _):
             return bigDelimiterBox(glyph, factor: factor, size: s)

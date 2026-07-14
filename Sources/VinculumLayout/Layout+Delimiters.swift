@@ -125,6 +125,9 @@ extension MathLayoutEngine {
                    style: MathMatrixStyle, size baseSize: CGFloat) -> MathBox {
         guard !rows.isEmpty else { return .empty }
         let size = style == .substack ? baseSize * constants.scriptPercentScaleDown : baseSize
+        // Cells anchor forced styles at their own size.
+        var cellEngine = self
+        cellEngine.styleAnchorSize = size
 
         let columns = rows.map(\.count).max() ?? 0
         var cellBoxes: [[MathBox]] = []
@@ -134,7 +137,7 @@ extension MathLayoutEngine {
         for (r, row) in rows.enumerated() {
             var boxes: [MathBox] = []
             for (c, cell) in row.enumerated() {
-                let b = box(for: cell, size: size, style: .text)
+                let b = cellEngine.box(for: cell, size: size, style: .text)
                 boxes.append(b)
                 colWidth[c] = max(colWidth[c], b.width)
                 rowAscent[r] = max(rowAscent[r], b.ascent)

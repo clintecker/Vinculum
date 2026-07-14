@@ -18,8 +18,12 @@ extension MathLayoutEngine {
         // everywhere.
         var gap = size * (style.isDisplay ? constants.radicalDisplayStyleVerticalGap
                                           : constants.radicalVerticalGap)
-        // The degree is typeset in scriptscript style (TeX Rule 11).
-        let degreeBox = degree.map { box(for: $0, size: size * MathLayout.Radical.degreeScale, style: .scriptScript) }
+        // The degree is typeset in scriptscript style (TeX Rule 11); its
+        // forced-style anchor is its own size (a \displaystyle in a degree
+        // stays degree-sized).
+        var degreeEngine = self
+        degreeEngine.styleAnchorSize = size * MathLayout.Radical.degreeScale
+        let degreeBox = degree.map { degreeEngine.box(for: $0, size: size * MathLayout.Radical.degreeScale, style: .scriptScript) }
 
         // Font-glyph paths: a purpose-drawn surd from the MATH table.
         let target = body.ascent + body.descent + gap + ruleThickness

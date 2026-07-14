@@ -55,8 +55,10 @@ extension MathLayoutEngine {
                                                : MathLayout.Fraction.partScaleText)
         // Numerator uncramped, denominator cramped (TeX num_style / denom_style)
         // — so an exponent in the denominator rides lower than in the numerator.
-        var numEngine = self; numEngine.cramped = false
-        var denEngine = self; denEngine.cramped = true
+        // The part scale moves the forced-style anchor with it (a
+        // \displaystyle inside returns to the PART's full size).
+        var numEngine = self; numEngine.cramped = false; numEngine.styleAnchorSize = partSize
+        var denEngine = self; denEngine.cramped = true; denEngine.styleAnchorSize = partSize
         let topBox = numEngine.box(for: top, size: partSize, style: style.fractionStyle)
         let bottomBox = denEngine.box(for: bottom, size: partSize, style: style.fractionStyle)
 
