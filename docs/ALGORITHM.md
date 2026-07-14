@@ -108,13 +108,16 @@ font's √ glyph, its size variants, or an assembly. Degree placement uses
 Vinculum proportions, not `RadicalKernBefore/AfterDegree` and the 60%
 raise. *Phase 5 adopts the real glyph; Phase 1 supplies its constants.*
 
-### Rule 12 — accents — **Partial**
-Accents are centered geometrically (`(baseWidth − accentWidth)/2`,
-`Layout+Accents.swift`) and hug the base's ink top. ABSENT:
-`topAccentAttachment` skew (the sub-table is unparsed), `AccentBaseHeight`
-clamping (constant defined, unused), horizontal width variants for wide
-bases (stretchy accents *scale*, clamped 0.7–1.6×), and single-char
-accentee script promotion. *Phase 4.*
+### Rule 12 — accents — **Implemented (Phase 4, minus width variants)**
+Accent x comes from the font's `topAccentAttachment` points (base minus
+accent, via the typography provider; advance-center fallback) — strictly
+better than TeX's `\skewchar`. Vertically the accent hugs the base's ink
+but never sinks below the font's `AccentBaseHeight` seat
+(δ = min(h, AccentBaseHeight)). Scripts on a single-character accentee
+promote onto the character (`\hat{f}^2` puts the ² on the f). Remaining:
+stretchy accents still *scale* toward the char width (clamped 0.7–1.6×)
+instead of walking horizontal width variants — Phase 5's horizontal
+machinery covers that.
 
 ### Rule 13 — large operators — **Partial / Deviation**
 Display-style big operators are **scaled 1.35×**
@@ -218,7 +221,7 @@ fraction part-scales and side padding, delimiter step factors.
 | ~~No style lattice / script spacing rule~~ **done** | §1.2, 3, 20 | 2 ✓ |
 | ~~No italic correction~~ **done** | 17, 18f, 13 | 3 ✓ |
 | ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | 3 ✓ |
-| Accent attachment points, width variants | 12 | 4 |
+| ~~Accent attachment points~~ **done** (width variants → 5) | 12 | 4 ✓ |
 | No glyph assembly; polyline radical; scaled tall fences | 11, 19 | 5 |
 | Operators scaled not variant-swapped; Rule 19 formula | 13, 19 | 6 |
 | `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | backlog |

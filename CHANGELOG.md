@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+Phase 4: accents placed by the font.
+
+- **`topAccentAttachment` skew** — the accent's x position is the base
+  glyph's attachment point minus the accent glyph's own (advance-center
+  fallback), so `\hat{f}` leans with the letter. Strictly better than
+  TeX's `\skewchar` mechanism.
+- **`AccentBaseHeight` seat** — the accent hugs the base's ink but never
+  sinks below the font's designed accent height (the constant was defined
+  and unused since 0.x; now honored: δ = min(h, AccentBaseHeight)).
+- **Script promotion** — `\hat{f}^2` attaches the ² to the f under the
+  hat's reach (TeX Rule 12's single-character accentee rule), instead of
+  scripting the whole accent box.
+- 4 new geometry tests (`MathAccentTests`).
+
 Phase 3: per-glyph script typography — italic correction and cut-in
 kerning. No native math library has the latter.
 

@@ -110,6 +110,13 @@ public struct MathLayoutEngine {
             return radicalBox(degree, radicand, size: s, style: style)
 
         case .scripts(let base, let sub, let sup):
+            // TeX Rule 12: scripts on an accented single character move onto
+            // the character itself — \hat{f}^2 puts the ² on the f, under
+            // the hat's reach, not after the accent box.
+            if case .accent(let inner, let acc) = base, acc.glyph != nil,
+               case .symbol = inner {
+                return accentBox(inner, accent: acc, size: s, style: style, scripts: (sub, sup))
+            }
             return scriptsBox(base, sub: sub, sup: sup, size: s, style: style)
 
         case .delimited(let left, let body, let right):
