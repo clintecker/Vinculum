@@ -28,8 +28,10 @@ public struct MathView: View {
         if let image = renderedImage() {
             #if canImport(AppKit)
             Image(nsImage: image).renderingMode(image.isTemplate ? .template : .original)
+                .accessibilityLabel(MathSpeech.describe(MathParser.parse(latex)))
             #else
             Image(uiImage: image)
+                .accessibilityLabel(MathSpeech.describe(MathParser.parse(latex)))
             #endif
         }
     }

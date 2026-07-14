@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+Phase 9a: spoken math — VoiceOver reads the equation, a native-library
+first.
+
+- **`MathSpeech.describe(MathNode)`** generates ClearSpeak-style utterances
+  from the same tree that was typeset ("x equals the fraction minus b plus
+  or minus the square root of b squared minus 4 a c, over 2 a"), covering
+  fractions (with "1 half"-style simple forms), roots, scripts
+  (squared/cubed/to-the-power), fences, matrices (row-by-row), cases,
+  binomials ("n choose k"), accents ("vector v", "x hat"), operators, and
+  ~80 spoken symbol names. Invisible nodes (spacing, phantoms) are silent.
+- Wired everywhere: `VinculumLabel` and `MathView` expose it as their
+  accessibility label, and every `MathImageRenderer` attachment image
+  carries it — so math in an `NSTextView`/`UITextView` reads aloud too.
+
 Phase 8 (a+b): round-trip and drop-in views.
 
 - **`MathNode.toLaTeX()`** — every node kind serializes back to LaTeX,

@@ -86,6 +86,17 @@ public final class VinculumLabel: PlatformView {
         isRendered = image != nil
         imageView.setImage(image)
         imageSize = image?.size ?? .zero
+        // VoiceOver reads the equation itself.
+        let speech = isRendered ? MathSpeech.describe(MathParser.parse(latex)) : latex
+        #if canImport(AppKit)
+        setAccessibilityElement(true)
+        setAccessibilityRole(.staticText)
+        setAccessibilityLabel(speech)
+        #else
+        isAccessibilityElement = true
+        accessibilityTraits = .staticText
+        accessibilityLabel = speech
+        #endif
         errorLabel.isHidden = isRendered || !displayErrorInline || latex.isEmpty
         if !errorLabel.isHidden { errorLabel.setErrorText(latex, size: baseSize) }
         relayout()

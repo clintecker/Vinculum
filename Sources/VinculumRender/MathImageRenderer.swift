@@ -57,6 +57,15 @@ public enum MathImageRenderer {
         }
 
         guard let image = entry.image else { return nil }
+        // Spoken-math description so VoiceOver reads the equation, not
+        // "image" (generated from the same tree that was typeset).
+        let speech = MathSpeech.describe(MathParser.parse(latex))
+        #if canImport(AppKit)
+        image.accessibilityDescription = speech
+        #else
+        image.isAccessibilityElement = true
+        image.accessibilityLabel = speech
+        #endif
         let attachment = NSTextAttachment()
         attachment.image = image
         let imageSize = image.size
