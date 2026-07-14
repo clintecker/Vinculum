@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.25.0 — 2026-07-14
+
+**The reviewed release.** A six-lens expert panel (decomposition,
+correctness, concurrency, cleanliness, DRY, dead code) audited the entire
+font-truth run; every critical and important finding is fixed below, the
+API took its pre-1.0 breaking changes, and the fonts got their showcase
+and documentation.
 
 Review backlog completed + the font showcase.
 
