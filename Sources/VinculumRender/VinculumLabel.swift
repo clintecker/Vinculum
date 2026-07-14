@@ -97,7 +97,7 @@ public final class VinculumLabel: PlatformView {
             latex: latex, display: displayMode, mathTheme: mathTheme,
             baseSize: baseSize, font: font)
         renderedFlag = result != nil
-        imageView.setImage(result?.image)
+        imageView.setImage(result?.image, ink: mathTheme.ink)
         imageSize = result?.image.size ?? .zero
         // VoiceOver reads the equation itself.
         let speech = result?.spokenDescription ?? latex
@@ -142,6 +142,13 @@ public final class VinculumLabel: PlatformView {
                       height: size.height + contentInsets.top + contentInsets.bottom)
     }
 
+    /// Flushes any pending refresh and lays out immediately (tests, and
+    /// hosts that need geometry before the next runloop turn).
+    public func layoutNow() {
+        refreshIfNeeded()
+        relayout()
+    }
+
     #if canImport(AppKit)
     public override func layout() { super.layout(); refreshIfNeeded(); relayout() }
     public override var isFlipped: Bool { true }
@@ -154,8 +161,10 @@ public final class VinculumLabel: PlatformView {
 
 private final class PlatformImageView: PlatformView {
     private var image: PlatformImage?
-    func setImage(_ image: PlatformImage?) {
+    private var ink: PlatformColor = .black
+    func setImage(_ image: PlatformImage?, ink: PlatformColor) {
         self.image = image
+        self.ink = ink
         #if canImport(AppKit)
         needsDisplay = true
         #else
@@ -165,11 +174,24 @@ private final class PlatformImageView: PlatformView {
     #if canImport(AppKit)
     override var isFlipped: Bool { true }
     override func draw(_ dirtyRect: NSRect) {
+        // Raw NSImage.draw ignores isTemplate and draws the real (ink-
+        // colored) pixels — correct as-is.
         image?.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1,
                     respectFlipped: true, hints: nil)
     }
     #else
-    override func draw(_ rect: CGRect) { image?.draw(in: bounds) }
+    override func draw(_ rect: CGRect) {
+        guard let image else { return }
+        // Template-mode images tint from the context on UIKit; drawn raw
+        // (outside UIImageView) that tint is effectively black, which
+        // vanished on dark canvases (caught by the iOS simulator CI job).
+        // Resolve the template against the theme ink explicitly.
+        if image.renderingMode == .alwaysTemplate {
+            image.withTintColor(ink, renderingMode: .alwaysOriginal).draw(in: bounds)
+        } else {
+            image.draw(in: bounds)
+        }
+    }
     override init(frame: CGRect) { super.init(frame: frame); backgroundColor = .clear; isOpaque = false }
     required init?(coder: NSCoder) { super.init(coder: coder) }
     #endif

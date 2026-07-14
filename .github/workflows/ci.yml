@@ -58,6 +58,29 @@ jobs:
           fi
           tail -5 ios-build.log
 
+      # RUN tests on an iOS simulator — the compile-only step above can't
+      # catch runtime issues (MainActor isolation, template-image drawing on
+      # dark canvases). Scoped to the UIKit-relevant suites for speed.
+      - name: Test on iOS Simulator
+        run: |
+          set -o pipefail
+          # Ask xcodebuild itself which iPhone simulators it can target —
+          # simctl can list devices whose runtime xcodebuild won't accept.
+          SIM=$(xcodebuild -showdestinations -scheme Vinculum-Package 2>/dev/null \
+            | grep -E 'platform:iOS Simulator.*name:iPhone' \
+            | sed -E 's/.*name:(iPhone [^}]*)\}/\1/' | sed 's/ *$//' | sort -u | tail -1)
+          echo "using simulator: $SIM"
+          if ! xcodebuild test -scheme Vinculum-Package \
+            -destination "platform=iOS Simulator,name=$SIM" \
+            -only-testing:VinculumRenderTests/VinculumLabelTests \
+            -only-testing:VinculumRenderTests/MathFontConstantsTests \
+            > ios-test.log 2>&1; then
+            grep -E "error:|failed" ios-test.log | sort -u | head -40
+            tail -20 ios-test.log
+            exit 1
+          fi
+          grep -E "Executed .* test" ios-test.log | tail -3
+
       # Regenerate the example images (labeled gallery posters + the stress
       # corpus pages) so docs/website always show the CURRENT rendering. Only
       # on main pushes; advisory (never blocks). Published below to a branch.

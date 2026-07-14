@@ -221,10 +221,16 @@ final class MathGoldenRenderTests: XCTestCase {
         var mismatched = 0
         var sampled = 0
         var i = 0
-        while i < count {
+        while i + 2 < count {
             sampled += 1
-            if abs(Int(bytesA[i]) - Int(bytesB[i])) > 24 { mismatched += 1 }
-            i += 4 // first channel of each pixel
+            // ALL color channels — a single-channel sample was blind to
+            // pure-hue regressions (\color drifting while luminance holds).
+            if abs(Int(bytesA[i]) - Int(bytesB[i])) > 24
+                || abs(Int(bytesA[i + 1]) - Int(bytesB[i + 1])) > 24
+                || abs(Int(bytesA[i + 2]) - Int(bytesB[i + 2])) > 24 {
+                mismatched += 1
+            }
+            i += 4
         }
         return Double(mismatched) / Double(max(1, sampled))
     }
