@@ -90,12 +90,18 @@ public enum MathParser {
     }
 
     /// One atom: a group, a command, or a single character.
+    /// Runtime recursion cap for `parseAtom`. Sized for the SMALLEST stack
+    /// the parser really runs on: XCTest parallel workers and many host
+    /// threads get 512 KB, and one parse level costs several unoptimized
+    /// frames — 48 levels stays comfortably inside that while far exceeding
+    /// any legitimate formula's atom-argument nesting (~30 worst case).
+    static let maxRuntimeDepth = 48
+
     private static func parseAtom(_ tokens: inout ArraySlice<Token>) -> MathNode? {
         // The runtime half of the recursion bound (see maxNestingDepth):
         // groups AND brace-free command arguments both pass through here.
-        // 2× the brace bound leaves room for legitimate mixed nesting.
         let depth = currentDepth
-        guard depth < maxNestingDepth * 2 else {
+        guard depth < maxRuntimeDepth else {
             // Consume one token so every caller still makes progress.
             guard let token = tokens.first else { return nil }
             tokens.removeFirst()
