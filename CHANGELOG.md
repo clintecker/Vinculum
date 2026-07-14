@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+Phase 5a: glyph assembly — arbitrarily tall fences from font parts.
+
+- **`MathAssemblySolver`** (pure, Linux-tested): OpenType GlyphAssembly
+  placement — fewest extender repeats whose reachable range covers the
+  target, joint overlaps opened equally from the maximum, respecting
+  `MinConnectorOverlap`; degenerate extenders (advance ≤ 0) rejected at
+  parse. `MathTableParser.variants` now reads the full `MathVariants`
+  sub-table (ladders + assemblies + minConnectorOverlap), fixture-tested.
+- **The stretch chain is complete**: size variants → glyph assembly →
+  scaling. A fence taller than the largest variant (~3 em) is now BUILT
+  from the font's caps and extenders at constant stroke weight (new
+  `assembly-tall` golden: a 9 em paren). Assemblies render as stacked
+  glyph-ID elements; no scene format change.
+- **The `()[]{}`-only gate is gone** — `MathVariantTable` is backed by the
+  fixture-tested parser (the old in-place parser mis-mapped some coverage),
+  so `⟨ ⟩ ‖ ⌈ ⌉ ⌊ ⌋` and every other covered delimiter now step through
+  true size variants (new `tall-angle` golden). `\vec`/accent marks now
+  sit at the font's attachment points (combining-mark data honored).
+- 8 new tests (`MathAssemblyTests`); goldens re-blessed after review.
+
 Phase 4: accents placed by the font.
 
 - **`topAccentAttachment` skew** — the accent's x position is the base

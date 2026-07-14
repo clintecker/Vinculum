@@ -148,6 +148,11 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "tall-delimiters", latex: #"\left( \dfrac{a}{\dfrac{b}{\dfrac{c}{d}}} \right) \left[ \begin{matrix} w \\ x \\ y \\ z \end{matrix} \right] \left\{ \sum_{i=1}^{n} \frac{1}{i} \right\}"#, expectation: .mustRender),
         // \cancelto
         .init(name: "cancelto", latex: #"\cancelto{0}{\frac{x}{y}} + \cancelto{\infty}{n}"#, expectation: .mustRender),
+        // Glyph ASSEMBLY: a fence far beyond the largest size variant (~3 em)
+        // must be built from font parts (caps + extenders), constant stroke.
+        .init(name: "assembly-tall", latex: #"\left( \dfrac{a}{\dfrac{b}{\dfrac{c}{\dfrac{d}{\dfrac{e}{f}}}}} \right)"#, expectation: .mustRender),
+        // Un-gated variant ladders: ⟨ ⟩ and ‖ step through size variants now.
+        .init(name: "tall-angle", latex: #"\left\langle \begin{matrix} a \\ b \\ c \end{matrix} \middle\| \begin{matrix} x \\ y \\ z \end{matrix} \right\rangle"#, expectation: .mustRender),
     ]
 
     private var goldenDirectory: URL {

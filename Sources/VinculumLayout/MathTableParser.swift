@@ -314,6 +314,68 @@ public enum MathTableParser {
                              extendedShapes: extended, kerns: kerns)
     }
 
+    /// Parses the `MathVariants` sub-table: minConnectorOverlap plus, per
+    /// covered glyph, the size-variant ladder and (if present) the
+    /// extensible `GlyphAssembly`. Assemblies with a degenerate extender
+    /// (fullAdvance ≤ 0, would loop forever) are dropped at parse.
+    public static func variants(from data: Data, unitsPerEm: Int) -> MathVariantsData? {
+        guard unitsPerEm > 0 else { return nil }
+        let b = [UInt8](data)
+        guard let mv = subTable(at: 8, in: b) else { return nil }
+        let em = CGFloat(unitsPerEm)
+        guard let mco = u16(b, mv),
+              let vertCovOff = u16(b, mv + 2), let horizCovOff = u16(b, mv + 4),
+              let vertCount = u16(b, mv + 6), let horizCount = u16(b, mv + 8) else { return nil }
+
+        func assembly(at start: Int) -> MathGlyphAssembly? {
+            guard start + 5 < b.count, let count = u16(b, start + 4) else { return nil }
+            var parts: [MathGlyphAssembly.Part] = []
+            parts.reserveCapacity(count)
+            for i in 0..<count {
+                let rec = start + 6 + 10 * i
+                guard let g = u16(b, rec), let sc = u16(b, rec + 2), let ec = u16(b, rec + 4),
+                      let fa = u16(b, rec + 6), let flags = u16(b, rec + 8) else { return nil }
+                parts.append(.init(glyphID: UInt16(g),
+                                   startConnector: CGFloat(sc) / em,
+                                   endConnector: CGFloat(ec) / em,
+                                   fullAdvance: CGFloat(fa) / em,
+                                   isExtender: flags & 1 == 1))
+            }
+            guard !parts.isEmpty,
+                  !parts.contains(where: { $0.isExtender && $0.fullAdvance <= 0 }) else { return nil }
+            return MathGlyphAssembly(italicsCorrection: CGFloat(i16(b, start)) / em, parts: parts)
+        }
+
+        func constructions(covOff: Int, count: Int, offsetsBase: Int)
+            -> [UInt16: MathVariantsData.Construction] {
+            guard covOff > 0, count > 0,
+                  let glyphs = coverage(b, at: mv + covOff), glyphs.count == count else { return [:] }
+            var out: [UInt16: MathVariantsData.Construction] = [:]
+            out.reserveCapacity(count)
+            for (i, glyph) in glyphs.enumerated() {
+                guard let cOff = u16(b, offsetsBase + 2 * i), cOff > 0 else { continue }
+                let c = mv + cOff
+                guard let asmOff = u16(b, c), let vCount = u16(b, c + 2) else { continue }
+                var vars: [MathVariantsData.Variant] = []
+                vars.reserveCapacity(vCount)
+                for k in 0..<vCount {
+                    guard let vg = u16(b, c + 4 + 4 * k), let adv = u16(b, c + 6 + 4 * k) else { break }
+                    vars.append(.init(glyphID: UInt16(vg), advance: CGFloat(adv) / em))
+                }
+                out[glyph] = MathVariantsData.Construction(
+                    variants: vars,
+                    assembly: asmOff > 0 ? assembly(at: c + asmOff) : nil)
+            }
+            return out
+        }
+
+        return MathVariantsData(
+            minConnectorOverlap: CGFloat(mco) / em,
+            vertical: constructions(covOff: vertCovOff, count: vertCount, offsetsBase: mv + 10),
+            horizontal: constructions(covOff: horizCovOff, count: horizCount,
+                                      offsetsBase: mv + 10 + 2 * vertCount))
+    }
+
     // MARK: - Inner tables
 
     private static func kernInfo(_ b: [UInt8], at start: Int, em: CGFloat)

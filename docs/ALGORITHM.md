@@ -167,13 +167,16 @@ Math ships no kern data (staircases exercised with synthetic bytes); STIX
 Two in Phase 7 lights this up for real. Ink-clearance floors are retained
 so exponents clear tall bases' ink.
 
-### Rule 19 — `\left…\right` — **Partial / Deviation**
-Auto-sizing exists; tall `( ) [ ] { }` step through MATH size variants
-(gated to a verified set), everything else point-scales (fat strokes,
-flagged in COVERAGE.md). The TeX sizing formula
-(`\delimiterfactor` 901/500, `\delimitershortfall`) is not used; Vinculum
-sizes to the body directly. No glyph assembly. `\middle`, `\big…\Bigg`:
-implemented. *Phases 5–6.*
+### Rule 19 — `\left…\right` — **Implemented (Phase 5) / minor deviation**
+The full stretch chain: MATH size variants (any covered glyph — the old
+`()[]{}`-only gate is gone; `⟨ ⟩ ‖ ⌈ ⌋` now step through variants) →
+**glyph assembly** from font parts (`MathAssemblySolver`: fewest extender
+repeats, joints opened equally from max overlap, `MinConnectorOverlap`
+respected, degenerate extenders rejected at parse) → continuous scaling
+as the last resort. Assemblies render as stacked `.glyph` elements at
+constant stroke weight. Remaining deviation: fences are sized to the body
+directly rather than via the `\delimiterfactor`/`\delimitershortfall`
+formula (Phase 6).
 
 ### Rule 20 — inter-atom spacing — **Implemented (Phase 2, minus Inner)**
 A hand-written switch over 7 atom classes (`spacing(between:and:style:)`,
@@ -222,7 +225,8 @@ fraction part-scales and side padding, delimiter step factors.
 | ~~No italic correction~~ **done** | 17, 18f, 13 | 3 ✓ |
 | ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | 3 ✓ |
 | ~~Accent attachment points~~ **done** (width variants → 5) | 12 | 4 ✓ |
-| No glyph assembly; polyline radical; scaled tall fences | 11, 19 | 5 |
+| ~~No glyph assembly; scaled tall fences~~ **done** (fences) | 19 | 5 ✓ |
+| Polyline radical (font glyph + variants + assembly) | 11 | 5b |
 | Operators scaled not variant-swapped; Rule 19 formula | 13, 19 | 6 |
 | `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | backlog |
 | Line breaking | 21 | 9 (stretch) |

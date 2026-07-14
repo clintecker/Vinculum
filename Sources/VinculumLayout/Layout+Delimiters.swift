@@ -24,6 +24,20 @@ extension MathLayoutEngine {
                            elements: [.glyph(id: shape.glyphID, size: size,
                                              origin: CGPoint(x: 0, y: offset), color: colorOverride)])
         }
+        // Beyond the largest size variant: assemble the fence from the
+        // font's parts (end caps + extenders, constant stroke weight),
+        // centered on the axis like the variant path.
+        if target >= size * 2.0, let provider = delimiterAssembly,
+           let asm = provider(glyph, target, size) {
+            let bottom = axis - asm.height / 2
+            let elements = asm.placements.map {
+                MathElement.glyph(id: $0.glyphID, size: size,
+                                  origin: CGPoint(x: 0, y: bottom + $0.offset),
+                                  color: colorOverride)
+            }
+            return MathBox(width: asm.width, ascent: bottom + asm.height, descent: -bottom,
+                           inkAscent: bottom + asm.height, elements: elements)
+        }
         let probe = glyphBox(glyph, size: size, italic: false)
         let scale = max(1, target / max(probe.height, 1))
         let scaled = glyphBox(glyph, size: size * scale, italic: false)
