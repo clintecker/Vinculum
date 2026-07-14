@@ -64,7 +64,7 @@ Swift Package Manager. Add the dependency:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.24.0"),
+    .package(url: "https://github.com/clintecker/Vinculum.git", from: "1.0.0"),
 ]
 ```
 
@@ -411,15 +411,27 @@ per-subtree during layout. That's the whole surface — see
 
 ## Performance
 
-- **Renders are cached** by content + theme + size (`NSCache`, bounded by
-  count and pixel-byte cost), so repeated layout of the same equation is a
-  dictionary hit. A `nil` (unsupported) result is cached as a negative entry,
-  so a live editor doesn't re-parse known-bad LaTeX every keystroke.
+Measured on Apple silicon (M-series, debug build, medians — the
+`MathPerformanceTests` suite re-measures on every run and enforces loose
+ceilings):
+
+| Path | Time |
+| --- | --- |
+| Cold render (parse → layout → rasterize, quadratic formula) | **~0.3 ms** |
+| Warm render (cache hit) | **~0.7 µs** |
+| Headless layout only (the Linux path) | **~40 µs** |
+
+- **Renders are cached** by content + theme + size + font (`NSCache`,
+  bounded by count and pixel-byte cost). A `nil` (unsupported) result is
+  cached as a negative entry, so a live editor doesn't re-parse known-bad
+  LaTeX every keystroke.
 - Layout is allocation-light struct geometry with no WebView spin-up — the
   cost is one CoreText line measurement per glyph run plus arithmetic.
-- The parser is bounded: a linear pre-scan caps recursion (adversarial
-  `{{{…` or `\begin` nesting degrades to fallback instead of overflowing the
-  stack) and macro expansion has a hard budget.
+- The parser is bounded twice: a linear pre-scan caps brace/environment
+  nesting and a runtime depth counter caps brace-free command recursion —
+  adversarial input degrades to fallback instead of overflowing any stack,
+  proven by the deterministic fuzz suite (grammar, mutation, and
+  depth-attack corpora).
 
 ---
 

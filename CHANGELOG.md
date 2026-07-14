@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.0.0 — 2026-07-14
+
+**1.0.** The promise, as the roadmap wrote it: *TeX-quality output measured
+against the font's own MATH table, on every Apple platform and
+Linux-headless, with a one-line integration.* What this release adds on
+top of 0.25:
+
+- **API freeze** — `MathFontServices` bundles the measurer, constants, and
+  all four refinement seams (an engine can no longer be half-configured);
+  `MathLayoutEngine(services:baseSize:)` is the primary initializer with a
+  headless `(measure:baseSize:)` convenience; internals moved to `package`
+  visibility; `MathFont.ctFont(size:)` is public so custom renderers of
+  the `MathScene` IR can resolve glyph IDs; the engine is `Sendable`.
+- **iOS is tested, not just compiled** — CI runs the label and font suites
+  on an iOS simulator. The very first run caught a real bug: template-mode
+  images drawn raw on UIKit tint to black, so dark-theme `VinculumLabel`
+  ink vanished on dark canvases. Fixed (explicit theme-ink tinting).
+- **The 1.0 bar, ratcheted** — the full 66-equation real-world stress
+  corpus lays out with sane geometry under EVERY bundled font's complete
+  pipeline; the golden comparator now checks all color channels.
+- **Measured performance** — cold parse+layout+raster ~0.3 ms, warm cache
+  hit ~0.7 µs, headless layout ~40 µs (Apple silicon medians, enforced as
+  ceilings by `MathPerformanceTests`).
+
+Deliberately not in 1.0 (tracked in docs/ROADMAP.md): `ssty` optical
+script glyphs, width-aware line breaking.
+
 ## 0.25.0 — 2026-07-14
 
 **The reviewed release.** A six-lens expert panel (decomposition,
