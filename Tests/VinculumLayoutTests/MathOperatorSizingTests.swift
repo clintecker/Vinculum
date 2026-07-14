@@ -7,10 +7,7 @@ import Foundation
 /// fences size by TeX's `\delimiterfactor`/`\delimitershortfall` formula.
 final class MathOperatorSizingTests: XCTestCase {
 
-    private let mock: MathTextMeasurer = { text, size, _ in
-        GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.75, descent: size * 0.25,
-                     inkAscent: size * 0.7, inkDescent: -size * 0.05)
-    }
+    private let mock = standardMockMeasurer
 
     /// Serves a big-∑/∫ variant (gid 42) when asked for at least the
     /// DisplayOperatorMinHeight (1.3 em in LM Math).

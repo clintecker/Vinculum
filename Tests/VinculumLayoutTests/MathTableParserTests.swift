@@ -12,12 +12,7 @@ import XCTest
 /// 0.050), and `stackGapMin` was 0.150 (font: 0.120 text / 0.280 display).
 final class MathTableParserTests: XCTestCase {
 
-    private static let fixture: Data = {
-        let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Tests/fixtures/math-table/latinmodern-math.bin")
-        return (try? Data(contentsOf: url)) ?? Data()
-    }()
+    private static let fixture = TestFixtures.mathTable("latinmodern-math")
 
     // MARK: - MathConstants sub-table
 

@@ -7,10 +7,7 @@ import Foundation
 /// `MathGlyphTypographyProvider`.
 final class MathScriptTypographyTests: XCTestCase {
 
-    private let mock: MathTextMeasurer = { text, size, _ in
-        GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.75, descent: size * 0.25,
-                     inkAscent: size * 0.7, inkDescent: -size * 0.05)
-    }
+    private let mock = standardMockMeasurer
 
     /// Provider giving the italic 𝑓 (U+1D453) a 0.2 em italic correction and
     /// everything else zero. Values are returned in points at `size`.
@@ -75,7 +72,7 @@ final class MathScriptTypographyTests: XCTestCase {
 
     // MARK: - Rule 18d: the font's SubSuperscriptGapMin separates colliding scripts
 
-    func testSubSuperGapOpensToFontMinimum() {
+    func testSubSuperGapOpensToFontMinimum() throws {
         // Deep sup + tall sub forced together: the vertical gap between the
         // superscript's bottom and subscript's top must be ≥ 0.160 em.
         let engine = MathLayoutEngine(measure: mock, baseSize: 10)
@@ -86,7 +83,7 @@ final class MathScriptTypographyTests: XCTestCase {
             if text == "𝑦" { supBottom = origin.y - size * 0.25 }
             if text == "𝑧" { subTop = origin.y + size * 0.75 }
         }
-        let gap = try! (XCTUnwrap(supBottom) - XCTUnwrap(subTop))
+        let gap = try XCTUnwrap(supBottom) - XCTUnwrap(subTop)
         XCTAssertGreaterThanOrEqual(gap + 0.001, 0.160 * 10, "18d minimum script gap")
     }
 

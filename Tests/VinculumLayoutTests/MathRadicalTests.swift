@@ -7,10 +7,7 @@ import Foundation
 /// font's degree-placement constants (TeX Rule 11).
 final class MathRadicalTests: XCTestCase {
 
-    private let mock: MathTextMeasurer = { text, size, _ in
-        GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.75, descent: size * 0.25,
-                     inkAscent: size * 0.7, inkDescent: -size * 0.05)
-    }
+    private let mock = standardMockMeasurer
 
     // MARK: - Variant selection heuristic
 

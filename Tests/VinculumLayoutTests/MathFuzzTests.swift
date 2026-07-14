@@ -8,10 +8,7 @@ import XCTest
 /// failures reproduce).
 final class MathFuzzTests: XCTestCase {
 
-    private let mock: MathTextMeasurer = { text, size, _ in
-        GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.75, descent: size * 0.25,
-                     inkAscent: size * 0.7, inkDescent: -size * 0.05)
-    }
+    private let mock = standardMockMeasurer
 
     private struct LCG {
         var state: UInt64
