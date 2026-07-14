@@ -112,31 +112,42 @@ extension MathLayoutEngine {
     /// above, subscript centered below.
     func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?,
                    size: CGFloat, style: MathStyle, enlarge: Bool) -> MathBox {
-        // The operator body lays out in text style (limits are what make it
-        // display); the limits themselves descend one script level.
-        let opBox = box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size, style: .text)
+        // The operator body: the font's display-size variant when available
+        // (axis-centered), else the scaled fallback laid out in text style
+        // so it can't recurse into limits.
+        var opBox: MathBox?
+        if enlarge, case .symbol(let glyph, .largeOperator, _) = base {
+            opBox = largeOperatorBox(glyph, size: size)
+        }
+        let op = opBox ?? box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size,
+                              style: .text)
         let scriptSize = size * style.scriptSizeRatio(constants)
         let supBox = sup.map { box(for: $0, size: scriptSize, style: style.scriptStyle) }
         let subBox = sub.map { box(for: $0, size: scriptSize, style: style.scriptStyle) }
-        let gap = size * constants.stackGapMin
+        // TeX Rule 13a: limit clearance is the font's gap minimum, or as
+        // much more as the baseline rise/drop minimums demand.
+        let upperGap = supBox.map { max(size * constants.upperLimitGapMin,
+                                        size * constants.upperLimitBaselineRiseMin - $0.descent) } ?? 0
+        let lowerGap = subBox.map { max(size * constants.lowerLimitGapMin,
+                                        size * constants.lowerLimitBaselineDropMin - $0.ascent) } ?? 0
 
-        let width = max(opBox.width, supBox?.width ?? 0, subBox?.width ?? 0)
-        var ascent = opBox.ascent
-        var descent = opBox.descent
-        if let supBox { ascent += gap + supBox.height }
-        if let subBox { descent += gap + subBox.height }
+        let width = max(op.width, supBox?.width ?? 0, subBox?.width ?? 0)
+        var ascent = op.ascent
+        var descent = op.descent
+        if let supBox { ascent += upperGap + supBox.height }
+        if let subBox { descent += lowerGap + subBox.height }
 
         // TeX Rule 13a: the upper limit shifts right by δ/2 (half the italic
         // correction), the lower limit left by δ/2, hugging the slant.
         let delta = glyphTypography(of: base, size: size)?.italicCorrection ?? 0
-        var elements = opBox.placed(at: CGPoint(x: (width - opBox.width) / 2, y: 0))
+        var elements = op.placed(at: CGPoint(x: (width - op.width) / 2, y: 0))
         if let supBox {
             elements += supBox.placed(at: CGPoint(x: (width - supBox.width) / 2 + delta / 2,
-                                                  y: opBox.ascent + gap + supBox.descent))
+                                                  y: op.ascent + upperGap + supBox.descent))
         }
         if let subBox {
             elements += subBox.placed(at: CGPoint(x: (width - subBox.width) / 2 - delta / 2,
-                                                  y: -opBox.descent - gap - subBox.ascent))
+                                                  y: -op.descent - lowerGap - subBox.ascent))
         }
         return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
     }

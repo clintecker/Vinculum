@@ -74,8 +74,14 @@ public struct MathLayoutEngine {
 
     func box(for node: MathNode, size s: CGFloat, style: MathStyle) -> MathBox {
         switch node {
-        case .symbol(let glyph, _, let style):
-            return glyphBox(glyph, size: s, italic: style == .italic, bold: style == .bold)
+        case .symbol(let glyph, let cls, let symbolStyle):
+            // TeX Rule 13: in display style a large operator swaps in the
+            // font's display-size variant (DisplayOperatorMinHeight),
+            // centered on the math axis.
+            if cls == .largeOperator, style.isDisplay, let opBox = largeOperatorBox(glyph, size: s) {
+                return opBox
+            }
+            return glyphBox(glyph, size: s, italic: symbolStyle == .italic, bold: symbolStyle == .bold)
 
         case .functionName(let name):
             return glyphBox(name, size: s, italic: false)
@@ -168,6 +174,30 @@ public struct MathLayoutEngine {
             // Callers gate on isFullySupported; draw something sane regardless.
             return glyphBox(source, size: s * MathLayout.unsupportedSourceScale, italic: false, mono: true)
         }
+    }
+
+    /// The font's display-size variant of a large operator (∑, ∫, …) at
+    /// `DisplayOperatorMinHeight`, centered on the math axis (TeX's
+    /// `½(h − d) − a` shift). Nil headless or when the font has no variant.
+    func largeOperatorBox(_ glyph: String, size: CGFloat) -> MathBox? {
+        guard let provider = delimiters,
+              let shape = provider(glyph, size * constants.displayOperatorMinHeight, size)
+        else { return nil }
+        let m = shape.metrics
+        let offset = size * constants.axisHeight - (m.ascent - m.descent) / 2
+        return MathBox(width: m.width, ascent: m.ascent + offset, descent: m.descent - offset,
+                       inkAscent: m.inkAscent + offset,
+                       elements: [.glyph(id: shape.glyphID, size: size,
+                                         origin: CGPoint(x: 0, y: offset), color: colorOverride)])
+    }
+
+    /// TeX Rule 19's fence height: ψ measured from the axis, covered to at
+    /// least `\delimiterfactor`/1000 of full (901 → 90.1%) or within
+    /// `\delimitershortfall` (5 pt) of it, whichever demands more.
+    func fenceTarget(ascent: CGFloat, descent: CGFloat, size: CGFloat) -> CGFloat {
+        let axis = size * constants.axisHeight
+        let psi = max(ascent - axis, descent + axis)
+        return max(psi * 2 * 0.901, 2 * psi - 5)
     }
 
     // MARK: - Glyph boxes

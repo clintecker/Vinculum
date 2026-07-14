@@ -8,11 +8,9 @@ extension MathLayoutEngine {
     func stretchedFence(_ glyph: String, targetHeight: CGFloat, around bodyBox: MathBox, size: CGFloat) -> MathBox {
         guard !glyph.isEmpty else { return .empty }
         let axis = size * constants.axisHeight
-        // Size the fence to cover the body symmetrically about the axis (TeX
-        // measures each side from the axis, not the baseline), so an
-        // off-baseline body still gets a fence tall enough on both ends.
-        let half = max(bodyBox.ascent - axis, bodyBox.descent + axis, targetHeight / 2)
-        let target = 2 * half
+        // The caller passes a Rule 19 target (ψ-based, axis-symmetric);
+        // floor it at one em so a short body still gets a real fence.
+        let target = max(targetHeight, size)
         // For clearly-tall fences, prefer a discrete MATH-table size variant
         // (constant stroke weight). Small stretches scale fine with negligible
         // distortion, so we skip the variant path there.
@@ -70,7 +68,7 @@ extension MathLayoutEngine {
         let bodyAscent = segBoxes.map(\.ascent).max() ?? 0
         let bodyDescent = segBoxes.map(\.descent).max() ?? 0
         let combined = MathBox(width: 0, ascent: bodyAscent, descent: bodyDescent)
-        let target = max(bodyAscent + bodyDescent, size)
+        let target = fenceTarget(ascent: bodyAscent, descent: bodyDescent, size: size)
         let fenceBoxes = fences.map { stretchedFence($0, targetHeight: target, around: combined, size: size) }
 
         var elements: [MathElement] = []
@@ -91,7 +89,7 @@ extension MathLayoutEngine {
     /// `\left…\right`: a body flanked by fences sized to its height.
     func delimitedBox(_ left: String, _ body: MathNode, _ right: String, size: CGFloat, style: MathStyle) -> MathBox {
         let bodyBox = box(for: body, size: size, style: style)
-        let target = max(bodyBox.height, size)
+        let target = fenceTarget(ascent: bodyBox.ascent, descent: bodyBox.descent, size: size)
         let leftBox = stretchedFence(left, targetHeight: target, around: bodyBox, size: size)
         let rightBox = stretchedFence(right, targetHeight: target, around: bodyBox, size: size)
         let width = leftBox.width + bodyBox.width + rightBox.width
@@ -107,8 +105,9 @@ extension MathLayoutEngine {
 
     /// Fences an already-laid-out box (a grid or stack) with stretched fences.
     func delimitedBoxAround(_ bodyBox: MathBox, left: String, right: String, size: CGFloat) -> MathBox {
-        let leftBox = stretchedFence(left, targetHeight: bodyBox.height, around: bodyBox, size: size)
-        let rightBox = stretchedFence(right, targetHeight: bodyBox.height, around: bodyBox, size: size)
+        let target = fenceTarget(ascent: bodyBox.ascent, descent: bodyBox.descent, size: size)
+        let leftBox = stretchedFence(left, targetHeight: target, around: bodyBox, size: size)
+        let rightBox = stretchedFence(right, targetHeight: target, around: bodyBox, size: size)
         let width = leftBox.width + bodyBox.width + rightBox.width + size * MathLayout.Grid.fencePadding
 
         var elements = leftBox.elements

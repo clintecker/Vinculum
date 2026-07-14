@@ -120,14 +120,15 @@ stretchy accents still *scale* toward the char width (clamped 0.7–1.6×)
 instead of walking horizontal width variants — Phase 5's horizontal
 machinery covers that.
 
-### Rule 13 — large operators — **Partial / Deviation**
-Display-style big operators are **scaled 1.35×**
-(`MathLayout.displayOperatorScale`, comment admits "TeX swaps in the
-display-size glyph; we scale instead") — no variant swap, no
-`DisplayOperatorMinHeight`. Limits stacking is implemented with
-`upperLimitBaselineRiseMin`/`lowerLimitBaselineDropMin`; integrals are
-correctly `\nolimits` by default; the `\lim` family stacks. Italic
-correction on operator scripts is ABSENT (see Rule 17). *Phases 3 and 6.*
+### Rule 13 — large operators — **Implemented (Phases 3 + 6)**
+In display style, large operators (∑, ∏, ∫, …) swap in the font's
+display-size **variant glyph** at `DisplayOperatorMinHeight`, centered on
+the math axis (`½(h−d) − a`); the 1.35× scale survives only as the
+headless fallback. Limits attach at the Rule 13a clearances —
+`max(UpperLimitGapMin, UpperLimitBaselineRiseMin − d(sup))` and the lower
+mirror — and split ±δ/2 by the italic correction (Phase 3). Integrals are
+`\nolimits` with the δ-tucked subscript; the `\lim` family stacks.
+Remaining: no `\displaylimits` tri-state (same as iosMath).
 
 ### Rule 14 — Ord runs, ligatures, kerns — **Partial**
 Adjacent symbols share glyph runs via the measurer. Math ligatures and
@@ -175,9 +176,10 @@ The full stretch chain: MATH size variants (any covered glyph — the old
 repeats, joints opened equally from max overlap, `MinConnectorOverlap`
 respected, degenerate extenders rejected at parse) → continuous scaling
 as the last resort. Assemblies render as stacked `.glyph` elements at
-constant stroke weight. Remaining deviation: fences are sized to the body
-directly rather than via the `\delimiterfactor`/`\delimitershortfall`
-formula (Phase 6).
+constant stroke weight. Fences size by TeX's formula (Phase 6):
+ψ measured from the axis, height ≥ max(2ψ·901/1000, 2ψ − 5pt) — so a
+fence may sit up to ~10% short of an extreme body, exactly as TeX's
+`\delimiterfactor` intends.
 
 ### Rule 20 — inter-atom spacing — **Implemented (Phase 2, minus Inner)**
 A hand-written switch over 7 atom classes (`spacing(between:and:style:)`,
@@ -228,7 +230,7 @@ fraction part-scales and side padding, delimiter step factors.
 | ~~Accent attachment points~~ **done** (width variants → 5) | 12 | 4 ✓ |
 | ~~No glyph assembly; scaled tall fences~~ **done** (fences) | 19 | 5 ✓ |
 | ~~Polyline radical~~ **done** (polyline = headless fallback only) | 11 | 5b ✓ |
-| Operators scaled not variant-swapped; Rule 19 formula | 13, 19 | 6 |
+| ~~Operators scaled not variant-swapped; Rule 19 formula~~ **done** | 13, 19 | 6 ✓ |
 | `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | backlog |
 | Line breaking | 21 | 9 (stretch) |
 

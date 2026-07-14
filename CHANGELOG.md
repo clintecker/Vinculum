@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+Phase 6: display operators from the font + TeX fence sizing.
+
+- **Display-size operator variants** — in display style, ∑ ∏ ∫ and every
+  large operator swap in the font's bigger cut (`DisplayOperatorMinHeight`,
+  1.3 em in LM Math), centered on the math axis, replacing the 1.35×
+  scale (which survives headless). `\int` in display is finally the tall
+  slanted integral.
+- **Rule 13a limit clearances** — stacked limits attach at
+  `max(Upper/LowerLimitGapMin, BaselineRiseMin − d(sup) / DropMin − h(sub))`
+  instead of a single stack gap.
+- **Rule 19 fence sizing** — `\left…\right` heights follow TeX's
+  `\delimiterfactor`/`\delimitershortfall` formula (ψ from the axis,
+  ≥ max(2ψ·0.901, 2ψ − 5pt)), so fences carry TeX's proportions instead
+  of enveloping the body completely.
+- 4 new tests (`MathOperatorSizingTests`); 32 goldens re-blessed.
+
 Phase 5b: the radical is the font's √ glyph.
 
 - **Font surd** — `\sqrt` draws Latin Modern's radical glyph via size
