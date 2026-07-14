@@ -115,10 +115,10 @@ accent, via the typography provider; advance-center fallback) — strictly
 better than TeX's `\skewchar`. Vertically the accent hugs the base's ink
 but never sinks below the font's `AccentBaseHeight` seat
 (δ = min(h, AccentBaseHeight)). Scripts on a single-character accentee
-promote onto the character (`\hat{f}^2` puts the ² on the f). Remaining:
-stretchy accents still *scale* toward the char width (clamped 0.7–1.6×)
-instead of walking horizontal width variants — Phase 5's horizontal
-machinery covers that.
+promote onto the character (`\hat{f}^2` puts the ² on the f). Stretchy
+accents (`\widehat` family) walk the font's HORIZONTAL variant ladder —
+carried by the combining-mark glyphs — taking the widest drawn cut not
+exceeding the accentee (Phase 5c); scaling is the headless fallback.
 
 ### Rule 13 — large operators — **Implemented (Phases 3 + 6)**
 In display style, large operators (∑, ∏, ∫, …) swap in the font's
