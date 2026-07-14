@@ -39,14 +39,14 @@ public struct MathLayoutEngine {
     /// scene. `display` enables display-style conventions (stacked limits,
     /// larger fraction parts).
     public func layout(_ node: MathNode, display: Bool = false) -> MathScene {
-        let box = box(for: node, size: baseSize, display: display)
+        let box = box(for: node, size: baseSize, style: display ? .display : .text)
         return MathScene(width: box.width, ascent: box.ascent, descent: box.descent,
                          elements: box.elements)
     }
 
     // MARK: - Node dispatch
 
-    func box(for node: MathNode, size s: CGFloat, display: Bool) -> MathBox {
+    func box(for node: MathNode, size s: CGFloat, style: MathStyle) -> MathBox {
         switch node {
         case .symbol(let glyph, _, let style):
             return glyphBox(glyph, size: s, italic: style == .italic, bold: style == .bold)
@@ -55,74 +55,78 @@ public struct MathLayoutEngine {
             return glyphBox(name, size: s, italic: false)
 
         case .limitsOperator(let base):
-            return box(for: base, size: s, display: display)   // transparent; limits handled in scriptsBox
+            return box(for: base, size: s, style: style)   // transparent; limits handled in scriptsBox
 
         case .classified(let base, _):
-            return box(for: base, size: s, display: display)   // transparent; only the atom class changes
+            return box(for: base, size: s, style: style)   // transparent; only the atom class changes
 
         case .ruleBox(let w, let h):
             let ww = CGFloat(w) * s, hh = CGFloat(h) * s
             return MathBox(width: ww, ascent: hh, descent: 0, elements: [rule(x: 0, y: 0, width: ww, height: hh)])
 
         case .raised(let base, let shift):
-            let b = box(for: base, size: s, display: display)
+            let b = box(for: base, size: s, style: style)
             let dy = CGFloat(shift) * s
             return MathBox(width: b.width, ascent: b.ascent + dy, descent: b.descent - dy,
                            inkAscent: b.inkAscent + dy, elements: b.placed(at: CGPoint(x: 0, y: dy)))
 
         case .colorbox(let base, let bg, let border):
-            return colorboxBox(base, background: bg, border: border, size: s, display: display)
+            return colorboxBox(base, background: bg, border: border, size: s, style: style)
 
         case .space(let ems):
             return MathBox(width: CGFloat(ems) * s, ascent: 0, descent: 0)
 
         case .row(let children):
-            return rowBox(children, size: s, display: display)
+            return rowBox(children, size: s, style: style)
 
         case .fraction(let numerator, let denominator):
-            return fractionBox(numerator, denominator, size: s, display: display)
+            return fractionBox(numerator, denominator, size: s, style: style)
 
         case .cfrac(let num, let den, let align):
             return cfracBox(num, den, align: align, size: s)
 
         case .radical(let degree, let radicand):
-            return radicalBox(degree, radicand, size: s, display: display)
+            return radicalBox(degree, radicand, size: s, style: style)
 
         case .scripts(let base, let sub, let sup):
-            return scriptsBox(base, sub: sub, sup: sup, size: s, display: display)
+            return scriptsBox(base, sub: sub, sup: sup, size: s, style: style)
 
         case .delimited(let left, let body, let right):
-            return delimitedBox(left, body, right, size: s, display: display)
+            return delimitedBox(left, body, right, size: s, style: style)
 
         case .fenced(let fences, let segments):
-            return fencedBox(fences, segments, size: s, display: display)
+            return fencedBox(fences, segments, size: s, style: style)
 
         case .matrix(let rows, let left, let right, let style):
             return matrixBox(rows, left: left, right: right, style: style, size: s)
 
         case .accent(let base, let accent):
-            return accentBox(base, accent: accent, size: s, display: display)
+            return accentBox(base, accent: accent, size: s, style: style)
 
         case .genfrac(let top, let bottom, let hasRule, let left, let right):
             return genfracBox(top, bottom, hasRule: hasRule, left: left, right: right,
-                              size: s, display: display)
+                              size: s, style: style)
 
         case .overUnder(let base, let over, let under, let kind):
             return overUnderBox(base, over: over, under: under, kind: kind,
-                                size: s, display: display)
+                                size: s, style: style)
 
         case .decorated(let base, let decoration):
-            return decoratedBox(base, decoration: decoration, size: s, display: display)
+            return decoratedBox(base, decoration: decoration, size: s, style: style)
 
         case .styled(let base, let color):
             // Lay the subtree out with a color override; nested \color nests.
             var sub = self
             sub.colorOverride = MathColor.resolve(color) ?? colorOverride
-            return sub.box(for: base, size: s, display: display)
+            return sub.box(for: base, size: s, style: style)
 
         case .mathStyle(let base, let forced):
-            // \dfrac/\tfrac: force the subtree's style regardless of context.
-            return box(for: base, size: s, display: forced)
+            // \dfrac/\tfrac/\genfrac style/\displaystyle…: force the
+            // subtree's style — and the size that style implies (so
+            // \scriptstyle shrinks and \displaystyle inside a script grows
+            // back to full size).
+            let factor = forced.sizeFactor(constants) / style.sizeFactor(constants)
+            return box(for: base, size: s * factor, style: forced)
 
         case .bigDelimiter(let glyph, let factor, _):
             return bigDelimiterBox(glyph, factor: factor, size: s)
@@ -170,10 +174,10 @@ public struct MathLayoutEngine {
 
     // MARK: - Rows with TeX spacing
 
-    func rowBox(_ children: [MathNode], size: CGFloat, display: Bool) -> MathBox {
+    func rowBox(_ children: [MathNode], size: CGFloat, style: MathStyle) -> MathBox {
         var boxes: [(box: MathBox, cls: MathAtomClass?)] = []
         for child in children {
-            boxes.append((box(for: child, size: size, display: display), atomClass(of: child)))
+            boxes.append((box(for: child, size: size, style: style), atomClass(of: child)))
         }
         let classes = Self.reclassifyBinaries(boxes.map(\.cls))
 
@@ -184,7 +188,7 @@ public struct MathLayoutEngine {
         for (i, entry) in boxes.enumerated() {
             let box = entry.box, cls = classes[i]
             if let previous, let cls {
-                width += spacing(between: previous, and: cls) * size
+                width += spacing(between: previous, and: cls, style: style) * size
             }
             placements.append((box, width))
             width += box.width
@@ -246,8 +250,13 @@ public struct MathLayoutEngine {
     }
 
     /// TeX inter-atom spacing (in ems): thin 3/18 · medium 4/18 · thick 5/18.
-    func spacing(between left: MathAtomClass, and right: MathAtomClass) -> CGFloat {
-        let thin = MathSpacing.thin, medium = MathSpacing.medium, thick = MathSpacing.thick
+    /// Medium and thick are parenthesized in TeX's chart (ch. 18) — they
+    /// vanish in script styles; thin space applies in every style.
+    func spacing(between left: MathAtomClass, and right: MathAtomClass,
+                 style: MathStyle = .text) -> CGFloat {
+        let thin = MathSpacing.thin
+        let medium = style.isScriptLevel ? 0 : MathSpacing.medium
+        let thick = style.isScriptLevel ? 0 : MathSpacing.thick
         switch (left, right) {
         case (.ordinary, .binary), (.binary, .ordinary),
              (.closing, .binary), (.binary, .opening),

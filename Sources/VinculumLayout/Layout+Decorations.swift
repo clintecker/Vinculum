@@ -5,8 +5,8 @@ extension MathLayoutEngine {
     /// `\colorbox{bg}{…}` / `\fcolorbox{border}{bg}{…}`: a filled background
     /// rectangle behind the content, with an optional stroked border.
     func colorboxBox(_ base: MathNode, background: String, border: String?,
-                     size: CGFloat, display: Bool) -> MathBox {
-        let baseBox = box(for: base, size: size, display: display)
+                     size: CGFloat, style: MathStyle) -> MathBox {
+        let baseBox = box(for: base, size: size, style: style)
         let pad = size * MathLayout.Box.padding
         let width = baseBox.width + pad * 2
         let ascent = baseBox.ascent + pad
@@ -31,8 +31,8 @@ extension MathLayoutEngine {
     /// `\boxed` (a stroked frame with padding) and the `\phantom` family
     /// (reserve space, draw nothing).
     func decoratedBox(_ base: MathNode, decoration: MathDecoration,
-                      size: CGFloat, display: Bool) -> MathBox {
-        let baseBox = box(for: base, size: size, display: display)
+                      size: CGFloat, style: MathStyle) -> MathBox {
+        let baseBox = box(for: base, size: size, style: style)
         switch decoration {
         case .phantom:
             return MathBox(width: baseBox.width, ascent: baseBox.ascent, descent: baseBox.descent)

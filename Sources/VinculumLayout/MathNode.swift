@@ -59,10 +59,11 @@ public indirect enum MathNode: Hashable, Sendable {
     /// A recolored subexpression: \color / \textcolor. The color is a name
     /// ("red", "teal") or "#rrggbb"; the renderer resolves it.
     case styled(base: MathNode, color: String)
-    /// A subexpression forced into display or text style regardless of the
-    /// ambient context: \dfrac / \tfrac (display/text fraction) and
-    /// \dbinom / \tbinom.
-    case mathStyle(base: MathNode, display: Bool)
+    /// A subexpression forced into an explicit TeX style regardless of the
+    /// ambient context: \dfrac / \tfrac, \dbinom / \tbinom, \genfrac's style
+    /// argument, and \displaystyle / \textstyle / \scriptstyle /
+    /// \scriptscriptstyle.
+    case mathStyle(base: MathNode, style: MathStyle)
     /// A lone delimiter glyph at an explicit size: \big \Big \bigg \Bigg
     /// (+ `l`/`r`/`m`). `factor` is the target height as a multiple of the
     /// base size; `atomClass` is the spacing class the suffix selects.

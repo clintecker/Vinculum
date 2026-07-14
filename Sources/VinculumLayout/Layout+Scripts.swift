@@ -6,21 +6,23 @@ extension MathLayoutEngine {
     /// stacked limits (∑ᵢ₌₁ⁿ), like TeX's `\limits`; otherwise they sit to the
     /// right of the base.
     func scriptsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?,
-                    size: CGFloat, display: Bool) -> MathBox {
-        if display, takesDisplayLimits(base) {
+                    size: CGFloat, style: MathStyle) -> MathBox {
+        if style.isDisplay, takesDisplayLimits(base) {
             // Symbol operators (∑, ∏) enlarge; named ones (lim, max) stay text-size.
             let enlarge: Bool
             if case .symbol(_, .largeOperator, _) = base { enlarge = true } else { enlarge = false }
-            return limitsBox(base, sub: sub, sup: sup, size: size, enlarge: enlarge)
+            return limitsBox(base, sub: sub, sup: sup, size: size, style: style, enlarge: enlarge)
         }
-        let baseBox = box(for: base, size: size, display: display)
-        let scriptSize = size * constants.scriptPercentScaleDown
+        let baseBox = box(for: base, size: size, style: style)
+        // Descend one script level: 70% from text, but only down to the 50%
+        // scriptscript floor from there (TeX sizes, not compounding shrink).
+        let scriptSize = size * style.scriptSizeRatio(constants)
         // A superscript is uncramped; a subscript is cramped (TeX sup_style /
         // sub_style), so nested exponents inside a subscript ride lower.
         var supEngine = self; supEngine.cramped = false
         var subEngine = self; subEngine.cramped = true
-        let supBox = sup.map { supEngine.box(for: $0, size: scriptSize, display: false) }
-        let subBox = sub.map { subEngine.box(for: $0, size: scriptSize, display: false) }
+        let supBox = sup.map { supEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
+        let subBox = sub.map { subEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
 
         // TeX Appendix G: take the nominal shift (lower in cramped style), but
         // raise it so the script clears a tall base's ink — an exponent on (…)²
@@ -54,11 +56,14 @@ extension MathLayoutEngine {
 
     /// ∑/∫-style stacked limits: the operator enlarged, superscript centered
     /// above, subscript centered below.
-    func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?, size: CGFloat, enlarge: Bool) -> MathBox {
-        let opBox = box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size, display: false)
-        let scriptSize = size * constants.scriptPercentScaleDown
-        let supBox = sup.map { box(for: $0, size: scriptSize, display: false) }
-        let subBox = sub.map { box(for: $0, size: scriptSize, display: false) }
+    func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?,
+                   size: CGFloat, style: MathStyle, enlarge: Bool) -> MathBox {
+        // The operator body lays out in text style (limits are what make it
+        // display); the limits themselves descend one script level.
+        let opBox = box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size, style: .text)
+        let scriptSize = size * style.scriptSizeRatio(constants)
+        let supBox = sup.map { box(for: $0, size: scriptSize, style: style.scriptStyle) }
+        let subBox = sub.map { box(for: $0, size: scriptSize, style: style.scriptStyle) }
         let gap = size * constants.stackGapMin
 
         let width = max(opBox.width, supBox?.width ?? 0, subBox?.width ?? 0)

@@ -177,8 +177,8 @@ public enum MathParser {
             let denominator = parseAtom(&tokens) ?? .row([])
             let frac = MathNode.fraction(numerator: numerator, denominator: denominator)
             switch name {                          // \dfrac/\tfrac force the style
-            case "dfrac": return .mathStyle(base: frac, display: true)
-            case "tfrac": return .mathStyle(base: frac, display: false)
+            case "dfrac": return .mathStyle(base: frac, style: .display)
+            case "tfrac": return .mathStyle(base: frac, style: .text)
             default: return frac
             }
 
@@ -204,8 +204,8 @@ public enum MathParser {
             let bottom = parseAtom(&tokens) ?? .row([])
             let binom = MathNode.genfrac(top: top, bottom: bottom, hasRule: false, left: "(", right: ")")
             switch name {
-            case "dbinom": return .mathStyle(base: binom, display: true)
-            case "tbinom": return .mathStyle(base: binom, display: false)
+            case "dbinom": return .mathStyle(base: binom, style: .display)
+            case "tbinom": return .mathStyle(base: binom, style: .text)
             default: return binom
             }
 
@@ -217,9 +217,11 @@ public enum MathParser {
             let numeric = thickness.filter { $0.isNumber || $0 == "." }
             let hasRule = thickness.isEmpty || (Double(numeric) ?? 1) != 0   // "0pt" → no rule
             let gf = MathNode.genfrac(top: num, bottom: den, hasRule: hasRule, left: ldelim, right: rdelim)
-            switch styleArg {
-            case "0": return .mathStyle(base: gf, display: true)     // \displaystyle
-            case "1", "2", "3": return .mathStyle(base: gf, display: false)
+            switch styleArg {                       // \genfrac style: 0=D 1=T 2=S 3=SS
+            case "0": return .mathStyle(base: gf, style: .display)
+            case "1": return .mathStyle(base: gf, style: .text)
+            case "2": return .mathStyle(base: gf, style: .script)
+            case "3": return .mathStyle(base: gf, style: .scriptScript)
             default: return gf
             }
 
@@ -450,6 +452,19 @@ public enum MathParser {
                 rest.append(atom)
             }
             return .styled(base: rest.count == 1 ? rest[0] : .row(rest), color: color)
+
+        case "displaystyle", "textstyle", "scriptstyle", "scriptscriptstyle":
+            // TeX style commands: stateful, applying to the rest of the
+            // current group (same mechanism as stateful \color).
+            let forced: MathStyle = name == "displaystyle" ? .display
+                : name == "textstyle" ? .text
+                : name == "scriptstyle" ? .script : .scriptScript
+            var rest: [MathNode] = []
+            while let t = tokens.first, t != .groupClose {
+                guard let atom = parseAtomWithScripts(&tokens) else { break }
+                rest.append(atom)
+            }
+            return .mathStyle(base: rest.count == 1 ? rest[0] : .row(rest), style: forced)
 
         // Spacing.
         case ",", "thinspace": return .space(3.0 / 18.0)

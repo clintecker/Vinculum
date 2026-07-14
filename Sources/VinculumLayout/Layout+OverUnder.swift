@@ -6,10 +6,10 @@ extension MathLayoutEngine {
     /// `\overbrace`/`\underbrace` (a drawn brace + label), and `\xrightarrow`/
     /// `\xleftarrow` (a stretchy arrow sized to its annotations).
     func overUnderBox(_ base: MathNode, over: MathNode?, under: MathNode?,
-                      kind: MathOverUnder, size: CGFloat, display: Bool) -> MathBox {
+                      kind: MathOverUnder, size: CGFloat, style: MathStyle) -> MathBox {
         let annotationSize = size * constants.scriptPercentScaleDown
-        let overBox = over.map { box(for: $0, size: annotationSize, display: false) }
-        let underBox = under.map { box(for: $0, size: annotationSize, display: false) }
+        let overBox = over.map { box(for: $0, size: annotationSize, style: style.scriptStyle) }
+        let underBox = under.map { box(for: $0, size: annotationSize, style: style.scriptStyle) }
         let gap = size * MathLayout.overUnderGap
 
         switch kind {
@@ -44,7 +44,7 @@ extension MathLayoutEngine {
             return MathBox(width: arrowWidth, ascent: ascent, descent: max(descent, 0), elements: elements)
 
         case .overbrace, .underbrace, .overbracket, .underbracket, .overparen, .underparen:
-            let baseBox = box(for: base, size: size, display: display)
+            let baseBox = box(for: base, size: size, style: style)
             let braceHeight = size * MathLayout.Brace.height
             let isOver = kind == .overbrace || kind == .overbracket || kind == .overparen
             let label = isOver ? overBox : underBox
@@ -76,7 +76,7 @@ extension MathLayoutEngine {
 
         case .overRightArrow, .overLeftArrow, .overLeftRightArrow,
              .underRightArrow, .underLeftArrow, .underLeftRightArrow:
-            let baseBox = box(for: base, size: size, display: display)
+            let baseBox = box(for: base, size: size, style: style)
             let isOver = kind == .overRightArrow || kind == .overLeftArrow || kind == .overLeftRightArrow
             let left = kind == .overLeftArrow || kind == .overLeftRightArrow
                     || kind == .underLeftArrow || kind == .underLeftRightArrow
@@ -99,7 +99,7 @@ extension MathLayoutEngine {
             }
 
         case .plain:
-            let baseBox = box(for: base, size: size, display: display)
+            let baseBox = box(for: base, size: size, style: style)
             let width = max(baseBox.width, overBox?.width ?? 0, underBox?.width ?? 0)
             var ascent = baseBox.ascent
             var descent = baseBox.descent

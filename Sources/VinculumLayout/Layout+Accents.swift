@@ -5,8 +5,8 @@ extension MathLayoutEngine {
     /// Accents over a base (`\hat \vec \bar …`), stretchy variants, and the
     /// `\overline`/`\underline` rules. Point accents sit on the base's actual
     /// ink top so a hat hugs `x` instead of floating at the font ascent.
-    func accentBox(_ base: MathNode, accent: MathAccent, size: CGFloat, display: Bool) -> MathBox {
-        let baseBox = box(for: base, size: size, display: display)
+    func accentBox(_ base: MathNode, accent: MathAccent, size: CGFloat, style: MathStyle) -> MathBox {
+        let baseBox = box(for: base, size: size, style: style)
         let ruleThickness = max(1, size * constants.overbarRuleThickness)
         let gap = size * constants.overbarVerticalGap
 

@@ -66,18 +66,18 @@ final class MathParserTests: XCTestCase {
 
     func testDfracForcesDisplayStyle() {
         // \dfrac wraps its fraction in a display-forcing style node.
-        guard case .mathStyle(let base, let display) = MathParser.parse("\\dfrac{a}{b}") else {
+        guard case .mathStyle(let base, let style) = MathParser.parse("\\dfrac{a}{b}") else {
             return XCTFail("expected mathStyle")
         }
-        XCTAssertTrue(display)
+        XCTAssertEqual(style, .display)
         guard case .fraction = base else { return XCTFail("expected a fraction inside") }
     }
 
     func testTfracForcesTextStyle() {
-        guard case .mathStyle(_, let display) = MathParser.parse("\\tfrac{a}{b}") else {
+        guard case .mathStyle(_, let style) = MathParser.parse("\\tfrac{a}{b}") else {
             return XCTFail("expected mathStyle")
         }
-        XCTAssertFalse(display)
+        XCTAssertEqual(style, .text)
     }
 
     func testPlainFracInheritsStyle() {

@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+Phase 2: the TeX style lattice — plus a long-standing fence-rendering bug
+found and fixed. (Phases 0–1 below.)
+
+- **`MathStyle` (display/text/script/scriptScript)** replaces the internal
+  `display: Bool`, giving the full eight-style lattice with the existing
+  cramped flag. TeX successor maps (`scriptStyle`, `fractionStyle`) thread
+  through every builder. `MathNode.mathStyle` now carries a `MathStyle`
+  (breaking for exhaustive matchers).
+- **Style-true geometry** — medium/thick inter-atom spacing vanishes in
+  script styles (TeX ch. 18): `\sum_{i=1}^{n}`'s lower limit tightens.
+  Nested scripts land on TeX sizes: 70% then the 50% scriptscript floor,
+  not 0.7ⁿ compounding shrink. Fractions use the font's Rule 15b–d
+  constant pairs (`FractionNum/DenomShift` + `GapMin`, display vs text;
+  stacks use the `StackTop/Bottom` pairs) — the 1.35 display boost and the
+  hand-tuned `ruleGap`/`atopGap` retire. `\cfrac` uses the display pair.
+- **`\displaystyle` / `\textstyle` / `\scriptstyle` / `\scriptscriptstyle`**
+  — stateful to the rest of the group (like stateful `\color`), forcing
+  both the style and the size it implies. `\genfrac`'s style argument now
+  honors all four values (2/3 properly shrink).
+- **Fixed: variant fences drawn at the previous text run's position.**
+  `CTFontDrawGlyphs` positions go through the context's text matrix, which
+  `saveGState` does not protect — every MATH-variant delimiter drawn after
+  a glyph run landed shifted right (visible as `\binom`'s right paren
+  overlapping the following `=` since 0.23). The renderer now resets the
+  text matrix; every fenced golden improved.
+- 33 golden fixtures re-blessed after visual review; 8 new geometry tests
+  (`MathStyleTests`) pin the lattice headless.
+
 Phase 1: MATH-table constants parsed from the font (and Phase 0's docs +
 fixtures below).
 

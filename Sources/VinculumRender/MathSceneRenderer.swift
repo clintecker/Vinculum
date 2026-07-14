@@ -34,6 +34,13 @@ public enum MathSceneRenderer {
                 guard let font = MathFont.ctFont(size: size) else { break }
                 ctx.saveGState()
                 ctx.setFillColor(cgColor(color, theme))
+                // CTFontDrawGlyphs positions go through the context's TEXT
+                // matrix, which still carries the translation a preceding
+                // CTLineDraw left behind (and which saveGState does NOT
+                // protect). Reset it or this glyph lands at the previous text
+                // run's end position — the bug that shifted every variant
+                // fence drawn after a glyph run.
+                ctx.textMatrix = .identity
                 var g = CGGlyph(id)
                 var pos = CGPoint(x: origin.x + o.x, y: origin.y + o.y)
                 CTFontDrawGlyphs(font, &g, &pos, 1, ctx)

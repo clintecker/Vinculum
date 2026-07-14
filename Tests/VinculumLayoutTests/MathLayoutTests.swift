@@ -114,8 +114,8 @@ final class MathLayoutTests: XCTestCase {
         let node = MathParser.parse("z^2")
         var normal = MathLayoutEngine(measure: lowInk, baseSize: 10)
         var cramped = MathLayoutEngine(measure: lowInk, baseSize: 10); cramped.cramped = true
-        let n = normal.box(for: node, size: 10, display: false)
-        let c = cramped.box(for: node, size: 10, display: false)
+        let n = normal.box(for: node, size: 10, style: .text)
+        let c = cramped.box(for: node, size: 10, style: .text)
         XCTAssertLessThan(c.ascent, n.ascent, "the cramped superscript rides lower")
     }
 

@@ -51,8 +51,8 @@ extension MathLayoutEngine {
     /// `\left … \middle| … \right`: segments split on `\middle`, every fence
     /// (left, each middle, right) stretched to the common tallest-segment
     /// height and centered on the math axis via `stretchedFence`.
-    func fencedBox(_ fences: [String], _ segments: [MathNode], size: CGFloat, display: Bool) -> MathBox {
-        let segBoxes = segments.map { box(for: $0, size: size, display: display) }
+    func fencedBox(_ fences: [String], _ segments: [MathNode], size: CGFloat, style: MathStyle) -> MathBox {
+        let segBoxes = segments.map { box(for: $0, size: size, style: style) }
         let bodyAscent = segBoxes.map(\.ascent).max() ?? 0
         let bodyDescent = segBoxes.map(\.descent).max() ?? 0
         let combined = MathBox(width: 0, ascent: bodyAscent, descent: bodyDescent)
@@ -75,8 +75,8 @@ extension MathLayoutEngine {
     }
 
     /// `\left…\right`: a body flanked by fences sized to its height.
-    func delimitedBox(_ left: String, _ body: MathNode, _ right: String, size: CGFloat, display: Bool) -> MathBox {
-        let bodyBox = box(for: body, size: size, display: display)
+    func delimitedBox(_ left: String, _ body: MathNode, _ right: String, size: CGFloat, style: MathStyle) -> MathBox {
+        let bodyBox = box(for: body, size: size, style: style)
         let target = max(bodyBox.height, size)
         let leftBox = stretchedFence(left, targetHeight: target, around: bodyBox, size: size)
         let rightBox = stretchedFence(right, targetHeight: target, around: bodyBox, size: size)
@@ -121,7 +121,7 @@ extension MathLayoutEngine {
         for (r, row) in rows.enumerated() {
             var boxes: [MathBox] = []
             for (c, cell) in row.enumerated() {
-                let b = box(for: cell, size: size, display: false)
+                let b = box(for: cell, size: size, style: .text)
                 boxes.append(b)
                 colWidth[c] = max(colWidth[c], b.width)
                 rowAscent[r] = max(rowAscent[r], b.ascent)

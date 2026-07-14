@@ -5,9 +5,9 @@ extension MathLayoutEngine {
     /// `\frac`: numerator over denominator, separated by a rule. It is exactly
     /// a ruled `genfrac` with no fences — one stacking implementation, kept DRY.
     func fractionBox(_ numerator: MathNode, _ denominator: MathNode,
-                     size: CGFloat, display: Bool) -> MathBox {
+                     size: CGFloat, style: MathStyle) -> MathBox {
         genfracBox(numerator, denominator, hasRule: true, left: "", right: "",
-                   size: size, display: display)
+                   size: size, style: style)
     }
 
     /// `\cfrac`: a continued fraction. Parts are laid out at FULL display size
@@ -16,15 +16,15 @@ extension MathLayoutEngine {
     func cfracBox(_ num: MathNode, _ den: MathNode, align: CfracAlign, size: CGFloat) -> MathBox {
         var numEngine = self; numEngine.cramped = false
         var denEngine = self; denEngine.cramped = true
-        let topBox = numEngine.box(for: num, size: size, display: true)      // full size + display
-        let bottomBox = denEngine.box(for: den, size: size, display: true)
+        let topBox = numEngine.box(for: num, size: size, style: .display)    // full size + display
+        let bottomBox = denEngine.box(for: den, size: size, style: .display)
 
         let ruleThickness = max(1, size * constants.fractionRuleThickness)
         let axis = size * constants.axisHeight
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
-        var shiftUp = size * constants.fractionNumeratorShiftUp * 1.35
-        var shiftDown = size * constants.fractionDenominatorShiftDown * 1.35
-        let minGap = size * MathLayout.Fraction.ruleGap
+        var shiftUp = size * constants.fractionNumeratorDisplayStyleShiftUp
+        var shiftDown = size * constants.fractionDenominatorDisplayStyleShiftDown
+        let minGap = size * constants.fractionNumDisplayStyleGapMin
         let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
         if numClear < minGap { shiftUp += minGap - numClear }
         let denClear = (axis - ruleThickness / 2) - (bottomBox.ascent - shiftDown)
@@ -49,35 +49,47 @@ extension MathLayoutEngine {
     /// `\binom` and ruleless stacks: numerator over denominator with an
     /// optional rule and optional enclosing fences.
     func genfracBox(_ top: MathNode, _ bottom: MathNode, hasRule: Bool,
-                    left: String, right: String, size: CGFloat, display: Bool) -> MathBox {
-        let partSize = size * (display ? MathLayout.Fraction.partScaleDisplay
-                                       : MathLayout.Fraction.partScaleText)
+                    left: String, right: String, size: CGFloat, style: MathStyle) -> MathBox {
+        let partSize = size * (style.isDisplay ? MathLayout.Fraction.partScaleDisplay
+                                               : MathLayout.Fraction.partScaleText)
         // Numerator uncramped, denominator cramped (TeX num_style / denom_style)
         // — so an exponent in the denominator rides lower than in the numerator.
         var numEngine = self; numEngine.cramped = false
         var denEngine = self; denEngine.cramped = true
-        let topBox = numEngine.box(for: top, size: partSize, display: false)
-        let bottomBox = denEngine.box(for: bottom, size: partSize, display: false)
+        let topBox = numEngine.box(for: top, size: partSize, style: style.fractionStyle)
+        let bottomBox = denEngine.box(for: bottom, size: partSize, style: style.fractionStyle)
 
         let ruleThickness = hasRule ? max(1, size * constants.fractionRuleThickness) : 0
         let axis = size * constants.axisHeight
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
 
-        // TeX shift-model (Appendix G rules 15): position each part by a NOMINAL
-        // baseline shift (the font's MATH-table values) so a short `1` and a
-        // deep numerator share the same baseline, then increase the shift only
-        // as needed to keep a minimum gap from the rule. Stable, TeX-like.
-        let displayBoost: CGFloat = display ? 1.35 : 1.0
-        var shiftUp = size * constants.fractionNumeratorShiftUp * displayBoost
-        var shiftDown = size * constants.fractionDenominatorShiftDown * displayBoost
+        // TeX shift-model (Appendix G Rule 15): position each part by the
+        // font's NOMINAL baseline shift for the style — fraction constants
+        // with a rule (15d), stack constants without (15c) — so a short `1`
+        // and a deep numerator share the same baseline, then increase the
+        // shift only as needed to keep the font's minimum clearance.
+        var shiftUp = size * (hasRule
+            ? (style.isDisplay ? constants.fractionNumeratorDisplayStyleShiftUp
+                               : constants.fractionNumeratorShiftUp)
+            : (style.isDisplay ? constants.stackTopDisplayStyleShiftUp
+                               : constants.stackTopShiftUp))
+        var shiftDown = size * (hasRule
+            ? (style.isDisplay ? constants.fractionDenominatorDisplayStyleShiftDown
+                               : constants.fractionDenominatorShiftDown)
+            : (style.isDisplay ? constants.stackBottomDisplayStyleShiftDown
+                               : constants.stackBottomShiftDown))
         if hasRule {
-            let minGap = size * MathLayout.Fraction.ruleGap
+            let numGapMin = size * (style.isDisplay ? constants.fractionNumDisplayStyleGapMin
+                                                    : constants.fractionNumeratorGapMin)
+            let denGapMin = size * (style.isDisplay ? constants.fractionDenomDisplayStyleGapMin
+                                                    : constants.fractionDenominatorGapMin)
             let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
-            if numClear < minGap { shiftUp += minGap - numClear }
+            if numClear < numGapMin { shiftUp += numGapMin - numClear }
             let denClear = (axis - ruleThickness / 2) - (bottomBox.ascent - shiftDown)
-            if denClear < minGap { shiftDown += minGap - denClear }
+            if denClear < denGapMin { shiftDown += denGapMin - denClear }
         } else {
-            let minGap = size * MathLayout.Fraction.atopGap
+            let minGap = size * (style.isDisplay ? constants.stackDisplayStyleGapMin
+                                                 : constants.stackGapMin)
             let gap = (shiftUp - topBox.descent) - (bottomBox.ascent - shiftDown)
             if gap < minGap { let d = (minGap - gap) / 2; shiftUp += d; shiftDown += d }
         }

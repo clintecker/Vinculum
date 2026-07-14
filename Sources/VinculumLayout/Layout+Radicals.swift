@@ -5,18 +5,19 @@ extension MathLayoutEngine {
     /// `\sqrt[n]{…}`: a hand-stroked radical sign (tick → downstroke →
     /// upstroke → overline) with the body under the vinculum and the optional
     /// degree tucked into the crook.
-    func radicalBox(_ degree: MathNode?, _ radicand: MathNode, size: CGFloat, display: Bool) -> MathBox {
+    func radicalBox(_ degree: MathNode?, _ radicand: MathNode, size: CGFloat, style: MathStyle) -> MathBox {
         // The radicand is cramped (an exponent under the root rides lower).
         var radicandEngine = self; radicandEngine.cramped = true
-        let body = radicandEngine.box(for: radicand, size: size, display: display)
+        let body = radicandEngine.box(for: radicand, size: size, style: style)
         let ruleThickness = max(1, size * constants.radicalRuleThickness)
         // The font distinguishes display/text radicand clearance (LM Math:
         // 0.148 vs 0.050 em); the old transcription used the display value
         // everywhere.
-        let gap = size * (display ? constants.radicalDisplayStyleVerticalGap
-                                  : constants.radicalVerticalGap)
+        let gap = size * (style.isDisplay ? constants.radicalDisplayStyleVerticalGap
+                                          : constants.radicalVerticalGap)
         let signWidth = size * MathLayout.Radical.signWidth
-        let degreeBox = degree.map { box(for: $0, size: size * MathLayout.Radical.degreeScale, display: false) }
+        // The degree is typeset in scriptscript style (TeX Rule 11).
+        let degreeBox = degree.map { box(for: $0, size: size * MathLayout.Radical.degreeScale, style: .scriptScript) }
         let degreeAdvance = degreeBox.map { max(0, $0.width - signWidth * MathLayout.Radical.degreeOverlap) } ?? 0
 
         let ascent = body.ascent + gap + ruleThickness + size * MathLayout.Radical.extraAscent
