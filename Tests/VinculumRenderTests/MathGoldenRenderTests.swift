@@ -24,6 +24,7 @@ final class MathGoldenRenderTests: XCTestCase {
         let name: String
         let latex: String
         let expectation: Expectation
+        var font: MathFont = .latinModern
     }
 
     // Coverage map: CommonMark-adjacent MathJax/LaTeX users actually write.
@@ -153,7 +154,14 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "assembly-tall", latex: #"\left( \dfrac{a}{\dfrac{b}{\dfrac{c}{\dfrac{d}{\dfrac{e}{f}}}}} \right)"#, expectation: .mustRender),
         // Un-gated variant ladders: ⟨ ⟩ and ‖ step through size variants now.
         .init(name: "tall-angle", latex: #"\left\langle \begin{matrix} a \\ b \\ c \end{matrix} \middle\| \begin{matrix} x \\ y \\ z \end{matrix} \right\rangle"#, expectation: .mustRender),
+        // Per-font canaries: same equation under each bundled font, proving
+        // per-font constants, variants, and (STIX) cut-in kerns end-to-end.
+        .init(name: "canary-termes", latex: canaryLaTeX, expectation: .mustRender, font: .termes),
+        .init(name: "canary-pagella", latex: canaryLaTeX, expectation: .mustRender, font: .pagella),
+        .init(name: "canary-stixtwo", latex: canaryLaTeX, expectation: .mustRender, font: .stixTwo),
     ]
+
+    static let canaryLaTeX = #"T_i^j = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} + \sum_{i=1}^{n} \left( \frac{x_i}{y_i} \right)"#
 
     private var goldenDirectory: URL {
         URL(fileURLWithPath: #filePath)
@@ -166,9 +174,9 @@ final class MathGoldenRenderTests: XCTestCase {
     }
 
     /// Deterministic 2× rasterization of the attachment image.
-    private func pngData(for latex: String) -> Data? {
+    private func pngData(for latex: String, font: MathFont = .latinModern) -> Data? {
         guard let attributed = MathImageRenderer.attachmentString(
-            latex: latex, display: true, mathTheme: MathTheme.light, baseSize: 15),
+            latex: latex, display: true, mathTheme: MathTheme.light, baseSize: 15, font: font),
               let image = Self.attachmentImage(in: attributed),
               image.size.width > 0, image.size.height > 0
         else { return nil }
@@ -235,7 +243,7 @@ final class MathGoldenRenderTests: XCTestCase {
         var coverageChanges: [String] = []
 
         for fixture in Self.fixtures {
-            let rendered = pngData(for: fixture.latex)
+            let rendered = pngData(for: fixture.latex, font: fixture.font)
             switch (fixture.expectation, rendered) {
             case (.mustRender, nil):
                 failures.append("\(fixture.name): REGRESSION — no longer renders")

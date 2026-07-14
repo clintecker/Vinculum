@@ -12,13 +12,16 @@ import VinculumLayout
 public enum MathSceneRenderer {
 
     /// Draws `scene` into a y-up context with its baseline origin at `origin`.
-    public static func draw(_ scene: MathScene, theme: MathTheme, in ctx: CGContext, at origin: CGPoint) {
+    /// `font` must be the font the scene was measured with (glyph IDs and
+    /// metrics are font-specific).
+    public static func draw(_ scene: MathScene, theme: MathTheme, in ctx: CGContext,
+                            at origin: CGPoint, font: MathFont = .latinModern) {
         for element in scene.elements {
             switch element {
             case let .glyphs(text, size, mono, o, color):
                 let ctFont: CTFont = mono
                     ? PlatformFont.monospacedSystemFont(ofSize: size, weight: .regular) as CTFont
-                    : (MathFont.ctFont(size: size) ?? PlatformFont.systemFont(ofSize: size) as CTFont)
+                    : (font.ctFont(size: size) ?? PlatformFont.systemFont(ofSize: size) as CTFont)
                 let attributed = NSAttributedString(string: text, attributes: [
                     kCTFontAttributeName as NSAttributedString.Key: ctFont,
                     kCTForegroundColorFromContextAttributeName as NSAttributedString.Key: true])
@@ -31,7 +34,7 @@ public enum MathSceneRenderer {
 
             case let .glyph(id, size, o, color):
                 // A MATH-table delimiter size variant, addressed by glyph ID.
-                guard let font = MathFont.ctFont(size: size) else { break }
+                guard let sizedFont = font.ctFont(size: size) else { break }
                 ctx.saveGState()
                 ctx.setFillColor(cgColor(color, theme))
                 // CTFontDrawGlyphs positions go through the context's TEXT
@@ -43,7 +46,7 @@ public enum MathSceneRenderer {
                 ctx.textMatrix = .identity
                 var g = CGGlyph(id)
                 var pos = CGPoint(x: origin.x + o.x, y: origin.y + o.y)
-                CTFontDrawGlyphs(font, &g, &pos, 1, ctx)
+                CTFontDrawGlyphs(sizedFont, &g, &pos, 1, ctx)
                 ctx.restoreGState()
 
             case let .rule(r, color):

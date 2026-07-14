@@ -11,11 +11,13 @@ no KaTeX, no WebView, zero dependencies.**
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 Vinculum parses LaTeX math into a TeX-style atom tree and typesets it with an
-OpenType MATH font (bundled **Latin Modern Math**), following Knuth's
-algorithm (Appendix G of *The TeXbook*) with layout constants **parsed from
-the font's MATH table at runtime** — axis height, rule thickness, script
-scales, fraction shifts, all 56 of them — plus tall-delimiter size variants
-from the same table. Layout is
+OpenType MATH font — **four bundled** (Latin Modern, TeX Gyre Termes, TeX
+Gyre Pagella, STIX Two) or any OTF you supply — following Knuth's algorithm
+(Appendix G of *The TeXbook*) with everything **parsed from the font's MATH
+table at runtime**: all 56 layout constants, per-glyph italic corrections
+and accent attachment points, cut-in kerning staircases, delimiter size
+variants, and glyph assemblies for arbitrarily tall fences and radicals.
+Layout is
 platform-free and emits a device-independent `MathScene`
 of positioned primitives — TeX's DVI in miniature — which a thin CoreGraphics
 renderer turns into a baseline-aligned `NSTextAttachment` (or draws into any
@@ -406,9 +408,11 @@ golden-image suite. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 ## License
 
 - **Code:** MIT © 2026 Clint Ecker ([LICENSE](LICENSE)).
-- **Bundled font:** Latin Modern Math is licensed under the **GUST Font
-  License (GFL)**, an OFL-style license — see
-  `Sources/VinculumRender/Resources/GUST-FONT-LICENSE.txt` and
-  `LatinModernMath-LICENSE.txt`. The GFL permits redistribution and embedding.
+- **Bundled fonts:** Latin Modern Math, TeX Gyre Termes Math, and TeX Gyre
+  Pagella Math are licensed under the **GUST Font License (GFL)**, an
+  OFL-style license; STIX Two Math under the **SIL Open Font License**.
+  License texts ship beside the fonts in
+  `Sources/VinculumRender/Resources/`. Both licenses permit redistribution
+  and embedding.
 </content>
 </invoke>

@@ -4,60 +4,83 @@ import CoreText
 import CoreGraphics
 import VinculumLayout
 
-/// The bundled OpenType math font (Latin Modern Math) plus the metrics from
-/// its MATH table. This is what gives Vinculum genuine LaTeX quality — the
-/// Computer-Modern glyph shapes AND the typesetting constants (axis height,
-/// rule thickness, script scales, shifts) that a math font is required to
-/// carry. Falls back to the system font if the resource can't be loaded, so
-/// rendering degrades rather than fails.
-enum MathFont {
+/// An OpenType math font plus its parsed MATH-table data. Four fonts are
+/// bundled — Latin Modern (the default), TeX Gyre Termes, TeX Gyre Pagella,
+/// and STIX Two — and any user OTF with a MATH table loads via `init?(url:)`.
+///
+/// Everything a font contributes to layout is parsed eagerly at load (so
+/// instances are immutable and freely `Sendable`): the 56 `MathConstants`,
+/// per-glyph typography (italic corrections, accent attachments, cut-in
+/// kerns — STIX Two ships kern data for 233 glyphs), and the variant
+/// ladders + glyph assemblies behind stretchy delimiters.
+public final class MathFont: @unchecked Sendable {
 
-    /// The loaded CGFont for the bundled math font, or nil if unavailable.
-    /// A CGFont is immutable and safe to read from any thread; the compiler
-    /// can't prove CGFont Sendable, so we vouch for it.
-    nonisolated(unsafe) static let cgFont: CGFont? = {
-        guard let url = Bundle.module.url(forResource: "latinmodern-math", withExtension: "otf"),
-              let data = try? Data(contentsOf: url),
-              let provider = CGDataProvider(data: data as CFData),
-              let font = CGFont(provider) else { return nil }
-        return font
-    }()
+    /// Stable identity: keys render caches and names the font in goldens.
+    public let name: String
+    /// nil when the resource failed to load — consumers fall back to system
+    /// fonts and preset metrics, so rendering degrades rather than fails.
+    let cgFont: CGFont?
+    /// MATH-table data, parsed once. `constants` falls back to the Latin
+    /// Modern preset so layout never lacks metrics.
+    public let constants: MathFontConstants
+    let glyphInfo: MathGlyphInfo?
+    let variantsData: MathVariantsData?
+    /// The raw MATH table bytes (fixture extraction, diagnostics).
+    let rawMathTable: Data?
 
-    static var isAvailable: Bool { cgFont != nil }
+    // MARK: - Bundled fonts
 
-    /// The font's MATH-table constants, parsed once from the live font
-    /// (Phase 1). Falls back to the `.latinModern` preset — same numbers,
-    /// since the preset is the test-pinned transcription of this font — if
-    /// the table is missing or malformed, so layout never lacks metrics.
-    static let constants: MathFontConstants = {
-        guard let cgFont,
-              let table = cgFont.table(for: 0x4D41_5448 /* 'MATH' */),
-              let parsed = MathTableParser.constants(from: table as Data,
-                                                     unitsPerEm: Int(cgFont.unitsPerEm))
-        else { return .latinModern }
-        return parsed
-    }()
+    public static let latinModern = MathFont(resource: "latinmodern-math")
+    public static let termes = MathFont(resource: "texgyretermes-math")
+    public static let pagella = MathFont(resource: "texgyrepagella-math")
+    public static let stixTwo = MathFont(resource: "stixtwo-math")
+    public static var bundled: [MathFont] { [latinModern, termes, pagella, stixTwo] }
 
-    /// Per-glyph MATH typography (italic corrections, accent attachments,
-    /// cut-in kerns), parsed once (Phase 3). Values are em fractions; the
-    /// typography provider scales them to point sizes. Nil when the table
-    /// is missing — layout uses neutral defaults.
-    static let glyphInfo: MathGlyphInfo? = {
-        guard let cgFont,
-              let table = cgFont.table(for: 0x4D41_5448 /* 'MATH' */) else { return nil }
-        return MathTableParser.glyphInfo(from: table as Data,
-                                         unitsPerEm: Int(cgFont.unitsPerEm))
-    }()
+    public var isAvailable: Bool { cgFont != nil }
 
-    // A tiny size→CTFont memo. Both measurement and drawing ask for the math
-    // font at a handful of sizes (base, script, scriptscript, display) over and
-    // over; `CTFontCreateWithGraphicsFont` isn't free, so cache it. Guarded by a
-    // lock (the measurer runs off-main); the value set is naturally small.
-    nonisolated(unsafe) private static var ctFontCache: [CGFloat: CTFont] = [:]
-    private static let ctFontLock = NSLock()
+    // MARK: - Loading
 
-    /// A CTFont for the math font at `size`, or nil (caller falls back).
-    static func ctFont(size: CGFloat) -> CTFont? {
+    private convenience init(resource: String) {
+        let url = Bundle.module.url(forResource: resource, withExtension: "otf")
+        self.init(fontURL: url, name: resource)
+    }
+
+    /// Loads a user-supplied OTF math font. Returns nil when the file can't
+    /// be read as a font or carries no MATH table.
+    public convenience init?(url: URL, name: String? = nil) {
+        self.init(fontURL: url, name: name ?? url.deletingPathExtension().lastPathComponent)
+        guard cgFont != nil, rawMathTable != nil else { return nil }
+    }
+
+    private init(fontURL: URL?, name: String) {
+        self.name = name
+        // A CGFont is immutable and safe to read from any thread. Loaded via
+        // CGDataProvider (not CTFontCreateWithName) so the full glyph
+        // repertoire — including unencoded math variants — is available.
+        let font: CGFont? = {
+            guard let fontURL,
+                  let data = try? Data(contentsOf: fontURL),
+                  let provider = CGDataProvider(data: data as CFData) else { return nil }
+            return CGFont(provider)
+        }()
+        self.cgFont = font
+        let table = font?.table(for: 0x4D41_5448 /* 'MATH' */).map { $0 as Data }
+        self.rawMathTable = table
+        let upm = font.map { Int($0.unitsPerEm) } ?? 0
+        self.constants = table.flatMap { MathTableParser.constants(from: $0, unitsPerEm: upm) }
+            ?? .latinModern
+        self.glyphInfo = table.flatMap { MathTableParser.glyphInfo(from: $0, unitsPerEm: upm) }
+        self.variantsData = table.flatMap { MathTableParser.variants(from: $0, unitsPerEm: upm) }
+    }
+
+    // MARK: - Sized CTFonts
+
+    // A tiny size→CTFont memo. Measurement and drawing ask for a handful of
+    // sizes over and over; CTFontCreateWithGraphicsFont isn't free.
+    nonisolated(unsafe) private var ctFontCache: [CGFloat: CTFont] = [:]
+    private let ctFontLock = NSLock()
+
+    func ctFont(size: CGFloat) -> CTFont? {
         guard let cgFont else { return nil }
         ctFontLock.lock(); defer { ctFontLock.unlock() }
         if let cached = ctFontCache[size] { return cached }
@@ -65,7 +88,15 @@ enum MathFont {
         ctFontCache[size] = font
         return font
     }
+
+    /// The glyph ID for a single-scalar string, or nil.
+    func glyphID(for text: String, size: CGFloat) -> UInt16? {
+        guard text.unicodeScalars.count == 1, let ctFont = ctFont(size: size) else { return nil }
+        var utf16 = Array(text.utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+        guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+              let id = glyphs.first, id != 0 else { return nil }
+        return UInt16(id)
+    }
 }
-// The MATH-table constants moved to VinculumLayout's `MathConstants` (they're
-// pure numbers the platform-free layout stage needs).
 #endif

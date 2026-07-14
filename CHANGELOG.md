@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+Phase 7: multi-font — four bundled math fonts, or bring your own.
+
+- **`MathFont` is now a value you pick**: `.latinModern` (default),
+  `.termes` (Times companion), `.pagella` (Palatino companion), and
+  `.stixTwo` — plus `MathFont(url:)` for any OTF with a MATH table. Pass
+  `font:` to `MathImageRenderer.attachmentString` / `MathSceneRenderer.draw`
+  or build providers with `CoreTextMeasurer.make(font:)` et al. Every
+  font's MATH table (constants, glyph typography, variants, assemblies)
+  is parsed once at load; caches key on the font.
+- **STIX Two lights up cut-in kerning for real** — it ships MathKernInfo
+  for 233 glyphs, so Phase 3's staircase kerning now runs on live font
+  data, a first for native math rendering.
+- Per-font raw MATH-table fixtures committed (Linux-testable) and
+  per-font canary goldens (`canary-termes/pagella/stixtwo`) pin the same
+  equation under each font. Existing Latin Modern goldens: zero churn.
+- Fonts are GUST-GFL (TeX Gyre) / OFL (STIX Two) licensed; licenses ship
+  in the bundle beside the fonts.
+
 Phase 6: display operators from the font + TeX fence sizing.
 
 - **Display-size operator variants** — in display style, ∑ ∏ ∫ and every

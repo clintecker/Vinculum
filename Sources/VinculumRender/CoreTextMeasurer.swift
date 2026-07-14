@@ -16,16 +16,17 @@ public enum CoreTextMeasurer {
     /// identical entries re-measures each glyph N² times), so a shared cache
     /// turns those into dictionary hits. Deterministic, so cross-thread races
     /// only ever recompute the same value.
-    public static func make() -> MathTextMeasurer {
-        { text, size, mono in measure(text, size, mono) }
+    public static func make(font: MathFont = .latinModern) -> MathTextMeasurer {
+        { text, size, mono in measure(text, size, mono, font) }
     }
 
-    private struct Key: Hashable { let text: String; let size: CGFloat; let mono: Bool }
+    private struct Key: Hashable { let font: String; let text: String; let size: CGFloat; let mono: Bool }
     nonisolated(unsafe) private static var cache: [Key: GlyphMetrics] = [:]
     private static let lock = NSLock()
 
-    private static func measure(_ text: String, _ size: CGFloat, _ mono: Bool) -> GlyphMetrics {
-        let key = Key(text: text, size: size, mono: mono)
+    private static func measure(_ text: String, _ size: CGFloat, _ mono: Bool,
+                                _ font: MathFont) -> GlyphMetrics {
+        let key = Key(font: font.name, text: text, size: size, mono: mono)
         lock.lock()
         if let hit = cache[key] { lock.unlock(); return hit }
         lock.unlock()
@@ -36,7 +37,7 @@ public enum CoreTextMeasurer {
         let ctFont: CTFont
         if mono {
             ctFont = PlatformFont.monospacedSystemFont(ofSize: size, weight: .regular) as CTFont
-        } else if let mathFont = MathFont.ctFont(size: size) {
+        } else if let mathFont = font.ctFont(size: size) {
             ctFont = mathFont
         } else {
             ctFont = PlatformFont.systemFont(ofSize: size) as CTFont

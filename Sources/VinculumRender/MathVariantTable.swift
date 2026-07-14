@@ -4,37 +4,26 @@ import CoreText
 import CoreGraphics
 import VinculumLayout
 
-/// The bundled font's `MathVariants` data (size-variant ladders + glyph
-/// assemblies), parsed once by the fixture-tested `MathTableParser` and
-/// served to layout through the delimiter provider seams. Stretchy
+/// Serves a font's `MathVariants` data (size-variant ladders + glyph
+/// assemblies) to layout through the delimiter provider seams. Stretchy
 /// delimiters try a purpose-drawn size variant first, then an assembly of
-/// parts (Phase 5), and only then fall back to continuous scaling.
+/// parts, and only then fall back to continuous scaling.
 enum MathVariantTable {
 
-    /// Parsed once; nil when the font/table is unavailable (layout scales).
-    private static let data: MathVariantsData? = {
-        guard let cgFont = MathFont.cgFont,
-              let table = cgFont.table(for: 0x4D41_5448 /* 'MATH' */) else { return nil }
-        return MathTableParser.variants(from: table as Data,
-                                        unitsPerEm: Int(cgFont.unitsPerEm))
-    }()
-
-    private static func construction(for baseGlyph: String, size: CGFloat)
+    private static func construction(for baseGlyph: String, size: CGFloat, font: MathFont)
         -> (MathVariantsData.Construction, CTFont)? {
-        guard let data, baseGlyph.unicodeScalars.count == 1,
-              let ctFont = MathFont.ctFont(size: size) else { return nil }
-        var utf16 = Array(baseGlyph.utf16)
-        var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
-        guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
-              let baseID = glyphs.first, baseID != 0,
-              let con = data.vertical[UInt16(baseID)] else { return nil }
+        guard let data = font.variantsData,
+              let ctFont = font.ctFont(size: size),
+              let baseID = font.glyphID(for: baseGlyph, size: size),
+              let con = data.vertical[baseID] else { return nil }
         return (con, ctFont)
     }
 
     /// The smallest vertical size variant of `baseGlyph` at point `size`
-    /// whose height reaches `minHeight`, or nil.
-    static func shape(for baseGlyph: String, minHeight: CGFloat, size: CGFloat) -> DelimiterShape? {
-        guard let (con, ctFont) = construction(for: baseGlyph, size: size),
+    /// whose height reaches `minHeight` (shortfall heuristic applied), or nil.
+    static func shape(for baseGlyph: String, minHeight: CGFloat, size: CGFloat,
+                      font: MathFont) -> DelimiterShape? {
+        guard let (con, ctFont) = construction(for: baseGlyph, size: size, font: font),
               let v = con.bestVariant(forTarget: minHeight / size) else { return nil }
         var glyph = CGGlyph(v.glyphID)
         var rect = CGRect.zero, adv = CGSize.zero
@@ -52,8 +41,10 @@ enum MathVariantTable {
     /// the font provides no assembly for this glyph. Part glyphs in math
     /// fonts put their ink exactly on [0, fullAdvance] above the baseline,
     /// so draw offsets are the solved offsets directly.
-    static func assembly(for baseGlyph: String, minHeight: CGFloat, size: CGFloat) -> DelimiterAssembly? {
-        guard let data, let (con, ctFont) = construction(for: baseGlyph, size: size),
+    static func assembly(for baseGlyph: String, minHeight: CGFloat, size: CGFloat,
+                         font: MathFont) -> DelimiterAssembly? {
+        guard let data = font.variantsData,
+              let (con, ctFont) = construction(for: baseGlyph, size: size, font: font),
               let asm = con.assembly,
               let solved = MathAssemblySolver.solve(asm, minOverlap: data.minConnectorOverlap,
                                                     target: minHeight / size) else { return nil }
@@ -75,14 +66,18 @@ enum MathVariantTable {
 
 /// The injected `MathDelimiterProvider` backed by `MathVariantTable`.
 public enum CoreTextDelimiterProvider {
-    public static func make() -> MathDelimiterProvider {
-        { glyph, minHeight, size in MathVariantTable.shape(for: glyph, minHeight: minHeight, size: size) }
+    public static func make(font: MathFont = .latinModern) -> MathDelimiterProvider {
+        { glyph, minHeight, size in
+            MathVariantTable.shape(for: glyph, minHeight: minHeight, size: size, font: font)
+        }
     }
 
     /// The assembly companion: font parts for heights beyond the largest
     /// size variant.
-    public static func makeAssembly() -> MathDelimiterAssemblyProvider {
-        { glyph, minHeight, size in MathVariantTable.assembly(for: glyph, minHeight: minHeight, size: size) }
+    public static func makeAssembly(font: MathFont = .latinModern) -> MathDelimiterAssemblyProvider {
+        { glyph, minHeight, size in
+            MathVariantTable.assembly(for: glyph, minHeight: minHeight, size: size, font: font)
+        }
     }
 }
 #endif

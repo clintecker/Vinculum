@@ -36,26 +36,23 @@ public enum MathImageRenderer {
         c.totalCostLimit = 32 * 1024 * 1024
         return c
     }()
-    /// The shared CoreText measurer feeding the platform-free layout engine.
-    private static let measurer: MathTextMeasurer = CoreTextMeasurer.make()
-    /// MATH-table delimiter size-variant provider (thins tall-fence strokes).
-    private static let delimiterProvider: MathDelimiterProvider = CoreTextDelimiterProvider.make()
-
     /// An attachment string for the given LaTeX, or nil if unsupported.
     public static func attachmentString(
         latex: String,
         display: Bool,
         mathTheme: MathTheme,
-        baseSize: CGFloat
+        baseSize: CGFloat,
+        font: MathFont = .latinModern
     ) -> NSAttributedString? {
         // The key is fully determined by the arguments, so check the cache
         // BEFORE parsing — a hit (positive OR negative) costs no parse/layout.
-        let key = "\(display ? "D" : "I")|\(mathTheme.fingerprint)|\(baseSize)|\(latex)" as NSString
+        let key = "\(font.name)|\(display ? "D" : "I")|\(mathTheme.fingerprint)|\(baseSize)|\(latex)" as NSString
         let entry: Entry
         if let cached = cache.object(forKey: key) {
             entry = cached
         } else {
-            entry = buildEntry(latex: latex, display: display, mathTheme: mathTheme, baseSize: baseSize)
+            entry = buildEntry(latex: latex, display: display, mathTheme: mathTheme,
+                               baseSize: baseSize, font: font)
             cache.setObject(entry, forKey: key, cost: entry.cost)
         }
 
@@ -70,16 +67,18 @@ public enum MathImageRenderer {
     /// Parses, lays out and rasterizes on a cache miss. Returns a negative
     /// entry (nil image) for unsupported/degenerate input so it's remembered.
     private static func buildEntry(latex: String, display: Bool,
-                                   mathTheme: MathTheme, baseSize: CGFloat) -> Entry {
+                                   mathTheme: MathTheme, baseSize: CGFloat,
+                                   font: MathFont) -> Entry {
         let negative = Entry(image: nil, descent: 0, cost: 1)
         let node = MathParser.parse(latex)
         guard MathParser.isFullySupported(node) else { return negative }
 
-        let engine = MathLayoutEngine(measure: measurer, baseSize: display ? baseSize * 1.15 : baseSize,
-                                      delimiters: delimiterProvider,
-                                      constants: MathFont.constants,
-                                      typography: CoreTextTypographyProvider.make(),
-                                      delimiterAssembly: CoreTextDelimiterProvider.makeAssembly())
+        let engine = MathLayoutEngine(measure: CoreTextMeasurer.make(font: font),
+                                      baseSize: display ? baseSize * 1.15 : baseSize,
+                                      delimiters: CoreTextDelimiterProvider.make(font: font),
+                                      constants: font.constants,
+                                      typography: CoreTextTypographyProvider.make(font: font),
+                                      delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: font))
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 
@@ -95,7 +94,7 @@ public enum MathImageRenderer {
         let appearance = NSAppearance(named: mathTheme.prefersDark ? .darkAqua : .aqua)
         let image = NSImage(size: size, flipped: false) { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
-            let draw = { MathSceneRenderer.draw(scene, theme: mathTheme, in: context, at: origin) }
+            let draw = { MathSceneRenderer.draw(scene, theme: mathTheme, in: context, at: origin, font: font) }
             if let appearance { appearance.performAsCurrentDrawingAppearance(draw) } else { draw() }
             return true
         }
@@ -110,7 +109,7 @@ public enum MathImageRenderer {
             // variant matching the theme's canvas, not the ambient trait.
             let traits = UITraitCollection(userInterfaceStyle: mathTheme.prefersDark ? .dark : .light)
             traits.performAsCurrent {
-                MathSceneRenderer.draw(scene, theme: mathTheme, in: context, at: origin)
+                MathSceneRenderer.draw(scene, theme: mathTheme, in: context, at: origin, font: font)
             }
         }
         if isTemplate { image = image.withRenderingMode(.alwaysTemplate) }

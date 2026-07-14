@@ -23,17 +23,15 @@ final class MathTableFixtureExtraction: XCTestCase {
         guard ProcessInfo.processInfo.environment["VINCULUM_UPDATE_MATH_FIXTURES"] == "1" else {
             throw XCTSkip("Set VINCULUM_UPDATE_MATH_FIXTURES=1 to regenerate Tests/fixtures/math-table/.")
         }
-        let cgFont = try XCTUnwrap(MathFont.cgFont, "bundled font failed to load")
-        let table = try XCTUnwrap(cgFont.table(for: 0x4D41_5448 /* 'MATH' */),
-                                  "bundled font has no MATH table")
-        let data = table as Data
-        XCTAssertGreaterThan(data.count, 4, "MATH table implausibly small")
-
         try FileManager.default.createDirectory(at: fixtureDirectory,
                                                 withIntermediateDirectories: true)
-        let destination = fixtureDirectory.appendingPathComponent("latinmodern-math.bin")
-        try data.write(to: destination)
-        print("Wrote \(data.count) bytes to \(destination.path)")
+        for font in MathFont.bundled {
+            let data = try XCTUnwrap(font.rawMathTable, "\(font.name) has no MATH table")
+            XCTAssertGreaterThan(data.count, 4, "\(font.name) MATH table implausibly small")
+            let destination = fixtureDirectory.appendingPathComponent("\(font.name).bin")
+            try data.write(to: destination)
+            print("Wrote \(data.count) bytes to \(destination.path)")
+        }
     }
 }
 #endif
