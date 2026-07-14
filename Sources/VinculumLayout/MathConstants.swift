@@ -1,16 +1,19 @@
 import Foundation
 
-/// Typesetting constants from the math font's OpenType MATH table, as em
-/// fractions (the raw values are in the font's 1000-unit em). These are Latin
-/// Modern Math's authoritative numbers — the metrics TeX would read from the
-/// font. Layout lives in the platform-free module, so the constants live here
-/// (pure data) rather than beside the font object in the renderer.
+/// Superseded by `MathFontConstants` (Phase 1): the engine now carries an
+/// instance of the constants — parsed from the live font's MATH table by
+/// `MathTableParser`, or the `.latinModern` preset headless — instead of
+/// reading this static transcription.
+///
+/// Kept only for source compatibility; three of these values were
+/// mistranscriptions the parser oracle caught (`spaceAfterScript` 0.041 →
+/// font 0.056; `radicalVerticalGap` 0.148 is the *display* value, text is
+/// 0.050; `stackGapMin` 0.150 → font 0.120). The values below are unchanged
+/// so existing callers see no silent shift; new code must use
+/// `MathFontConstants`.
+@available(*, deprecated, message: "Use MathFontConstants (font-parsed via MathTableParser, or .latinModern).")
 public enum MathConstants {
     public static let axisHeight: CGFloat = 0.250
-    /// TeX's ξ8 `default_rule_thickness` — the one rule weight the extension
-    /// font hands out for bars that have no dedicated OpenType constant
-    /// (arrow shafts, `\boxed` frames). Fraction/radical/overbar carry their
-    /// own MATH-table values below; all four happen to be 0.040 in LM Math.
     public static let defaultRuleThickness: CGFloat = 0.040
     public static let fractionRuleThickness: CGFloat = 0.040
     public static let fractionNumeratorShiftUp: CGFloat = 0.394
@@ -18,9 +21,6 @@ public enum MathConstants {
     public static let scriptPercentScaleDown: CGFloat = 0.70
     public static let scriptScriptPercentScaleDown: CGFloat = 0.50
     public static let superscriptShiftUp: CGFloat = 0.363
-    /// TeX's σ15 (sup3): the lower superscript shift used in cramped style —
-    /// under a radical, in a denominator, or on a subscript. This is what makes
-    /// the exponent in √(x²) or the denominator of a fraction ride lower.
     public static let superscriptShiftUpCramped: CGFloat = 0.289
     public static let subscriptShiftDown: CGFloat = 0.247
     public static let radicalRuleThickness: CGFloat = 0.040

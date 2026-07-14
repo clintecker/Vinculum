@@ -19,7 +19,7 @@ extension MathLayoutEngine {
         }
         elements += baseBox.placed(at: CGPoint(x: pad, y: 0))
         if let border, let bc = MathColor.resolve(border) {
-            let line = max(1, size * MathConstants.defaultRuleThickness)
+            let line = max(1, size * constants.defaultRuleThickness)
             let rx = line / 2, ry = -descent + line / 2, rw = width - line, rh = ascent + descent - line
             elements.append(.stroke(path: [.move(CGPoint(x: rx, y: ry)), .line(CGPoint(x: rx + rw, y: ry)),
                                            .line(CGPoint(x: rx + rw, y: ry + rh)), .line(CGPoint(x: rx, y: ry + rh)),
@@ -42,7 +42,7 @@ extension MathLayoutEngine {
             return MathBox(width: 0, ascent: baseBox.ascent, descent: baseBox.descent)
         case .boxed:
             let pad = size * MathLayout.Box.padding
-            let line = max(1, size * MathConstants.defaultRuleThickness)
+            let line = max(1, size * constants.defaultRuleThickness)
             let width = baseBox.width + pad * 2
             let ascent = baseBox.ascent + pad
             let descent = baseBox.descent + pad
@@ -61,7 +61,7 @@ extension MathLayoutEngine {
 
         case .cancel, .bcancel, .xcancel:
             // Diagonal strike(s) across the base's box, base kept underneath.
-            let t = max(1, size * MathConstants.defaultRuleThickness)
+            let t = max(1, size * constants.defaultRuleThickness)
             let yb = -baseBox.descent, yt = baseBox.ascent
             var elements = baseBox.elements
             if decoration != .bcancel {   // forward ╱
@@ -75,8 +75,8 @@ extension MathLayoutEngine {
 
         case .negation:
             // \not — a short steep slash centered on the atom (a ≠ from =).
-            let t = max(1, size * MathConstants.defaultRuleThickness)
-            let axis = size * MathConstants.axisHeight
+            let t = max(1, size * constants.defaultRuleThickness)
+            let axis = size * constants.axisHeight
             let cx = baseBox.width / 2
             let halfH = size * 0.42, halfW = size * 0.15
             var elements = baseBox.elements

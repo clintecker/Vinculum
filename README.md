@@ -11,10 +11,12 @@ no KaTeX, no WebView, zero dependencies.**
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 Vinculum parses LaTeX math into a TeX-style atom tree and typesets it with an
-OpenType MATH font (bundled **Latin Modern Math**), reading its layout
-constants — axis height, rule thickness, script scales, fraction shifts — from
-the font's MATH table the way Knuth's algorithm intends (Appendix G of *The
-TeXbook*). Layout is platform-free and emits a device-independent `MathScene`
+OpenType MATH font (bundled **Latin Modern Math**), following Knuth's
+algorithm (Appendix G of *The TeXbook*) with layout constants **parsed from
+the font's MATH table at runtime** — axis height, rule thickness, script
+scales, fraction shifts, all 56 of them — plus tall-delimiter size variants
+from the same table. Layout is
+platform-free and emits a device-independent `MathScene`
 of positioned primitives — TeX's DVI in miniature — which a thin CoreGraphics
 renderer turns into a baseline-aligned `NSTextAttachment` (or draws into any
 `CGContext` you own).
@@ -52,8 +54,14 @@ is a third option with different trade-offs.
 - A **device-independent scene IR** and an injected measurer seam, so the
   entire layout stage builds and unit-tests on **Linux**, headless.
 - A `\newcommand`/`\def` macro processor and a document-scoped model.
-- Broader current coverage: ~400 symbols, `array` rules, stateful `\color`,
-  MATH-table tall-delimiter variants, cramped-style scripts, and more (below).
+- Broader current *command* coverage: ~400 symbols, `array` rules, stateful
+  `\color`, MATH-table tall-delimiter variants, cramped-style scripts, and
+  more (below).
+- Honest trade-off: iosMath currently reads more per-glyph typography from
+  the font — italic correction, accent attachment points, glyph assembly
+  for very tall fences — and bundles eight math fonts. Closing (and
+  passing) that gap is the core of [docs/ROADMAP.md](docs/ROADMAP.md);
+  the rule-by-rule audit lives in [docs/ALGORITHM.md](docs/ALGORITHM.md).
 
 **vs. rendering to a static image on a server** — Vinculum runs on-device,
 offline, private. Nothing leaves the machine.
@@ -96,9 +104,12 @@ Then pick your product(s):
 Since the early releases, Vinculum grew from a small curated subset into broad
 coverage of everyday math. Highlights:
 
-- **TeX-faithful metrics** — layout constants come from the bundled font's
-  OpenType MATH table (axis height, rule thickness, script scales, fraction
-  numerator/denominator shifts), not hand-tuned guesses.
+- **TeX-true metrics, read from the font** — the full 56-value
+  `MathConstants` sub-table of the OpenType MATH table is parsed from the
+  bundled font at runtime (fontTools-verified, fixture-pinned on Linux CI),
+  along with per-glyph italic corrections, accent attachment points, and
+  cut-in kern data (`MathGlyphInfo`) that upcoming releases consume — the
+  door to multi-font support ([docs/ROADMAP.md](docs/ROADMAP.md)).
 - **Cramped style + the TeX fraction shift-model** — subscripts and radical
   indices lower correctly in cramped positions; fractions shift by the font's
   named parameters.

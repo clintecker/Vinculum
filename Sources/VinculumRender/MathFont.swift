@@ -2,6 +2,7 @@
 import Foundation
 import CoreText
 import CoreGraphics
+import VinculumLayout
 
 /// The bundled OpenType math font (Latin Modern Math) plus the metrics from
 /// its MATH table. This is what gives Vinculum genuine LaTeX quality — the
@@ -23,6 +24,19 @@ enum MathFont {
     }()
 
     static var isAvailable: Bool { cgFont != nil }
+
+    /// The font's MATH-table constants, parsed once from the live font
+    /// (Phase 1). Falls back to the `.latinModern` preset — same numbers,
+    /// since the preset is the test-pinned transcription of this font — if
+    /// the table is missing or malformed, so layout never lacks metrics.
+    static let constants: MathFontConstants = {
+        guard let cgFont,
+              let table = cgFont.table(for: 0x4D41_5448 /* 'MATH' */),
+              let parsed = MathTableParser.constants(from: table as Data,
+                                                     unitsPerEm: Int(cgFont.unitsPerEm))
+        else { return .latinModern }
+        return parsed
+    }()
 
     // A tiny size→CTFont memo. Both measurement and drawing ask for the math
     // font at a handful of sizes (base, script, scriptscript, display) over and

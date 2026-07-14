@@ -14,7 +14,7 @@ extension MathLayoutEngine {
             return limitsBox(base, sub: sub, sup: sup, size: size, enlarge: enlarge)
         }
         let baseBox = box(for: base, size: size, display: display)
-        let scriptSize = size * MathConstants.scriptPercentScaleDown
+        let scriptSize = size * constants.scriptPercentScaleDown
         // A superscript is uncramped; a subscript is cramped (TeX sup_style /
         // sub_style), so nested exponents inside a subscript ride lower.
         var supEngine = self; supEngine.cramped = false
@@ -26,18 +26,18 @@ extension MathLayoutEngine {
         // raise it so the script clears a tall base's ink — an exponent on (…)²
         // rides above the paren, not through it — and keep a minimum gap
         // between a coexisting super- and subscript so they can't collide.
-        let supNominal = size * (cramped ? MathConstants.superscriptShiftUpCramped
-                                         : MathConstants.superscriptShiftUp)
+        let supNominal = size * (cramped ? constants.superscriptShiftUpCramped
+                                         : constants.superscriptShiftUp)
         let supRaise = max(supNominal, baseBox.inkAscent - scriptSize * 0.25)
-        var subDrop = max(size * MathConstants.subscriptShiftDown,
+        var subDrop = max(size * constants.subscriptShiftDown,
                           baseBox.descent + scriptSize * 0.15)
         if let supBox, let subBox {
-            let minGap = size * 4 * MathConstants.defaultRuleThickness
+            let minGap = size * 4 * constants.defaultRuleThickness
             let gap = (supRaise - supBox.descent) - (subBox.ascent - subDrop)
             if gap < minGap { subDrop += minGap - gap }
         }
         let scriptsWidth = max(supBox?.width ?? 0, subBox?.width ?? 0)
-        let width = baseBox.width + scriptsWidth + size * MathConstants.spaceAfterScript
+        let width = baseBox.width + scriptsWidth + size * constants.spaceAfterScript
 
         var ascent = baseBox.ascent
         var descent = baseBox.descent
@@ -45,7 +45,7 @@ extension MathLayoutEngine {
         if let subBox { descent = max(descent, subDrop + subBox.descent) }
 
         var elements = baseBox.elements
-        let scriptX = baseBox.width + size * MathConstants.spaceAfterScript
+        let scriptX = baseBox.width + size * constants.spaceAfterScript
         if let supBox { elements += supBox.placed(at: CGPoint(x: scriptX, y: supRaise)) }
         if let subBox { elements += subBox.placed(at: CGPoint(x: scriptX, y: -subDrop)) }
         return MathBox(width: width, ascent: ascent, descent: descent,
@@ -56,10 +56,10 @@ extension MathLayoutEngine {
     /// above, subscript centered below.
     func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?, size: CGFloat, enlarge: Bool) -> MathBox {
         let opBox = box(for: base, size: enlarge ? size * MathLayout.displayOperatorScale : size, display: false)
-        let scriptSize = size * MathConstants.scriptPercentScaleDown
+        let scriptSize = size * constants.scriptPercentScaleDown
         let supBox = sup.map { box(for: $0, size: scriptSize, display: false) }
         let subBox = sub.map { box(for: $0, size: scriptSize, display: false) }
-        let gap = size * MathConstants.stackGapMin
+        let gap = size * constants.stackGapMin
 
         let width = max(opBox.width, supBox?.width ?? 0, subBox?.width ?? 0)
         var ascent = opBox.ascent

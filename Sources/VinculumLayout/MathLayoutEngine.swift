@@ -12,6 +12,10 @@ public struct MathLayoutEngine {
     /// glyph scaling (the platform-free / headless default).
     let delimiters: MathDelimiterProvider?
     let baseSize: CGFloat
+    /// The font's MATH-table constants. Defaults to Latin Modern Math's
+    /// values (`.latinModern`) so headless hosts need no font; the renderer
+    /// passes constants parsed from the live font (`MathTableParser`).
+    let constants: MathFontConstants
     /// The active `\color` override for the current subtree; `nil` primitives
     /// take the renderer's theme ink.
     var colorOverride: MathColor?
@@ -22,10 +26,12 @@ public struct MathLayoutEngine {
     var cramped = false
 
     public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
-                delimiters: MathDelimiterProvider? = nil) {
+                delimiters: MathDelimiterProvider? = nil,
+                constants: MathFontConstants = .latinModern) {
         self.measure = measure
         self.delimiters = delimiters
         self.baseSize = baseSize
+        self.constants = constants
         self.colorOverride = nil
     }
 

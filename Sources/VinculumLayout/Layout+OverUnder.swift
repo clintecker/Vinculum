@@ -7,7 +7,7 @@ extension MathLayoutEngine {
     /// `\xleftarrow` (a stretchy arrow sized to its annotations).
     func overUnderBox(_ base: MathNode, over: MathNode?, under: MathNode?,
                       kind: MathOverUnder, size: CGFloat, display: Bool) -> MathBox {
-        let annotationSize = size * MathConstants.scriptPercentScaleDown
+        let annotationSize = size * constants.scriptPercentScaleDown
         let overBox = over.map { box(for: $0, size: annotationSize, display: false) }
         let underBox = under.map { box(for: $0, size: annotationSize, display: false) }
         let gap = size * MathLayout.overUnderGap
@@ -16,9 +16,9 @@ extension MathLayoutEngine {
         case .rightarrow, .leftarrow:
             let labelWidth = max(overBox?.width ?? 0, underBox?.width ?? 0)
             let arrowWidth = max(size * MathLayout.Arrow.minWidth, labelWidth + size * MathLayout.Arrow.labelPadding)
-            let arrowThickness = max(1, size * MathConstants.defaultRuleThickness)
+            let arrowThickness = max(1, size * constants.defaultRuleThickness)
             let headLength = size * MathLayout.Arrow.headLength
-            let axis = size * MathConstants.axisHeight
+            let axis = size * constants.axisHeight
             var ascent = axis + arrowThickness / 2
             var descent = arrowThickness / 2 - axis
             if let overBox { ascent += gap + overBox.height }
@@ -82,7 +82,7 @@ extension MathLayoutEngine {
                     || kind == .underLeftArrow || kind == .underLeftRightArrow
             let right = kind == .overRightArrow || kind == .overLeftRightArrow
                      || kind == .underRightArrow || kind == .underLeftRightArrow
-            let thickness = max(1, size * MathConstants.defaultRuleThickness)
+            let thickness = max(1, size * constants.defaultRuleThickness)
             let head = size * MathLayout.Arrow.headLength * 0.75
             let width = max(baseBox.width, head * 2)
             var elements = baseBox.placed(at: CGPoint(x: (width - baseBox.width) / 2, y: 0))

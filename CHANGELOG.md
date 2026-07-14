@@ -1,5 +1,54 @@
 # Changelog
 
+## Unreleased
+
+Phase 1: MATH-table constants parsed from the font (and Phase 0's docs +
+fixtures below).
+
+- **`MathTableParser`** (VinculumLayout, platform-free): parses the raw
+  `MATH` table's full 56-value `MathConstants` sub-table into
+  `MathFontConstants`, and the `MathGlyphInfo` sub-table — per-glyph italic
+  corrections (1,002 glyphs in LM Math), `topAccentAttachment` (2,475),
+  extended shapes (250), and MathKernInfo cut-in kern staircases — into
+  `MathGlyphInfo`. Bounds-checked, `nil` on malformation, fixture-tested
+  headless against committed table bytes and fontTools ground truth.
+- **The engine now carries the constants as data.**
+  `MathLayoutEngine(…, constants:)` defaults to the `.latinModern` preset;
+  `MathImageRenderer` passes `MathFont.constants`, parsed once from the
+  live bundled font. The static `MathConstants` enum is deprecated. This is
+  the keystone for multi-font support (roadmap Theme F).
+- **The parser oracle caught three transcription bugs** in the old
+  hardcoded constants, now fixed font-true: `spaceAfterScript` 0.041 →
+  **0.056** (scripts breathe slightly more), `radicalVerticalGap` 0.148 was
+  the *display* value — text style now uses the font's **0.050** (inline
+  radicals hug their radicand like real TeX), and `stackGapMin` 0.150 →
+  **0.120** (stacked limits sit slightly tighter). 36 golden fixtures
+  re-blessed after visual review; `MathGlyphInfo` is parsed but not yet
+  consumed (that's Phases 3–4: italic correction, cut-in kerning, accent
+  attachment).
+
+Phase 0 of the best-in-class plan (docs + fixtures, no behavior change).
+
+- **Roadmap + phased implementation plan.** New
+  [docs/ROADMAP.md](docs/ROADMAP.md) (release-level: font truth → style
+  lattice → script typography/cut-in kerning → accents → glyph assembly →
+  multi-font → DX → accessibility/firsts) and
+  [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) (phase-by-phase,
+  test-first), grounded in a mechanism-level audit against iosMath v2.5.0.
+- **docs/ALGORITHM.md** — honest rule-by-rule TeX Appendix G audit of the
+  current engine (Implemented / Partial / Deviation / ABSENT), with a
+  constants ledger and a gap→phase map. The doc the README answers to.
+- **Raw MATH-table fixtures.** `Tests/fixtures/math-table/
+  latinmodern-math.bin` (the font's raw `MATH` table), regenerated via the
+  env-gated `MathTableFixtureExtraction` test
+  (`VINCULUM_UPDATE_MATH_FIXTURES=1`), sanity-checked headless by
+  `MathTableFixtureTests` — the Linux-testable ground truth Phase 1's
+  constants/glyph-info parser will be developed against.
+- **README honesty pass** — the metrics claims now say "test-pinned
+  transcription of Latin Modern's MATH-table values" (font-parsed at
+  runtime is Phase 1), and the iosMath comparison names where iosMath is
+  currently ahead.
+
 ## 0.23.0 — 2026-07-13
 
 Delimiter size-variants (the big one) + `\cancelto`.

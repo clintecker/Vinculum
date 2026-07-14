@@ -76,7 +76,8 @@ public enum MathImageRenderer {
         guard MathParser.isFullySupported(node) else { return negative }
 
         let engine = MathLayoutEngine(measure: measurer, baseSize: display ? baseSize * 1.15 : baseSize,
-                                      delimiters: delimiterProvider)
+                                      delimiters: delimiterProvider,
+                                      constants: MathFont.constants)
         let scene = engine.layout(node, display: display)
         guard scene.width > 0, scene.height > 0 else { return negative }
 

@@ -7,8 +7,8 @@ extension MathLayoutEngine {
     /// ink top so a hat hugs `x` instead of floating at the font ascent.
     func accentBox(_ base: MathNode, accent: MathAccent, size: CGFloat, display: Bool) -> MathBox {
         let baseBox = box(for: base, size: size, display: display)
-        let ruleThickness = max(1, size * MathConstants.overbarRuleThickness)
-        let gap = size * MathConstants.overbarVerticalGap
+        let ruleThickness = max(1, size * constants.overbarRuleThickness)
+        let gap = size * constants.overbarVerticalGap
 
         // Drawn rules: \overline above, \underline below.
         if accent == .overline || accent == .underline {

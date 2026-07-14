@@ -7,7 +7,7 @@ extension MathLayoutEngine {
     /// which differ only in the target height they pass.
     func stretchedFence(_ glyph: String, targetHeight: CGFloat, around bodyBox: MathBox, size: CGFloat) -> MathBox {
         guard !glyph.isEmpty else { return .empty }
-        let axis = size * MathConstants.axisHeight
+        let axis = size * constants.axisHeight
         // Size the fence to cover the body symmetrically about the axis (TeX
         // measures each side from the axis, not the baseline), so an
         // off-baseline body still gets a fence tall enough on both ends.
@@ -41,7 +41,7 @@ extension MathLayoutEngine {
         let probe = glyphBox(glyph, size: size, italic: false)
         let scale = max(1, size * factor / max(probe.height, 1))
         let scaled = glyphBox(glyph, size: size * scale, italic: false)
-        let axis = size * MathConstants.axisHeight
+        let axis = size * constants.axisHeight
         let offset = axis - (scaled.ascent - scaled.descent) / 2   // midpoint → axis
         return MathBox(width: scaled.width, ascent: scaled.ascent + offset,
                        descent: scaled.descent - offset,
@@ -111,7 +111,7 @@ extension MathLayoutEngine {
     func matrixBox(_ rows: [[MathNode]], left: String, right: String,
                    style: MathMatrixStyle, size baseSize: CGFloat) -> MathBox {
         guard !rows.isEmpty else { return .empty }
-        let size = style == .substack ? baseSize * MathConstants.scriptPercentScaleDown : baseSize
+        let size = style == .substack ? baseSize * constants.scriptPercentScaleDown : baseSize
 
         let columns = rows.map(\.count).max() ?? 0
         var cellBoxes: [[MathBox]] = []
@@ -141,7 +141,7 @@ extension MathLayoutEngine {
         }
         let gridWidth = colWidth.reduce(0, +) + CGFloat(max(columns - 1, 0)) * colGap
 
-        let axis = size * MathConstants.axisHeight
+        let axis = size * constants.axisHeight
         let ascent = totalHeight / 2 + axis
         let descent = totalHeight / 2 - axis
 
@@ -153,7 +153,7 @@ extension MathLayoutEngine {
         // rules need outer padding so the grid isn't clipped by them.
         var arraySpec: ArraySpec?
         if case .array(let s) = style { arraySpec = s }
-        let ruleT = size * MathConstants.defaultRuleThickness
+        let ruleT = size * constants.defaultRuleThickness
         let leftPad = (arraySpec?.columnRules.contains(0) ?? false) ? colGap / 2 : 0
         let rightPad = (arraySpec?.columnRules.contains(columns) ?? false) ? colGap / 2 : 0
         let totalWidth = gridWidth + leftPad + rightPad

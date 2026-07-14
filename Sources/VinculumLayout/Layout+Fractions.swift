@@ -19,11 +19,11 @@ extension MathLayoutEngine {
         let topBox = numEngine.box(for: num, size: size, display: true)      // full size + display
         let bottomBox = denEngine.box(for: den, size: size, display: true)
 
-        let ruleThickness = max(1, size * MathConstants.fractionRuleThickness)
-        let axis = size * MathConstants.axisHeight
+        let ruleThickness = max(1, size * constants.fractionRuleThickness)
+        let axis = size * constants.axisHeight
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
-        var shiftUp = size * MathConstants.fractionNumeratorShiftUp * 1.35
-        var shiftDown = size * MathConstants.fractionDenominatorShiftDown * 1.35
+        var shiftUp = size * constants.fractionNumeratorShiftUp * 1.35
+        var shiftDown = size * constants.fractionDenominatorShiftDown * 1.35
         let minGap = size * MathLayout.Fraction.ruleGap
         let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
         if numClear < minGap { shiftUp += minGap - numClear }
@@ -59,8 +59,8 @@ extension MathLayoutEngine {
         let topBox = numEngine.box(for: top, size: partSize, display: false)
         let bottomBox = denEngine.box(for: bottom, size: partSize, display: false)
 
-        let ruleThickness = hasRule ? max(1, size * MathConstants.fractionRuleThickness) : 0
-        let axis = size * MathConstants.axisHeight
+        let ruleThickness = hasRule ? max(1, size * constants.fractionRuleThickness) : 0
+        let axis = size * constants.axisHeight
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
 
         // TeX shift-model (Appendix G rules 15): position each part by a NOMINAL
@@ -68,8 +68,8 @@ extension MathLayoutEngine {
         // deep numerator share the same baseline, then increase the shift only
         // as needed to keep a minimum gap from the rule. Stable, TeX-like.
         let displayBoost: CGFloat = display ? 1.35 : 1.0
-        var shiftUp = size * MathConstants.fractionNumeratorShiftUp * displayBoost
-        var shiftDown = size * MathConstants.fractionDenominatorShiftDown * displayBoost
+        var shiftUp = size * constants.fractionNumeratorShiftUp * displayBoost
+        var shiftDown = size * constants.fractionDenominatorShiftDown * displayBoost
         if hasRule {
             let minGap = size * MathLayout.Fraction.ruleGap
             let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)

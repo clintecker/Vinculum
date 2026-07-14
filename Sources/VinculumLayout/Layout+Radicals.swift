@@ -9,8 +9,12 @@ extension MathLayoutEngine {
         // The radicand is cramped (an exponent under the root rides lower).
         var radicandEngine = self; radicandEngine.cramped = true
         let body = radicandEngine.box(for: radicand, size: size, display: display)
-        let ruleThickness = max(1, size * MathConstants.radicalRuleThickness)
-        let gap = size * MathConstants.radicalVerticalGap
+        let ruleThickness = max(1, size * constants.radicalRuleThickness)
+        // The font distinguishes display/text radicand clearance (LM Math:
+        // 0.148 vs 0.050 em); the old transcription used the display value
+        // everywhere.
+        let gap = size * (display ? constants.radicalDisplayStyleVerticalGap
+                                  : constants.radicalVerticalGap)
         let signWidth = size * MathLayout.Radical.signWidth
         let degreeBox = degree.map { box(for: $0, size: size * MathLayout.Radical.degreeScale, display: false) }
         let degreeAdvance = degreeBox.map { max(0, $0.width - signWidth * MathLayout.Radical.degreeOverlap) } ?? 0
