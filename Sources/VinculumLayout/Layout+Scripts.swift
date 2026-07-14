@@ -28,7 +28,7 @@ extension MathLayoutEngine {
         // separates the superscript from the subscript (Rules 17/18f), the
         // kern staircases tuck scripts into the glyph's corners.
         let typo = glyphTypography(of: base, size: size)
-        let delta = typo?.italicCorrection ?? 0
+        let delta = typo?.italicsCorrection ?? 0
         let isGlyphBase: Bool = {
             switch base { case .symbol, .functionName: return true; default: return false }
         }()
@@ -139,7 +139,7 @@ extension MathLayoutEngine {
 
         // TeX Rule 13a: the upper limit shifts right by δ/2 (half the italic
         // correction), the lower limit left by δ/2, hugging the slant.
-        let delta = glyphTypography(of: base, size: size)?.italicCorrection ?? 0
+        let delta = glyphTypography(of: base, size: size)?.italicsCorrection ?? 0
         var elements = op.placed(at: CGPoint(x: (width - op.width) / 2, y: 0))
         if let supBox {
             elements += supBox.placed(at: CGPoint(x: (width - supBox.width) / 2 + delta / 2,

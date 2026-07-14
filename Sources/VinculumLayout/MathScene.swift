@@ -108,18 +108,18 @@ public typealias MathDelimiterProvider =
 /// the top-accent attachment x (Rule 12), and the cut-in kern staircases
 /// for script positioning against the glyph's actual corner profile.
 public struct GlyphTypography: Sendable, Equatable {
-    public var italicCorrection: CGFloat
+    public var italicsCorrection: CGFloat
     /// Distance from the glyph origin to the accent attachment point;
     /// nil → center on the advance (the spec fallback).
     public var topAccentAttachment: CGFloat?
     public var kernTopRight: MathGlyphInfo.KernStaircase?
     public var kernBottomRight: MathGlyphInfo.KernStaircase?
 
-    public init(italicCorrection: CGFloat = 0,
+    public init(italicsCorrection: CGFloat = 0,
                 topAccentAttachment: CGFloat? = nil,
                 kernTopRight: MathGlyphInfo.KernStaircase? = nil,
                 kernBottomRight: MathGlyphInfo.KernStaircase? = nil) {
-        self.italicCorrection = italicCorrection
+        self.italicsCorrection = italicsCorrection
         self.topAccentAttachment = topAccentAttachment
         self.kernTopRight = kernTopRight
         self.kernBottomRight = kernBottomRight

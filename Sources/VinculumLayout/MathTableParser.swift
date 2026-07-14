@@ -62,10 +62,10 @@ public struct MathFontConstants: Equatable, Sendable {
     public var fractionDenominatorShiftDown: CGFloat
     public var fractionDenominatorDisplayStyleShiftDown: CGFloat
     public var fractionNumeratorGapMin: CGFloat
-    public var fractionNumDisplayStyleGapMin: CGFloat
+    public var fractionNumeratorDisplayStyleGapMin: CGFloat
     public var fractionRuleThickness: CGFloat
     public var fractionDenominatorGapMin: CGFloat
-    public var fractionDenomDisplayStyleGapMin: CGFloat
+    public var fractionDenominatorDisplayStyleGapMin: CGFloat
     public var skewedFractionHorizontalGap: CGFloat
     public var skewedFractionVerticalGap: CGFloat
     // Over/underbars.
@@ -132,10 +132,10 @@ public struct MathFontConstants: Equatable, Sendable {
         fractionDenominatorShiftDown: 345 / 1000,
         fractionDenominatorDisplayStyleShiftDown: 686 / 1000,
         fractionNumeratorGapMin: 40 / 1000,
-        fractionNumDisplayStyleGapMin: 120 / 1000,
+        fractionNumeratorDisplayStyleGapMin: 120 / 1000,
         fractionRuleThickness: 40 / 1000,
         fractionDenominatorGapMin: 40 / 1000,
-        fractionDenomDisplayStyleGapMin: 120 / 1000,
+        fractionDenominatorDisplayStyleGapMin: 120 / 1000,
         skewedFractionHorizontalGap: 350 / 1000,
         skewedFractionVerticalGap: 96 / 1000,
         overbarVerticalGap: 120 / 1000,
@@ -251,10 +251,10 @@ public enum MathTableParser {
             fractionDenominatorShiftDown: value(30),
             fractionDenominatorDisplayStyleShiftDown: value(31),
             fractionNumeratorGapMin: value(32),
-            fractionNumDisplayStyleGapMin: value(33),
+            fractionNumeratorDisplayStyleGapMin: value(33),
             fractionRuleThickness: value(34),
             fractionDenominatorGapMin: value(35),
-            fractionDenomDisplayStyleGapMin: value(36),
+            fractionDenominatorDisplayStyleGapMin: value(36),
             skewedFractionHorizontalGap: value(37),
             skewedFractionVerticalGap: value(38),
             overbarVerticalGap: value(39),

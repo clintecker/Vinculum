@@ -13,7 +13,7 @@ final class MathScriptTypographyTests: XCTestCase {
     /// everything else zero. Values are returned in points at `size`.
     private func engineWithItalicF(_ size: CGFloat = 10) -> MathLayoutEngine {
         MathLayoutEngine(measure: mock, baseSize: size, typography: { glyph, size in
-            glyph == "𝑓" ? GlyphTypography(italicCorrection: 0.2 * size) : nil
+            glyph == "𝑓" ? GlyphTypography(italicsCorrection: 0.2 * size) : nil
         })
     }
 
@@ -107,7 +107,7 @@ final class MathScriptTypographyTests: XCTestCase {
         // ∫ with δ = 0.3 em keeps side scripts (nolimits): the subscript
         // shifts left by δ; the superscript does not.
         let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
-            glyph == "∫" ? GlyphTypography(italicCorrection: 0.3 * size) : nil
+            glyph == "∫" ? GlyphTypography(italicsCorrection: 0.3 * size) : nil
         })
         let scene = engine.layout(MathParser.parse("\\int_a^b"), display: true)
         let runs = glyphOrigins(scene)
@@ -122,7 +122,7 @@ final class MathScriptTypographyTests: XCTestCase {
         // ∑ with δ = 0.2 em stacking its limits: upper limit center shifts
         // +δ/2, lower −δ/2 relative to each other (TeX Rule 13a).
         let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
-            glyph == "∑" ? GlyphTypography(italicCorrection: 0.2 * size) : nil
+            glyph == "∑" ? GlyphTypography(italicsCorrection: 0.2 * size) : nil
         })
         let scene = engine.layout(MathParser.parse("\\sum_a^b"), display: true)
         let runs = glyphOrigins(scene)

@@ -37,9 +37,6 @@ public enum MathLayout {
     public enum Fraction {
         public static let partScaleDisplay: CGFloat = 0.9
         public static let partScaleText: CGFloat = 0.8
-        /// Clearance between the rule and the nearer part (ruled vs. atop).
-        public static let ruleGap: CGFloat = 0.14
-        public static let atopGap: CGFloat = 0.18
         /// Horizontal breathing room added to the wider part, and the rule's
         /// inset from each edge (half on each side).
         public static let sidePadding: CGFloat = 0.24

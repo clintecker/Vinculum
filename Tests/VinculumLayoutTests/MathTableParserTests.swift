@@ -62,7 +62,7 @@ final class MathTableParserTests: XCTestCase {
         XCTAssertEqual(c.radicalDisplayStyleVerticalGap, 0.148)
         XCTAssertEqual(c.stackDisplayStyleGapMin, 0.280)
         XCTAssertEqual(c.fractionNumeratorGapMin, 0.040)
-        XCTAssertEqual(c.fractionNumDisplayStyleGapMin, 0.120)
+        XCTAssertEqual(c.fractionNumeratorDisplayStyleGapMin, 0.120)
         XCTAssertEqual(c.radicalKernBeforeDegree, 0.278)
     }
 

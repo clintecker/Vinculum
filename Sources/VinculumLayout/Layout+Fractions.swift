@@ -24,8 +24,8 @@ extension MathLayoutEngine {
         let width = max(topBox.width, bottomBox.width) + size * MathLayout.Fraction.sidePadding
         var shiftUp = size * constants.fractionNumeratorDisplayStyleShiftUp
         var shiftDown = size * constants.fractionDenominatorDisplayStyleShiftDown
-        let numGapMin = size * constants.fractionNumDisplayStyleGapMin
-        let denGapMin = size * constants.fractionDenomDisplayStyleGapMin
+        let numGapMin = size * constants.fractionNumeratorDisplayStyleGapMin
+        let denGapMin = size * constants.fractionDenominatorDisplayStyleGapMin
         let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
         if numClear < numGapMin { shiftUp += numGapMin - numClear }
         let denClear = (axis - ruleThickness / 2) - (bottomBox.ascent - shiftDown)
@@ -80,9 +80,9 @@ extension MathLayoutEngine {
             : (style.isDisplay ? constants.stackBottomDisplayStyleShiftDown
                                : constants.stackBottomShiftDown))
         if hasRule {
-            let numGapMin = size * (style.isDisplay ? constants.fractionNumDisplayStyleGapMin
+            let numGapMin = size * (style.isDisplay ? constants.fractionNumeratorDisplayStyleGapMin
                                                     : constants.fractionNumeratorGapMin)
-            let denGapMin = size * (style.isDisplay ? constants.fractionDenomDisplayStyleGapMin
+            let denGapMin = size * (style.isDisplay ? constants.fractionDenominatorDisplayStyleGapMin
                                                     : constants.fractionDenominatorGapMin)
             let numClear = (shiftUp - topBox.descent) - (axis + ruleThickness / 2)
             if numClear < numGapMin { shiftUp += numGapMin - numClear }

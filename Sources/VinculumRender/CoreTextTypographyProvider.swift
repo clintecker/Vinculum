@@ -19,7 +19,7 @@ public enum CoreTextTypographyProvider {
             let kerns = info.kerns[gid]
             guard italic != nil || accent != nil || kerns != nil else { return nil }
             return GlyphTypography(
-                italicCorrection: (italic ?? 0) * size,
+                italicsCorrection: (italic ?? 0) * size,
                 topAccentAttachment: accent.map { $0 * size },
                 kernTopRight: kerns?.topRight?.scaled(by: size),
                 kernBottomRight: kerns?.bottomRight?.scaled(by: size))
