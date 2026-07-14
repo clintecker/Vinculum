@@ -20,9 +20,9 @@ final class MathAccentTests: XCTestCase {
         // 𝑓's attachment point is at 0.7 of its advance (7pt at base 10);
         // the accent (no data → centered on its own width, 9·0.5 = 4.5)
         // lands at 7 − 4.5 = 2.5, not geometric center 0.5.
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
+        let engine = MathLayoutEngine(services: .init(measure: mock, typography: { glyph, size in
             glyph == "𝑓" ? GlyphTypography(topAccentAttachment: 0.7 * size) : nil
-        })
+        }), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\hat{f}"))
         let run = accentRun(scene)
         XCTAssertEqual(run?.x ?? -1, 0.7 * 10 - (run?.size ?? 0) / 2, accuracy: 0.001,

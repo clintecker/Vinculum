@@ -185,20 +185,26 @@ public struct MathGlyphInfo: Sendable {
         public let bottomLeft: KernStaircase?
     }
 
+    /// Glyph ID → italic correction (em fractions).
     public let italicsCorrection: [UInt16: CGFloat]
+    /// Glyph ID → top-accent attachment x (em fractions from the origin).
     public let topAccentAttachment: [UInt16: CGFloat]
+    /// Glyphs the font marks as extended shapes (tall variants).
     public let extendedShapes: Set<UInt16>
+    /// Glyph ID → cut-in kern staircases, per corner.
     public let kerns: [UInt16: KernEntry]
 }
 
 /// Bounds-checked big-endian parser for the raw `MATH` table bytes.
-public enum MathTableParser {
+/// `package`: VinculumRender consumes it; hosts get parsed results through
+/// `MathFont` and the provider seams, never raw bytes.
+package enum MathTableParser {
 
     // MARK: - Public entry points
 
     /// Parses the `MathConstants` sub-table. Returns nil when the header is
     /// malformed, the sub-table is absent/truncated, or `unitsPerEm <= 0`.
-    public static func constants(from data: Data, unitsPerEm: Int) -> MathFontConstants? {
+    package static func constants(from data: Data, unitsPerEm: Int) -> MathFontConstants? {
         guard unitsPerEm > 0 else { return nil }
         let b = [UInt8](data)
         guard let start = subTable(at: 4, in: b) else { return nil }
@@ -273,7 +279,7 @@ public enum MathTableParser {
     /// Parses the `MathGlyphInfo` sub-table. Returns nil when the header is
     /// malformed or the sub-table is absent; individually malformed inner
     /// tables degrade to empty maps (same discipline as the variants parser).
-    public static func glyphInfo(from data: Data, unitsPerEm: Int) -> MathGlyphInfo? {
+    package static func glyphInfo(from data: Data, unitsPerEm: Int) -> MathGlyphInfo? {
         guard unitsPerEm > 0 else { return nil }
         let b = [UInt8](data)
         guard let gi = subTable(at: 6, in: b) else { return nil }
@@ -317,7 +323,7 @@ public enum MathTableParser {
     /// covered glyph, the size-variant ladder and (if present) the
     /// extensible `GlyphAssembly`. Assemblies with a degenerate extender
     /// (fullAdvance ≤ 0, would loop forever) are dropped at parse.
-    public static func variants(from data: Data, unitsPerEm: Int) -> MathVariantsData? {
+    package static func variants(from data: Data, unitsPerEm: Int) -> MathVariantsData? {
         guard unitsPerEm > 0 else { return nil }
         let b = [UInt8](data)
         guard let mv = subTable(at: 8, in: b) else { return nil }

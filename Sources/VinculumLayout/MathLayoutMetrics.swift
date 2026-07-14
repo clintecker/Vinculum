@@ -5,7 +5,7 @@ import Foundation
 /// length; it uses `\thinmuskip` (3mu), `\medmuskip` (4mu), `\thickmuskip`
 /// (5mu), selected by the atom-class pair table (TeXbook p. 170). Expressed
 /// as em fractions so a builder multiplies by the current size.
-public enum MathSpacing {
+package enum MathSpacing {
     /// 3mu — Ord↔Op and after Punct.
     public static let thin: CGFloat = 3.0 / 18.0
     /// 4mu — around Bin (binary operators).
@@ -20,7 +20,7 @@ public enum MathSpacing {
 /// `\fontdimen`. There is no OpenType MATH constant for these, so we name and
 /// document them here instead of leaving bare literals. Everything that DOES
 /// have a font parameter lives in `MathConstants` and is read from there.
-public enum MathLayout {
+package enum MathLayout {
     /// Unsupported source drawn in mono, one notch down from the run size.
     public static let unsupportedSourceScale: CGFloat = 0.85
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX

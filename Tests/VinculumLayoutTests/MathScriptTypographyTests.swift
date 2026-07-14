@@ -12,9 +12,9 @@ final class MathScriptTypographyTests: XCTestCase {
     /// Provider giving the italic 𝑓 (U+1D453) a 0.2 em italic correction and
     /// everything else zero. Values are returned in points at `size`.
     private func engineWithItalicF(_ size: CGFloat = 10) -> MathLayoutEngine {
-        MathLayoutEngine(measure: mock, baseSize: size, typography: { glyph, size in
+        MathLayoutEngine(services: .init(measure: mock, typography: { glyph, size in
             glyph == "𝑓" ? GlyphTypography(italicsCorrection: 0.2 * size) : nil
-        })
+        }), baseSize: size)
     }
 
     private func glyphOrigins(_ scene: MathScene) -> [(text: String, x: CGFloat, size: CGFloat)] {
@@ -93,9 +93,9 @@ final class MathScriptTypographyTests: XCTestCase {
         // A base whose top-right corner cuts in by 0.15 em at every height:
         // the superscript moves LEFT by the kern.
         let stair = MathGlyphInfo.KernStaircase(correctionHeights: [], kernValues: [-0.15])
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
+        let engine = MathLayoutEngine(services: .init(measure: mock, typography: { glyph, size in
             glyph == "𝑇" ? GlyphTypography(kernTopRight: stair.scaled(by: size)) : nil
-        })
+        }), baseSize: 10)
         let scene = engine.layout(MathParser.parse("T^2"))
         let sup = glyphOrigins(scene).first { $0.text == "2" }
         XCTAssertEqual(sup?.x ?? -1, 10 - 1.5, accuracy: 0.001, "superscript tucks into the cut corner")
@@ -106,9 +106,9 @@ final class MathScriptTypographyTests: XCTestCase {
     func testIntegralSubscriptTucksUnderItalicOverhang() {
         // ∫ with δ = 0.3 em keeps side scripts (nolimits): the subscript
         // shifts left by δ; the superscript does not.
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
+        let engine = MathLayoutEngine(services: .init(measure: mock, typography: { glyph, size in
             glyph == "∫" ? GlyphTypography(italicsCorrection: 0.3 * size) : nil
-        })
+        }), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\int_a^b"), display: true)
         let runs = glyphOrigins(scene)
         let sub = runs.first { $0.text == "𝑎" }
@@ -121,9 +121,9 @@ final class MathScriptTypographyTests: XCTestCase {
     func testStackedLimitsShiftByHalfDelta() {
         // ∑ with δ = 0.2 em stacking its limits: upper limit center shifts
         // +δ/2, lower −δ/2 relative to each other (TeX Rule 13a).
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, typography: { glyph, size in
+        let engine = MathLayoutEngine(services: .init(measure: mock, typography: { glyph, size in
             glyph == "∑" ? GlyphTypography(italicsCorrection: 0.2 * size) : nil
-        })
+        }), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\sum_a^b"), display: true)
         let runs = glyphOrigins(scene)
         let lower = runs.first { $0.text == "𝑎" }

@@ -43,12 +43,15 @@ public struct MathView: View {
     public func inlineStyle(_ inline: Bool = true) -> MathView {
         var copy = self; copy.display = !inline; return copy
     }
+    /// Selects the math font (default `.latinModern`).
     public func mathFont(_ font: MathFont) -> MathView {
         var copy = self; copy.font = font; return copy
     }
+    /// Ink color + appearance (default `.light`).
     public func mathTheme(_ theme: MathTheme) -> MathView {
         var copy = self; copy.theme = theme; return copy
     }
+    /// The point size of the surrounding text (default 17).
     public func mathSize(_ size: CGFloat) -> MathView {
         var copy = self; copy.baseSize = size; return copy
     }

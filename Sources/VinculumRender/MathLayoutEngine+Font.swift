@@ -15,13 +15,20 @@ extension MathLayoutEngine {
     /// silently drops every font capability (the expert-review finding
     /// that had the CI galleries rendering the pre-font-truth pipeline).
     public static func make(font: MathFont = .latinModern, baseSize: CGFloat) -> MathLayoutEngine {
-        MathLayoutEngine(measure: CoreTextMeasurer.make(font: font),
-                         baseSize: baseSize,
-                         delimiters: CoreTextDelimiterProvider.make(font: font),
-                         constants: font.constants,
-                         typography: CoreTextTypographyProvider.make(font: font),
-                         delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: font),
-                         accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: font))
+        MathLayoutEngine(services: font.layoutServices, baseSize: baseSize)
+    }
+}
+
+extension MathFont {
+    /// The complete layout-services bundle for this font — every seam the
+    /// MATH table can fill, plus the font's parsed constants.
+    public var layoutServices: MathFontServices {
+        MathFontServices(measure: CoreTextMeasurer.make(font: self),
+                         constants: constants,
+                         delimiters: CoreTextDelimiterProvider.make(font: self),
+                         delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: self),
+                         typography: CoreTextTypographyProvider.make(font: self),
+                         accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: self))
     }
 }
 #endif

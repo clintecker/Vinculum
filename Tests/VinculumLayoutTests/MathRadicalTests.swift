@@ -28,12 +28,12 @@ final class MathRadicalTests: XCTestCase {
     // MARK: - Font-glyph radical path (mock delimiter provider)
 
     private func fontRadicalEngine(_ size: CGFloat = 10) -> MathLayoutEngine {
-        MathLayoutEngine(measure: mock, baseSize: size, delimiters: { glyph, minHeight, _ in
+        MathLayoutEngine(services: .init(measure: mock, delimiters: { glyph, minHeight, _ in
             guard glyph == "√" else { return nil }
             return DelimiterShape(glyphID: 99, metrics: GlyphMetrics(
                 width: 5, ascent: minHeight * 0.8, descent: minHeight * 0.2,
                 inkAscent: minHeight * 0.8, inkDescent: -minHeight * 0.2))
-        })
+        }), baseSize: size)
     }
 
     func testRadicalUsesFontGlyphWhenProviderServes() {

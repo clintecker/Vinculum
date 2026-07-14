@@ -34,7 +34,8 @@ public struct MathGlyphAssembly: Sendable, Equatable {
 
 /// The parsed `MathVariants` sub-table: discrete size-variant ladders and
 /// (where the font provides one) the extensible assembly, per base glyph.
-public struct MathVariantsData: Sendable {
+/// `package`: served to layout through the delimiter/accent provider seams.
+package struct MathVariantsData: Sendable {
     public struct Variant: Sendable, Equatable {
         public let glyphID: UInt16
         public let advance: CGFloat   // em; the glyph's extent along the stretch axis

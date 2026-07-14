@@ -80,7 +80,11 @@ public final class MathFont: @unchecked Sendable {
     nonisolated(unsafe) private var ctFontCache: [CGFloat: CTFont] = [:]
     private let ctFontLock = NSLock()
 
-    func ctFont(size: CGFloat) -> CTFont? {
+    /// The sized CTFont — public so a CUSTOM renderer of the public
+    /// `MathScene` IR can resolve `.glyph(id:)` elements (draw them with
+    /// `CTFontDrawGlyphs` against this font; reset the context text matrix
+    /// first). Cached per size.
+    public func ctFont(size: CGFloat) -> CTFont? {
         guard let cgFont else { return nil }
         ctFontLock.lock(); defer { ctFontLock.unlock() }
         if let cached = ctFontCache[size] { return cached }

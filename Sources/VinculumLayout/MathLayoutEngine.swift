@@ -5,7 +5,7 @@ import Foundation
 /// positioned primitives, so it runs headless (and on Linux). The per-domain
 /// builders live in `Layout+*.swift` extensions; this file is the entry point,
 /// the node dispatch, glyph boxes, and TeX inter-atom spacing.
-public struct MathLayoutEngine {
+public struct MathLayoutEngine: Sendable {
 
     let measure: MathTextMeasurer
     /// Optional MATH-table delimiter variant provider; `nil` → continuous
@@ -42,21 +42,23 @@ public struct MathLayoutEngine {
     /// propagated by sub-context copies, like `cramped`.
     var styleAnchorSize: CGFloat = 0
 
-    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
-                delimiters: MathDelimiterProvider? = nil,
-                constants: MathFontConstants = .latinModern,
-                typography: MathGlyphTypographyProvider? = nil,
-                delimiterAssembly: MathDelimiterAssemblyProvider? = nil,
-                accentVariants: MathAccentVariantProvider? = nil) {
-        self.measure = measure
-        self.delimiters = delimiters
-        self.delimiterAssembly = delimiterAssembly
-        self.accentVariants = accentVariants
+    /// The primary initializer: a services bundle plus the base size.
+    public init(services: MathFontServices, baseSize: CGFloat) {
+        self.measure = services.measure
+        self.delimiters = services.delimiters
+        self.delimiterAssembly = services.delimiterAssembly
+        self.accentVariants = services.accentVariants
         self.baseSize = baseSize
-        self.constants = constants
-        self.typography = typography
+        self.constants = services.constants
+        self.typography = services.typography
         self.colorOverride = nil
         self.styleAnchorSize = baseSize
+    }
+
+    /// Headless convenience: measurement only, Latin Modern preset
+    /// constants, no per-glyph refinements (they all degrade gracefully).
+    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat) {
+        self.init(services: MathFontServices(measure: measure), baseSize: baseSize)
     }
 
     /// Per-glyph typography of a node that renders as a single glyph run —

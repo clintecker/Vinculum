@@ -21,7 +21,7 @@ final class MathOperatorSizingTests: XCTestCase {
     }
 
     func testDisplaySumUsesFontVariantCenteredOnAxis() {
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, delimiters: operatorProvider())
+        let engine = MathLayoutEngine(services: .init(measure: mock, delimiters: operatorProvider()), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\sum_a^b"), display: true)
         let op = scene.elements.compactMap { e -> CGPoint? in
             if case let .glyph(42, _, origin, _) = e { return origin }
@@ -34,7 +34,7 @@ final class MathOperatorSizingTests: XCTestCase {
     }
 
     func testDisplayIntegralUsesVariantAndKeepsSideScripts() {
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, delimiters: operatorProvider())
+        let engine = MathLayoutEngine(services: .init(measure: mock, delimiters: operatorProvider()), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\int_a^b"), display: true)
         let hasVariant = scene.elements.contains {
             if case .glyph(42, _, _, _) = $0 { return true }; return false
@@ -48,7 +48,7 @@ final class MathOperatorSizingTests: XCTestCase {
     }
 
     func testTextStyleOperatorStaysBaseSize() {
-        let engine = MathLayoutEngine(measure: mock, baseSize: 10, delimiters: operatorProvider())
+        let engine = MathLayoutEngine(services: .init(measure: mock, delimiters: operatorProvider()), baseSize: 10)
         let scene = engine.layout(MathParser.parse("\\sum_a^b"))   // text style
         let hasVariant = scene.elements.contains {
             if case .glyph = $0 { return true }; return false
