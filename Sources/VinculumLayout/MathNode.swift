@@ -73,6 +73,42 @@ public indirect enum MathNode: Hashable, Sendable {
     case unsupported(String)
 }
 
+extension MathNode {
+    /// The node's direct children, in source order — the canonical traversal
+    /// that every whole-tree analysis (support classification, diagnostics,
+    /// depth checks) builds on, so a new node case touches one accessor
+    /// instead of a hand-rolled switch per walk. Semantic per-case visitors
+    /// (layout, `toLaTeX`, speech) still switch themselves.
+    public var children: [MathNode] {
+        switch self {
+        case .symbol, .space, .functionName, .ruleBox, .bigDelimiter, .unsupported:
+            return []
+        case .row(let children):
+            return children
+        case .fraction(let n, let d), .cfrac(let n, let d, _):
+            return [n, d]
+        case .genfrac(let top, let bottom, _, _, _):
+            return [top, bottom]
+        case .radical(let degree, let radicand):
+            return (degree.map { [$0] } ?? []) + [radicand]
+        case .scripts(let base, let sub, let sup):
+            return [base] + (sub.map { [$0] } ?? []) + (sup.map { [$0] } ?? [])
+        case .delimited(_, let body, _):
+            return [body]
+        case .fenced(_, let segments):
+            return segments
+        case .matrix(let rows, _, _, _):
+            return rows.flatMap { $0 }
+        case .limitsOperator(let base), .classified(let base, _), .raised(let base, _),
+             .colorbox(let base, _, _), .accent(let base, _), .decorated(let base, _),
+             .styled(let base, _), .mathStyle(let base, _):
+            return [base]
+        case .overUnder(let base, let over, let under, _):
+            return [base] + (over.map { [$0] } ?? []) + (under.map { [$0] } ?? [])
+        }
+    }
+}
+
 /// `\cfrac` denominator alignment (`\cfrac[l]`/`[r]`/`[c]`).
 public enum CfracAlign: Hashable, Sendable { case left, center, right }
 
