@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+Phase 8 (a+b): round-trip and drop-in views.
+
+- **`MathNode.toLaTeX()`** — every node kind serializes back to LaTeX,
+  proven render-equivalent (scene-identical) and idempotent over a
+  23-expression corpus. The substrate for copy-as-LaTeX, editing, and
+  spoken-math accessibility.
+- **`VinculumLabel`** (AppKit/UIKit) — `label.latex = "…"` and done:
+  alignment, content insets, font/theme/size, intrinsic sizing, and
+  opt-in `displayErrorInline` (OFF by default — unsupported input renders
+  nothing, preserving the never-half-broken contract; `isRendered` tells
+  the host to use its fallback).
+- **`MathView`** (SwiftUI) — `MathView("e^{i\pi}+1=0").mathFont(.pagella)`
+  with `.inlineStyle()`, `.mathTheme()`, `.mathSize()` modifiers.
+
 Phase 7: multi-font — four bundled math fonts, or bring your own.
 
 - **`MathFont` is now a value you pick**: `.latinModern` (default),

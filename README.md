@@ -137,7 +137,18 @@ See [CHANGELOG.md](CHANGELOG.md) for the full arc.
 
 ## Quick Start
 
-One call turns LaTeX into an inline attachment for a text view:
+The one-liner — a drop-in view (AppKit/UIKit), or SwiftUI:
+
+```swift
+let label = VinculumLabel()
+label.latex = #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#
+// label.font = .stixTwo · .termes · .pagella — or MathFont(url:) for your own
+
+// SwiftUI:
+MathView(#"e^{i\pi} + 1 = 0"#).mathFont(.pagella)
+```
+
+Or one call turns LaTeX into an inline attachment for a text view:
 
 ```swift
 import VinculumRender
