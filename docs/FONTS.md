@@ -34,6 +34,10 @@ is practically its own design), stroke contrast, and the display-operator
 sizes. For a genuinely different voice, load a sans-serif math font
 (Fira Math, Noto Sans Math) via `MathFont(url:)`.
 
+Glyph by glyph, the designs diverge clearly (CI-regenerated):
+
+![The same glyphs in all four fonts, side by side](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/08-font-glyphs.png)
+
 They are not interchangeable metrics-wise — that is the point. A few
 numbers Vinculum reads from each font's `MathConstants` (em fractions):
 

@@ -27,6 +27,142 @@ final class FontShowcaseGenerator: XCTestCase {
         (.stixTwo, "STIX Two Math", "the scientific-publishing standard; ships cut-in kerning data"),
     ]
 
+    /// One-off evidence strip: a handful of glyphs at poster size, where
+    /// letterform differences are unmistakable. Not part of the gallery.
+    func testGenerateGiantComparison() throws {
+        guard let dir = ProcessInfo.processInfo.environment["VINCULUM_COMPARE_DIR"] else {
+            throw XCTSkip("Set VINCULUM_COMPARE_DIR to generate the comparison strip.")
+        }
+        let sample = #"a\, g\, x\, \pi\, \xi \quad \mathcal{L} \quad \oint"#
+        let nameFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 18, nil)
+        var rows: [(NSImage, CTLine, CGFloat)] = []
+        for (font, name, _) in Self.fonts {
+            let r = try XCTUnwrap(MathImageRenderer.rendered(
+                latex: sample, display: true, mathTheme: .light, baseSize: 54, font: font))
+            let attr = NSAttributedString(string: name, attributes: [
+                kCTFontAttributeName as NSAttributedString.Key: nameFont])
+            let line = CTLineCreateWithAttributedString(attr)
+            var a: CGFloat = 0, d: CGFloat = 0, l: CGFloat = 0
+            _ = CTLineGetTypographicBounds(line, &a, &d, &l)
+            rows.append((r.image, line, a + d))
+        }
+        let margin: CGFloat = 20, gap: CGFloat = 14
+        let width = (rows.map { $0.0.size.width }.max() ?? 0) + margin * 2
+        let height = rows.reduce(margin) { $0 + $1.2 + 4 + $1.0.size.height + gap } + margin - gap
+        let scale: CGFloat = 2
+        let ctx = try XCTUnwrap(CGContext(data: nil, width: Int(width * scale), height: Int(height * scale),
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+        defer { NSGraphicsContext.current = nil }
+        var y = height - margin
+        for (image, line, labelH) in rows {
+            y -= labelH
+            ctx.setFillColor(CGColor(gray: 0, alpha: 1))
+            ctx.textPosition = CGPoint(x: margin, y: y)
+            CTLineDraw(line, ctx)
+            y -= 4 + image.size.height
+            image.draw(in: CGRect(x: margin, y: y, width: image.size.width, height: image.size.height),
+                       from: .zero, operation: .sourceOver, fraction: 1)
+            y -= gap
+        }
+        let img = try XCTUnwrap(ctx.makeImage())
+        let url = URL(fileURLWithPath: dir).appendingPathComponent("giant-compare.png")
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, img, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        print("Wrote \(url.path)")
+    }
+
+    /// Side-by-side grid: fonts as columns, one glyph per row, so identical
+    /// characters sit directly next to each other — where the four designs
+    /// visibly diverge. Published to the gallery as 08-font-glyphs.png.
+    func testGenerateSideBySide() throws {
+        guard let dir = ProcessInfo.processInfo.environment["VINCULUM_GALLERY_DIR"]
+            ?? ProcessInfo.processInfo.environment["VINCULUM_COMPARE_DIR"] else {
+            throw XCTSkip("Set VINCULUM_GALLERY_DIR to generate the side-by-side glyph grid.")
+        }
+        let glyphRows = [#"a"#, #"g"#, #"x"#, #"\pi"#, #"\xi"#, #"\mathcal{L}"#,
+                         #"\oint"#, #"\sqrt{x}"#, #"\sum"#]
+        let headers = ["Latin Modern", "Termes", "Pagella", "STIX Two"]
+        let headerFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 16, nil)
+
+        func line(_ t: String) -> (CTLine, CGFloat, CGFloat) {
+            let attr = NSAttributedString(string: t, attributes: [
+                kCTFontAttributeName as NSAttributedString.Key: headerFont])
+            let l = CTLineCreateWithAttributedString(attr)
+            var a: CGFloat = 0, d: CGFloat = 0, lead: CGFloat = 0
+            let w = CGFloat(CTLineGetTypographicBounds(l, &a, &d, &lead))
+            return (l, w, a + d)
+        }
+
+        // Render every cell.
+        var cells: [[NSImage]] = []   // [row][col]
+        for glyph in glyphRows {
+            var row: [NSImage] = []
+            for (font, _, _) in Self.fonts {
+                let r = try XCTUnwrap(MathImageRenderer.rendered(
+                    latex: glyph, display: true, mathTheme: .light, baseSize: 44, font: font))
+                row.append(r.image)
+            }
+            cells.append(row)
+        }
+        let headerLines = headers.map(line)
+
+        let margin: CGFloat = 24, colGap: CGFloat = 28, rowGap: CGFloat = 10
+        var colW = [CGFloat](repeating: 0, count: 4)
+        for c in 0..<4 {
+            colW[c] = max(headerLines[c].1, cells.map { $0[c].size.width }.max() ?? 0)
+        }
+        let rowH = cells.map { row in row.map(\.size.height).max() ?? 0 }
+        let headerH = headerLines.map(\.2).max() ?? 0
+        let width = margin * 2 + colW.reduce(0, +) + colGap * 3
+        let height = margin * 2 + headerH + 12 + rowH.reduce(0, +) + rowGap * CGFloat(rowH.count - 1)
+
+        let scale: CGFloat = 2
+        let ctx = try XCTUnwrap(CGContext(data: nil, width: Int(width * scale), height: Int(height * scale),
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+        defer { NSGraphicsContext.current = nil }
+
+        // Column headers (centered over each column).
+        var colX = [CGFloat](); var x = margin
+        for c in 0..<4 { colX.append(x); x += colW[c] + colGap }
+        var y = height - margin - headerH
+        ctx.setFillColor(CGColor(gray: 0, alpha: 1))
+        for c in 0..<4 {
+            ctx.textPosition = CGPoint(x: colX[c] + (colW[c] - headerLines[c].1) / 2, y: y)
+            CTLineDraw(headerLines[c].0, ctx)
+        }
+        y -= 12
+        // Cells: each glyph row, horizontally centered per column.
+        for (r, row) in cells.enumerated() {
+            y -= rowH[r]
+            for c in 0..<4 {
+                let img = row[c]
+                let cx = colX[c] + (colW[c] - img.size.width) / 2
+                let cy = y + (rowH[r] - img.size.height) / 2
+                img.draw(in: CGRect(x: cx, y: cy, width: img.size.width, height: img.size.height),
+                         from: .zero, operation: .sourceOver, fraction: 1)
+            }
+            y -= rowGap
+        }
+
+        let img = try XCTUnwrap(ctx.makeImage())
+        let url = URL(fileURLWithPath: dir).appendingPathComponent("08-font-glyphs.png")
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, img, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        print("Wrote \(url.path)")
+    }
+
     func testGenerateFontShowcase() throws {
         guard let dir = ProcessInfo.processInfo.environment["VINCULUM_GALLERY_DIR"] else {
             throw XCTSkip("Set VINCULUM_GALLERY_DIR to generate the font showcase poster.")

@@ -245,6 +245,7 @@ The gallery posters cover:
 | `05-macros.png` | Document-scoped `\newcommand` in action |
 | `06-symbols.png` | Standalone delimiters and the extended symbol set |
 | `07-fonts.png` | The same equations in all four bundled math fonts |
+| `08-font-glyphs.png` | Glyph-by-glyph font comparison (fonts as columns) |
 
 **The complete command charts.** A visual companion to
 [docs/COMMANDS.md](docs/COMMANDS.md): *every* command rendered — a font-specimen

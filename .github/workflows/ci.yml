@@ -76,6 +76,9 @@ jobs:
           # Font showcase: the same equations in every bundled math font.
           VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
             swift test --filter FontShowcaseGenerator/testGenerateFontShowcase || true
+          # Glyph-by-glyph font comparison grid.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter FontShowcaseGenerator/testGenerateSideBySide || true
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery
