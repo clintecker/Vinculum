@@ -23,10 +23,11 @@ layout stage builds and unit-tests on Linux with no display.
 
 `VinculumLayout` never imports CoreGraphics or CoreText. It uses only
 Foundation geometry types (`CGPoint`, `CGRect`, `CGFloat`), which exist on
-Linux, so it is fully portable and headless. Note that even `MathConstants`
-(the font's OpenType MATH-table numbers) lives in the layout product as pure
-data — the layout stage needs it, and it must build on Linux — while the font
-*object* that those numbers describe lives in the renderer.
+Linux, so it is fully portable and headless. Note that even the font's
+OpenType MATH-table numbers live in the layout product as pure data
+(`MathFontConstants`, parsed by the platform-free `MathTableParser`) — the
+layout stage needs them, and it must build on Linux — while the font
+*object* those numbers come from lives in the renderer.
 
 ---
 
@@ -167,40 +168,39 @@ public typealias MathDelimiterProvider =
 ```
 
 Given a base fence glyph and a minimum height, the provider returns the
-smallest discrete size variant that reaches it, or `nil`. It is passed to
-`MathLayoutEngine(measure:baseSize:delimiters:)` and defaults to `nil`, so
-headless / Linux layout is completely unaffected — it just point-scales fences,
-as it always did.
+smallest discrete size variant that reaches it (with a shortfall heuristic:
+a cut within 3% of the target beats a ≥1.3× jump), or `nil`. Two sibling
+seams complete the stretch chain: `MathDelimiterAssemblyProvider` (an
+assembled column of font parts — end caps + repeatable extenders — for
+heights beyond the largest cut) and `MathAccentVariantProvider` (horizontal
+width variants for `\widehat`-family accents). All default to `nil`, so
+headless / Linux layout is completely unaffected — it point-scales, as it
+always did.
 
-**Where it's consulted.** `stretchedFence` (in `Layout+Delimiters.swift`) only
-reaches for a variant when a fence is *clearly* tall (`target >= size * 2.0`)
-and a provider is present; short stretches scale with negligible distortion, so
-they skip the variant path. When a variant is returned it emits a
-`.glyph(id:)` element; otherwise it falls back to scaling the base glyph. The
-`\big…\Bigg` path (`bigDelimiterBox`) still always scales — those are
-explicitly-sized lone glyphs.
+**Where they're consulted.** `stretchedFence` (in `Layout+Delimiters.swift`)
+tries variants, then assembly, then scaling, for every covered delimiter;
+`radicalBox` does the same for the surd (falling back to the hand-stroked
+polyline only with no provider); display-style large operators swap in the
+font's bigger cut at `DisplayOperatorMinHeight`; stretchy accents take the
+widest horizontal cut not exceeding the accentee. The `\big…\Bigg` path
+(`bigDelimiterBox`) still always scales — those are explicitly-sized lone
+glyphs.
 
-**How the provider is built (VinculumRender).** `MathVariantTable` parses the
-bundled font's OpenType **MATH** table directly (`CGFont.table(for: 'MATH')`),
-walking the `MathVariants` subtable's vertical coverage + per-glyph
-`MathGlyphConstruction` variant lists into a `baseGlyphID → [(variantGlyphID,
-advance)]` map. The parse is fully bounds-checked (`u16` returns `nil` past the
-buffer); any malformation yields an empty map and layout silently falls back to
-scaling. The result is cached behind an `NSLock`.
-`CoreTextDelimiterProvider.make()` wraps `MathVariantTable.shape(for:…)` as the
-injected closure, and `MathImageRenderer` passes it into every engine it builds.
+**How the providers are built (VinculumRender).** Every font's raw MATH
+table is parsed ONCE, eagerly, when its `MathFont` loads — by
+`MathTableParser` in VinculumLayout, which is platform-free and
+fixture-tested on Linux against committed table bytes. The parse is fully
+bounds-checked; any malformed sub-table degrades to "no data" and layout
+falls back to scaling. `CoreTextDelimiterProvider.make(font:)` /
+`.makeAssembly(font:)` / `.makeAccentVariants(font:)` wrap lookups into the
+font's parsed `MathVariantsData` as the injected closures.
 
-**Stage 1, deliberately gated.** Two limits are load-bearing and *intentional*:
-
-- **Size variants only, no extensible assembly.** The table reads the discrete
-  taller cuts; it does not yet stack repeatable pieces to build an
-  arbitrarily-tall fence. Very tall fences top out at the largest cut (then
-  scaling).
-- **Verified glyph allowlist.** `MathVariantTable.verified` is `( ) [ ] { }`
-  (plus the tall-fence use of those). Other delimiters (`⟨ ⟩ ‖ ⌈ ⌋`) have a
-  MATH-`MathVariants` mapping the current parser mis-reads, so they are
-  excluded and fall through to scaling until the parse is hardened. This is why
-  the seam "never regresses": anything not proven correct takes the old path.
+**Build engines through the factory.** On Apple platforms,
+`MathLayoutEngine.make(font:baseSize:)` is the one correct construction: it
+wires the measurer, the font's constants, and all provider seams in one
+call. The bare `MathLayoutEngine(measure:baseSize:)` initializer exists for
+headless hosts injecting their own seams — used directly, it deliberately
+carries no font capabilities.
 
 ---
 
@@ -211,14 +211,15 @@ constants **from the font**, never from hand-tuned literals. Vinculum follows
 it, and splits its numbers into two files accordingly. Both live in
 `VinculumLayout` (the layout stage needs them and must build on Linux).
 
-- **`MathConstants`** (`MathConstants.swift`) — values with an OpenType
-  MATH-table equivalent, as em fractions of Latin Modern Math's real numbers:
-  `axisHeight` (0.250), `fractionRuleThickness` (0.040), `superscriptShiftUp`
-  (0.363) and its cramped counterpart `superscriptShiftUpCramped` (0.289),
-  `subscriptShiftDown` (0.247), `radicalVerticalGap` (0.148),
-  `scriptPercentScaleDown` (0.70), `defaultRuleThickness` (0.040, TeX's ξ8 for
-  bars with no dedicated OpenType constant), and so on. These are what TeX
-  would read from the font.
+- **`MathFontConstants`** (`MathTableParser.swift`) — the full 56-value
+  `MathConstants` sub-table of the OpenType MATH standard, **parsed from the
+  live font at load** and carried by the engine as instance data
+  (`engine.constants`). Headless hosts get the `.latinModern` preset — a
+  fontTools-verified transcription of Latin Modern Math's values, test-pinned
+  against committed raw table bytes — so Linux layout still uses TeX-true
+  numbers. Alongside it, `MathGlyphInfo` carries the per-glyph data (italic
+  corrections, accent attachment points, cut-in kern staircases) and
+  `MathVariantsData` the variant ladders + glyph assemblies.
 - **`MathLayout`** and **`MathSpacing`** (both in `MathLayoutMetrics.swift`) —
   proportions that have *no* font parameter because TeX delegates them to
   *glyphs* (the radical hook, the curly brace, the arrowhead) or to the *style
@@ -228,10 +229,10 @@ it, and splits its numbers into two files accordingly. Both live in
   literals. Inter-atom spacing is `MathSpacing`, in `mu` (1/18 em): thin 3mu,
   medium 4mu, thick 5mu.
 
-The guiding invariant: **zero unexplained numbers in the builders.** If a value
-has a font equivalent it is read from `MathConstants`; otherwise it is a named
-`MathLayout` / `MathSpacing` proportion with a comment saying why it has no
-font source.
+The guiding invariant: **zero unexplained numbers in the builders.** If a
+value has a font equivalent it is read from the font (`engine.constants`,
+per-glyph typography, variants); otherwise it is a named `MathLayout` /
+`MathSpacing` proportion with a comment saying why it has no font source.
 
 ---
 
@@ -377,7 +378,7 @@ also exhaustive and must be extended — but new element kinds are rare.)
   the four switches above).
 - **Layout builder** — put the geometry in the matching `Layout+*.swift`
   extension. Build a `MathBox` from sub-boxes and primitives; use
-  `MathConstants` for any value with a font source, otherwise a named
+  `engine.constants` for any value with a font source, otherwise a named
   `MathLayout` / `MathSpacing` proportion.
 - **Tests** — a headless geometry assertion in `MathLayoutTests` (mock
   measurer) and, if it renders, a golden fixture the render suite diffs.

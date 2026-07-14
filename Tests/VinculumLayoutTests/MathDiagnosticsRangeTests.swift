@@ -1,8 +1,7 @@
 import XCTest
 @testable import VinculumLayout
 
-/// Phase 8c: parse diagnostics with SOURCE RANGES — what neither iosMath
-/// (message-only NSErrors) nor any WebView library surfaces. An editor host
+/// parse diagnostics with SOURCE RANGES — an editor host
 /// can underline the exact offending token.
 final class MathDiagnosticsRangeTests: XCTestCase {
 

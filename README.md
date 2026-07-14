@@ -32,43 +32,28 @@ from [Quoin](https://github.com/clintecker/quoin), sibling to
 
 ## Why native?
 
-If you render math in a native app today, you are usually embedding
-**KaTeX or MathJax in a `WKWebView`**, or reaching for **[iosMath]**. Vinculum
-is a third option with different trade-offs.
+Rendering math in a native app has usually meant embedding a JavaScript
+math renderer in a `WKWebView`. Vinculum typesets natively instead:
 
-**vs. KaTeX / MathJax in a WebView**
-
-- No WebView. No JavaScript runtime, no HTML/CSS reflow, no bridging layer,
-  no web-content process to spin up per equation.
-- Output is a **`NSTextAttachment`** that flows inline in an `NSTextView` /
-  `UITextView` / `TextKit` layout, sharing the text system's baseline,
-  selection, and line-breaking — a WebView snapshot never does.
-- Deterministic, headless-testable geometry (see the golden-image suite),
-  instead of pixels that depend on a web engine version.
+- **No WebView.** No JavaScript runtime, no HTML/CSS reflow, no bridging
+  layer, no web-content process to spin up per equation.
+- **Real text integration.** Output is an `NSTextAttachment` that flows
+  inline in an `NSTextView` / `UITextView` / TextKit layout, sharing the
+  text system's baseline, selection, and line-breaking — a WebView
+  snapshot never does.
+- **The font is the authority.** Everything TeX reads from a font,
+  Vinculum reads from the font: the full `MathConstants` sub-table,
+  per-glyph italic corrections and accent attachment points, cut-in
+  kerning, size-variant ladders, and glyph assemblies.
+- **Deterministic, headless-testable geometry** (see the golden-image
+  suite and the Linux-tested layout engine), instead of pixels that
+  depend on a web engine version.
+- **On-device and private.** Nothing leaves the machine.
 - Trade-off: Vinculum covers the **everyday LaTeX math** most documents
-  actually use, not every macro package KaTeX ships. If you need mhchem,
-  siunitx, `\href`, or arbitrary embedded HTML, a WebView still wins.
-
-**vs. iosMath**
-
-- Swift 6, strict concurrency, `Sendable` layout; macOS + iOS + visionOS +
-  tvOS from one package (iosMath is Objective-C, iOS/macOS).
-- A **device-independent scene IR** and an injected measurer seam, so the
-  entire layout stage builds and unit-tests on **Linux**, headless.
-- A `\newcommand`/`\def` macro processor and a document-scoped model.
-- Broader current *command* coverage: ~400 symbols, `array` rules, stateful
-  `\color`, MATH-table tall-delimiter variants, cramped-style scripts, and
-  more (below).
-- Honest trade-off: iosMath currently reads more per-glyph typography from
-  the font — italic correction, accent attachment points, glyph assembly
-  for very tall fences — and bundles eight math fonts. Closing (and
-  passing) that gap is the core of [docs/ROADMAP.md](docs/ROADMAP.md);
-  the rule-by-rule audit lives in [docs/ALGORITHM.md](docs/ALGORITHM.md).
-
-**vs. rendering to a static image on a server** — Vinculum runs on-device,
-offline, private. Nothing leaves the machine.
-
-[iosMath]: https://github.com/kostub/iosMath
+  actually use, not every macro package a web renderer ships. If you need
+  mhchem, siunitx, `\href`, or arbitrary embedded HTML, a WebView still
+  wins. Everything unsupported degrades to a named fallback — never a
+  broken half-render.
 
 ---
 
@@ -79,7 +64,7 @@ Swift Package Manager. Add the dependency:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.23.0"),
+    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.24.0"),
 ]
 ```
 
@@ -103,33 +88,34 @@ Then pick your product(s):
 
 ## What's new
 
-Since the early releases, Vinculum grew from a small curated subset into broad
-coverage of everyday math. Highlights:
+The 0.24 line is the **font-truth release**: everything the OpenType MATH
+table offers, Vinculum now reads and uses — for four bundled fonts or any
+math OTF you supply.
 
-- **TeX-true metrics, read from the font** — the full 56-value
-  `MathConstants` sub-table of the OpenType MATH table is parsed from the
-  bundled font at runtime (fontTools-verified, fixture-pinned on Linux CI),
-  along with per-glyph italic corrections, accent attachment points, and
-  cut-in kern data (`MathGlyphInfo`) that upcoming releases consume — the
-  door to multi-font support ([docs/ROADMAP.md](docs/ROADMAP.md)).
-- **Cramped style + the TeX fraction shift-model** — subscripts and radical
-  indices lower correctly in cramped positions; fractions shift by the font's
-  named parameters.
-- **MATH-table tall-delimiter variants** — tall `( ) [ ] { }` step through the
-  font's purpose-drawn size-variant glyphs (constant stroke weight) instead of
-  scaling a base glyph; the feature is gated and optional so it can never
-  regress. Other delimiters and short stretches scale continuously.
-- **`array` with rules** — column specs (`l c r`), `|` vertical rules, and
-  `\hline` / `\cline` for augmented matrices, bordered tables, and truth
-  tables.
-- **`\middle`, `\cfrac`, `\genfrac`** — `\left…\middle|…\right` growing
-  separators; true full-size continued fractions with `[l]`/`[r]` alignment;
-  the general 5-argument `\genfrac`.
-- **Stateful `\color`** — `\color{blue}` tints the remainder of its group, in
-  addition to the braced `\color{name}{body}` and `\textcolor` forms.
-- **~400 symbols** across Greek, operators, relations, arrows, delimiters,
-  and letterlike sets, each carrying its correct TeX atom class so inter-atom
-  spacing is real.
+- **All metrics from the font, at runtime** — the full 56-value
+  `MathConstants` sub-table (axis height, rule thicknesses, script scales,
+  every shift and clearance), fontTools-verified and fixture-pinned on
+  Linux CI.
+- **Per-glyph typography** — italic corrections split superscripts from
+  subscripts and tuck `\int`'s lower bound under its slant; accents sit
+  on each glyph's `topAccentAttachment`; **cut-in kerning** staircases
+  nestle scripts into the base glyph's corners (STIX Two ships kern data
+  for 233 glyphs).
+- **Glyph assembly** — arbitrarily tall fences and radicals are BUILT from
+  the font's end caps and extenders at constant stroke weight; nested
+  radicals step through purpose-drawn size variants exactly like TeX.
+- **The TeX style lattice** — display/text/script/scriptscript with
+  cramping, style-correct constant pairs, spacing suppression in scripts,
+  and the `\displaystyle` command family.
+- **Four bundled fonts** — Latin Modern, TeX Gyre Termes, TeX Gyre
+  Pagella, STIX Two — plus `MathFont(url:)` for your own (see
+  [docs/FONTS.md](docs/FONTS.md)).
+- **A real product surface** — `VinculumLabel` / SwiftUI `MathView`,
+  LaTeX round-tripping (`MathNode.toLaTeX()`), parse diagnostics with
+  source ranges, and **spoken math**: VoiceOver reads every equation
+  ("x equals the fraction negative b plus or minus…").
+- **Hardened** — the whole pipeline is fuzz-tested (grammar, mutation,
+  and depth-attack corpora) and never crashes on adversarial input.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full arc.
 
@@ -198,6 +184,35 @@ Vinculum ships no PDF convenience wrapper; you own the context.
 
 ---
 
+## Fonts
+
+One engine, four bundled OpenType math fonts — pick per render, or load
+any `.otf` that carries a MATH table. Every metric, kern, variant, and
+assembly comes from the selected font. **CI regenerates this specimen on
+every push** (deep dive: [docs/FONTS.md](docs/FONTS.md)):
+
+![The same equations in all four bundled fonts](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/07-fonts.png)
+
+| Font | Pair it with | Character |
+| --- | --- | --- |
+| `.latinModern` *(default)* | Computer Modern / LaTeX-look documents | The classic TeX voice |
+| `.termes` | Times, Georgia, serif body text | Narrow, upright, editorial |
+| `.pagella` | Palatino, Book Antiqua | Calligraphic warmth |
+| `.stixTwo` | Times-family scientific publishing | The STIX standard; richest kerning data |
+
+```swift
+label.font = .pagella                          // VinculumLabel
+MathView(#"e^{i\pi}+1=0"#).mathFont(.stixTwo)  // SwiftUI
+MathImageRenderer.attachmentString(latex: src, display: true,
+                                   mathTheme: .light, baseSize: 15,
+                                   font: .termes)
+
+// Bring your own (must carry an OpenType MATH table):
+if let custom = MathFont(url: fontURL) { label.font = custom }
+```
+
+---
+
 ## Gallery
 
 Vinculum renders the everyday math people actually write. **CI regenerates
@@ -229,6 +244,7 @@ The gallery posters cover:
 | `04-equations.png` | Real-world equations: quadratic, Euler, Schrödinger, Bayes, Maxwell, the zeta functional product |
 | `05-macros.png` | Document-scoped `\newcommand` in action |
 | `06-symbols.png` | Standalone delimiters and the extended symbol set |
+| `07-fonts.png` | The same equations in all four bundled math fonts |
 
 **The complete command charts.** A visual companion to
 [docs/COMMANDS.md](docs/COMMANDS.md): *every* command rendered — a font-specimen

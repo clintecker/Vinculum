@@ -1,6 +1,6 @@
 # Vinculum Coverage
 
-The honest, code-checked support matrix for **Vinculum v0.23.0**. Every claim
+The honest, code-checked support matrix for **Vinculum v0.24.0**. Every claim
 here is verified against `MathSymbolTable.swift`, `MathParser.swift`, the
 `Layout+*.swift` builders, and the golden fixtures in `Tests/fixtures/math-golden/`.
 

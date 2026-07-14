@@ -5,7 +5,7 @@ Vinculum is the native LaTeX math engine extracted from
 [MermaidKit](https://github.com/clintecker/MermaidKit): a small, published,
 zero-dependency Swift package that a host app consumes from GitHub.
 
-The current release is **0.23.0**. Roughly **~400 symbol commands** and over
+The current release is **0.24.0**. Roughly **~400 symbol commands** and over
 three dozen function-name operators parse and lay out natively — no
 JavaScript, no WebView, no third-party dependencies.
 
@@ -156,7 +156,7 @@ documented gap; do not paper over it.
 ## Co-development with Quoin
 
 Vinculum is published and consumed **from GitHub**, like MermaidKit — Quoin
-declares it as `.package(url: "…/Vinculum.git", from: "0.23.0")`. It is not
+declares it as `.package(url: "…/Vinculum.git", from: "0.24.0")`. It is not
 vendored. To co-develop against a host app, point that dependency at a local
 checkout (`.package(path: "../Vinculum")` or `swift package edit`, and don't
 commit that), make your change here, then **publish → tag → bump**: push to

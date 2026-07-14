@@ -84,6 +84,9 @@ public final class MathFont: @unchecked Sendable {
         guard let cgFont else { return nil }
         ctFontLock.lock(); defer { ctFontLock.unlock() }
         if let cached = ctFontCache[size] { return cached }
+        // Bounded: a host animating sizes would otherwise grow this without
+        // limit (script/display factors multiply the distinct sizes seen).
+        if ctFontCache.count >= 256 { ctFontCache.removeAll(keepingCapacity: true) }
         let font = CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
         ctFontCache[size] = font
         return font

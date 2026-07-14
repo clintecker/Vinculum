@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 4 geometry tests: accents positioned by the font's attachment
+/// geometry tests: accents positioned by the font's attachment
 /// points (TeX Rule 12, OpenType topAccentAttachment), the AccentBaseHeight
 /// floor, and single-character accentee script promotion.
 final class MathAccentTests: XCTestCase {

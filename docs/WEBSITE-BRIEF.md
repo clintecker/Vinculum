@@ -256,7 +256,7 @@ kind of deep-dive that gets posted to Hacker News / iOS Dev Weekly).
 ## Calls to action
 
 - **Primary everywhere:** copy the SwiftPM one-liner
-  (`.package(url: "…/Vinculum.git", from: "0.23.0")`) + "Get started".
+  (`.package(url: "…/Vinculum.git", from: "0.24.0")`) + "Get started".
 - **Playground:** "Try your own equation."
 - **Gallery:** "Copy this LaTeX."
 - **Under the Hood / Compare:** "Read the architecture" → docs.

@@ -1,7 +1,7 @@
 import XCTest
 @testable import VinculumLayout
 
-/// Phase 9a: spoken-math descriptions — the VoiceOver text no native math
+/// spoken-math descriptions — the VoiceOver text no native math
 /// library generates. Table-driven: LaTeX → expected utterance.
 final class MathSpeechTests: XCTestCase {
 

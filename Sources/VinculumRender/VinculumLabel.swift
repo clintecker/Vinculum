@@ -27,16 +27,16 @@ public typealias PlatformEdgeInsets = UIEdgeInsets
 public final class VinculumLabel: PlatformView {
 
     /// The LaTeX source to render.
-    public var latex: String = "" { didSet { refresh() } }
+    public var latex: String = "" { didSet { setNeedsRefresh() } }
     /// Display style (stacked limits, larger fraction parts). Default true —
     /// a standalone label is usually a display equation.
-    public var displayMode: Bool = true { didSet { refresh() } }
+    public var displayMode: Bool = true { didSet { setNeedsRefresh() } }
     /// The math font. Default Latin Modern.
-    public var font: MathFont = .latinModern { didSet { refresh() } }
+    public var font: MathFont = .latinModern { didSet { setNeedsRefresh() } }
     /// Ink + appearance.
-    public var mathTheme: MathTheme = .light { didSet { refresh() } }
+    public var mathTheme: MathTheme = .light { didSet { setNeedsRefresh() } }
     /// Point size of surrounding text. Default 17.
-    public var baseSize: CGFloat = 17 { didSet { refresh() } }
+    public var baseSize: CGFloat = 17 { didSet { setNeedsRefresh() } }
     /// Horizontal placement of the equation within the bounds.
     public var textAlignment: Alignment = .left { didSet { relayout() } }
     /// Padding between the rendered equation and the view's bounds.
@@ -46,10 +46,12 @@ public final class VinculumLabel: PlatformView {
     /// When true, unsupported LaTeX shows its source in red instead of
     /// rendering nothing. Off by default: a document should degrade to the
     /// host's own fallback, never to a half-render.
-    public var displayErrorInline: Bool = false { didSet { refresh() } }
+    public var displayErrorInline: Bool = false { didSet { setNeedsRefresh() } }
 
-    /// Whether the current `latex` rendered natively.
-    public private(set) var isRendered: Bool = false
+    /// Whether the current `latex` rendered natively. Reading this flushes
+    /// any pending (coalesced) refresh, so it is always current.
+    public var isRendered: Bool { refreshIfNeeded(); return renderedFlag }
+    private var renderedFlag = false
 
     public enum Alignment { case left, center, right }
 
@@ -73,12 +75,28 @@ public final class VinculumLabel: PlatformView {
     }
 
     private var imageSize: CGSize = .zero
+    private var needsRefresh = false
+
+    /// Coalesces configuration: setting latex + font + theme + size in
+    /// sequence renders ONCE on the next runloop turn, not four times
+    /// (each into the shared bitmap cache).
+    private func setNeedsRefresh() {
+        guard !needsRefresh else { return }
+        needsRefresh = true
+        DispatchQueue.main.async { [weak self] in self?.refreshIfNeeded() }
+    }
+
+    private func refreshIfNeeded() {
+        guard needsRefresh else { return }
+        needsRefresh = false
+        refresh()
+    }
 
     private func refresh() {
         let result = MathImageRenderer.rendered(
             latex: latex, display: displayMode, mathTheme: mathTheme,
             baseSize: baseSize, font: font)
-        isRendered = result != nil
+        renderedFlag = result != nil
         imageView.setImage(result?.image)
         imageSize = result?.image.size ?? .zero
         // VoiceOver reads the equation itself.
@@ -92,7 +110,7 @@ public final class VinculumLabel: PlatformView {
         accessibilityTraits = .staticText
         accessibilityLabel = speech
         #endif
-        errorLabel.isHidden = isRendered || !displayErrorInline || latex.isEmpty
+        errorLabel.isHidden = renderedFlag || !displayErrorInline || latex.isEmpty
         if !errorLabel.isHidden { errorLabel.setErrorText(latex, size: baseSize) }
         relayout()
         invalidateIntrinsicContentSize()
@@ -103,7 +121,7 @@ public final class VinculumLabel: PlatformView {
         let available = CGRect(x: insets.left, y: insets.top,
                                width: max(0, bounds.width - insets.left - insets.right),
                                height: max(0, bounds.height - insets.top - insets.bottom))
-        let size = isRendered ? imageSize : errorLabel.naturalSize()
+        let size = renderedFlag ? imageSize : errorLabel.naturalSize()
         let x: CGFloat
         switch textAlignment {
         case .left: x = available.minX
@@ -117,17 +135,18 @@ public final class VinculumLabel: PlatformView {
     }
 
     public override var intrinsicContentSize: CGSize {
-        let size = isRendered ? imageSize
+        refreshIfNeeded()
+        let size = renderedFlag ? imageSize
             : (displayErrorInline && !latex.isEmpty ? errorLabel.naturalSize() : .zero)
         return CGSize(width: size.width + contentInsets.left + contentInsets.right,
                       height: size.height + contentInsets.top + contentInsets.bottom)
     }
 
     #if canImport(AppKit)
-    public override func layout() { super.layout(); relayout() }
+    public override func layout() { super.layout(); refreshIfNeeded(); relayout() }
     public override var isFlipped: Bool { true }
     #else
-    public override func layoutSubviews() { super.layoutSubviews(); relayout() }
+    public override func layoutSubviews() { super.layoutSubviews(); refreshIfNeeded(); relayout() }
     #endif
 }
 

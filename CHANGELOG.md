@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+Review backlog completed + the font showcase.
+
+- **`MathNode.children`** — the canonical child traversal; the three
+  hand-rolled diagnostics walks collapse onto it (−115 lines; a new node
+  case now touches one accessor plus the semantic visitors).
+- **Fixed: `\displaystyle` inside a text fraction rendered larger than
+  the surrounding text** — forced styles now scale from a propagated
+  size anchor that part scales move with them.
+- **Pre-1.0 API cleanup** — deprecated `MathConstants` enum deleted;
+  `fractionNum/Denom…` constants renamed to the full OpenType spec
+  spelling; `italicsCorrection` spelling unified; dead tuning constants
+  removed.
+- **Font showcase** — new CI-published `07-fonts.png` gallery poster
+  (the same equations in all four bundled fonts, including the italic
+  alphabets and script faces where they differ most), a README Fonts
+  section, and a comprehensive [docs/FONTS.md](docs/FONTS.md) (what each
+  font is for, per-font metric differences, custom-font requirements,
+  exactly what Vinculum reads from a MATH table, licensing).
+- **Docs refresh** — ARCHITECTURE.md rewritten to the current design
+  (font-parsed constants, the full provider stretch chain, the engine
+  factory); version references brought current; implementation-phase
+  bookkeeping and competitor comparisons removed from reference docs
+  (they remain in the roadmap/plan, where they're the subject).
+- Hardening: `VinculumLabel` coalesces configuration into one render
+  (with synchronous flush on read); subscript positions clamped against
+  extreme kerns; script-descent ratio guarded against malformed fonts;
+  the per-font CTFont cache is bounded; shared test scaffolding replaces
+  13 copies of mocks/fixture loaders.
+
 Expert-review fixes (six-lens panel: decomposition, correctness,
 concurrency, cleanliness, DRY, dead code — findings tracked from the
 0.24.0 review).

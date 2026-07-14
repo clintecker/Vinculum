@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 8: `MathNode.toLaTeX()` round-trip. The contract is RENDER
+/// `MathNode.toLaTeX()` round-trip. The contract is RENDER
 /// equivalence: `parse(toLaTeX(parse(x)))` lays out to the same scene as
 /// `parse(x)` under the deterministic mock measurer — string identity is
 /// not required (Unicode symbols serialize as themselves).

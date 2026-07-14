@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 6: display-style large operators use the font's bigger variant
+/// display-style large operators use the font's bigger variant
 /// (DisplayOperatorMinHeight) centered on the axis, and `\left…\right`
 /// fences size by TeX's `\delimiterfactor`/`\delimitershortfall` formula.
 final class MathOperatorSizingTests: XCTestCase {

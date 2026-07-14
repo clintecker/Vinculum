@@ -8,10 +8,7 @@ README honest: each rule is marked **Implemented**, **Partial**,
 
 It is a living document. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 phases land against it — a phase isn't done until its rules here flip
-status. Audited at v0.23.0 (Phase 0 baseline).
-
-Credit where due: the format follows iosMath's `ALGORITHM.md`, the best
-artifact in that codebase.
+status. Audited at v0.24.0 (a later release baseline).
 
 ---
 
@@ -32,7 +29,7 @@ Vinculum has no separate "finalize" pass: binary→ordinary reclassification
 recursive `box(for:)` descent. Where TeX emits a horizontal list, Vinculum
 emits a `MathBox` of positioned `MathElement`s.
 
-### 1.2 Styles — **Implemented (Phase 2)**
+### 1.2 Styles — **Implemented**
 
 `MathStyle` (display/text/script/scriptScript, `MathStyle.swift`) threads
 through every builder, with the engine's separate `cramped` flag giving the
@@ -47,7 +44,7 @@ size; `\genfrac`'s style argument honors all four values.
 Cramping propagates as before: radicands, denominators, and subscripts set
 `cramped`, selecting `superscriptShiftUpCramped`.
 
-### 1.3 Font parameters — **Implemented (Phase 1)**
+### 1.3 Font parameters — **Implemented**
 
 TeX reads σ/ξ parameters from the font; so does Vinculum now.
 `MathTableParser` (`VinculumLayout`, platform-free, fixture-tested on raw
@@ -59,14 +56,14 @@ kern staircases) into `MathGlyphInfo`. The engine carries a
 (`MathFont.constants`), or the `.latinModern` preset headless. The preset
 is pinned three ways: live font ↔ fixture bytes ↔ fontTools ground truth.
 
-The Phase 1 oracle caught **three mistranscriptions** in the old hardcoded
+The a later release oracle caught **three mistranscriptions** in the old hardcoded
 constants: `spaceAfterScript` 0.041 → font 0.056; `radicalVerticalGap`
 0.148 was the *display* value (text is 0.050, now style-selected in
 `radicalBox`); `stackGapMin` 0.150 → font 0.120. The old `MathConstants`
 enum is deprecated. Note: `MathGlyphInfo` is *parsed* but not yet
 *consumed* — that's Phases 3–4. Latin Modern Math ships no MathKernInfo
 (fontTools-verified); kern staircases are exercised with synthetic bytes
-until STIX Two arrives in Phase 7.
+until STIX Two arrives in a later release.
 
 Vinculum's own drawing proportions (radical hook, brace arcs, arrowheads,
 fraction part-scales) live separately in `MathLayoutMetrics.swift` and are
@@ -82,7 +79,7 @@ of TeX's 1.0/0.7, documented there as a legibility choice.
 mu = em/18 (`MathLayoutMetrics.swift`). `\nonscript` is ABSENT (moot until
 the style lattice exists). Thin/med/thick are fixed 3/4/5 mu.
 
-### Rule 3 — style items — **Implemented (Phase 2)**
+### Rule 3 — style items — **Implemented**
 All four style commands, stateful to the group; `.mathStyle(base:style:)`
 forces style + implied size (`\dfrac`/`\tfrac`, `\genfrac` styles 0–3).
 
@@ -99,7 +96,7 @@ binary before Rel/Close/Punct likewise (TeXbook p.170 chart).
 Rule + gap from `overbarVerticalGap`/`underbarVerticalGap` and rule
 thickness constants (`Layout+Decorations.swift`); inner cramped.
 
-### Rule 11 — radicals — **Implemented (Phase 5b)**
+### Rule 11 — radicals — **Implemented**
 The surd is the font's √ glyph: size variants first (with the shortfall
 heuristic — a variant within 3% beats a ≥1.3× jump, so the sign hugs the
 radicand), then glyph assembly for very tall radicands, excess split into
@@ -109,7 +106,7 @@ tucks the sign back over the degree) and the 60%
 `RadicalDegreeBottomRaisePercent`. The hand-stroked polyline survives only
 as the no-provider fallback (headless/Linux, mock-measurer tests).
 
-### Rule 12 — accents — **Implemented (Phase 4, minus width variants)**
+### Rule 12 — accents — **Implemented (a later release, minus width variants)**
 Accent x comes from the font's `topAccentAttachment` points (base minus
 accent, via the typography provider; advance-center fallback) — strictly
 better than TeX's `\skewchar`. Vertically the accent hugs the base's ink
@@ -118,23 +115,23 @@ but never sinks below the font's `AccentBaseHeight` seat
 promote onto the character (`\hat{f}^2` puts the ² on the f). Stretchy
 accents (`\widehat` family) walk the font's HORIZONTAL variant ladder —
 carried by the combining-mark glyphs — taking the widest drawn cut not
-exceeding the accentee (Phase 5c); scaling is the headless fallback.
+exceeding the accentee; scaling is the headless fallback.
 
-### Rule 13 — large operators — **Implemented (Phases 3 + 6)**
+### Rule 13 — large operators — **Implemented**
 In display style, large operators (∑, ∏, ∫, …) swap in the font's
 display-size **variant glyph** at `DisplayOperatorMinHeight`, centered on
 the math axis (`½(h−d) − a`); the 1.35× scale survives only as the
 headless fallback. Limits attach at the Rule 13a clearances —
 `max(UpperLimitGapMin, UpperLimitBaselineRiseMin − d(sup))` and the lower
-mirror — and split ±δ/2 by the italic correction (Phase 3). Integrals are
+mirror — and split ±δ/2 by the italic correction. Integrals are
 `\nolimits` with the δ-tucked subscript; the `\lim` family stacks.
-Remaining: no `\displaylimits` tri-state (same as iosMath).
+Remaining: no `\displaylimits` tri-state.
 
 ### Rule 14 — Ord runs, ligatures, kerns — **Partial**
 Adjacent symbols share glyph runs via the measurer. Math ligatures and
-inter-glyph math kerns: ABSENT (also absent in iosMath; low priority).
+inter-glyph math kerns: ABSENT (low priority).
 
-### Rule 15 — fractions — **Implemented (Phase 2)**
+### Rule 15 — fractions — **Implemented**
 Rules 15b–d land font-true: with a rule, numerator/denominator shifts come
 from the `FractionNumerator/Denominator[DisplayStyle]Shift` pairs and
 clearance from `FractionNum/DenomGapMin` (display: 3ξ₈, text: ξ₈); without
@@ -146,7 +143,7 @@ Remaining deviation: part-scales 0.9/0.8 (deliberate, see §1.3);
 
 ### Rule 16 — retype to Ord — **Implemented** via each builder returning a classed box consumed by the spacing walk.
 
-### Rule 17 — nucleus conversion + italic correction — **Implemented (Phase 3)**
+### Rule 17 — nucleus conversion + italic correction — **Implemented**
 Per-glyph italic correction flows through the injected
 `MathGlyphTypographyProvider` (backed by the font's
 MathItalicsCorrectionInfo): the superscript shifts right by δ while the
@@ -155,9 +152,9 @@ subscript δ left under the overhang (∫'s δ is 0.332 em in LM Math); and
 stacked limits split ±δ/2 (Rule 13a). The `\scriptspace` analog
 (`SpaceAfterScript`, the correct 0.056 em) now trails the scripts instead
 of preceding them. Remaining gap: no unconditional italic-correction kern
-between adjacent unscripted symbols (same as iosMath).
+between adjacent unscripted symbols.
 
-### Rule 18 — scripts — **Implemented (Phase 3), exceeds iosMath**
+### Rule 18 — scripts — **Implemented, including cut-in kerning**
 The full 18a–f ladder: style shift constants for character bases and the
 σ₁₈/σ₁₉ baseline drops (`Superscript/SubscriptBaselineDrop`) for composite
 nuclei, the `SuperscriptBottomMin`/`SubscriptTopMax` clamps (18b–c), the
@@ -166,36 +163,35 @@ resolution (18d–e), the δ split (18f), and — beyond TeX and beyond every
 native library — **MathKernInfo cut-in kerning**: scripts sample the base
 glyph's corner staircase at their near edge and tuck in by the kern. LM
 Math ships no kern data (staircases exercised with synthetic bytes); STIX
-Two in Phase 7 lights this up for real. Ink-clearance floors are retained
+Two in a later release lights this up for real. Ink-clearance floors are retained
 so exponents clear tall bases' ink.
 
-### Rule 19 — `\left…\right` — **Implemented (Phase 5) / minor deviation**
+### Rule 19 — `\left…\right` — **Implemented / minor deviation**
 The full stretch chain: MATH size variants (any covered glyph — the old
 `()[]{}`-only gate is gone; `⟨ ⟩ ‖ ⌈ ⌋` now step through variants) →
 **glyph assembly** from font parts (`MathAssemblySolver`: fewest extender
 repeats, joints opened equally from max overlap, `MinConnectorOverlap`
 respected, degenerate extenders rejected at parse) → continuous scaling
 as the last resort. Assemblies render as stacked `.glyph` elements at
-constant stroke weight. Fences size by TeX's formula (Phase 6):
+constant stroke weight. Fences size by TeX's formula:
 ψ measured from the axis, height ≥ max(2ψ·901/1000, 2ψ − 5pt) — so a
 fence may sit up to ~10% short of an extreme body, exactly as TeX's
 `\delimiterfactor` intends.
 
-### Rule 20 — inter-atom spacing — **Implemented (Phase 2, minus Inner)**
+### Rule 20 — inter-atom spacing — **Implemented (a later release, minus Inner)**
 A hand-written switch over 7 atom classes (`spacing(between:and:style:)`,
 `MathLayoutEngine.swift`) with thin/med/thick = 3/4/5 mu, driven by real
 atom classes from `MathSymbolTable`. Medium and thick vanish in script
 styles (TeX's parenthesized chart entries); thin applies everywhere.
-ABSENT: the `Inner` class as a distinct row/column. Fixed muskips (same
-as iosMath).
+ABSENT: the `Inner` class as a distinct row/column. Fixed muskips.
 
 ### Rules 21/22 — line-break penalties, `\mathsurround` — **ABSENT**
 Math lays out atomically; breaking is the host's problem. Automatic
-breaking is a Phase 9 stretch goal.
+breaking is a a later release stretch goal.
 
 ---
 
-## 3. Constants ledger (post-Phase 1)
+## 3. Constants ledger (post-a later release)
 
 **Read from the font at runtime:** the full 56-value `MathConstants`
 sub-table (`MathFontConstants`), the `MathGlyphInfo` sub-table (italic
@@ -211,28 +207,28 @@ RadicalDegreeBottomRaisePercent, FractionNum/DenomGapMin pairs, the
 stretch-stack and skewed-fraction sets (Phases 2–6).
 
 **Still missing from the parser:** GlyphAssembly part records +
-MinConnectorOverlap (Phase 5).
+MinConnectorOverlap.
 
 **Vinculum's own numbers (deliberate, stay):** `MathLayoutMetrics.swift` —
-radical polyline proportions (until Phase 5), brace arcs, arrowheads,
+radical polyline proportions (until a later release), brace arcs, arrowheads,
 fraction part-scales and side padding, delimiter step factors.
 
 ---
 
 ## 4. Gap summary → plan mapping
 
-| Gap | Rule(s) | Phase |
+| Gap | Rule(s) | Status |
 | --- | --- | --- |
-| ~~Constants not read from font~~ **done** | §1.3 | 1 ✓ |
-| ~~No style lattice / script spacing rule~~ **done** | §1.2, 3, 20 | 2 ✓ |
-| ~~No italic correction~~ **done** | 17, 18f, 13 | 3 ✓ |
-| ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | 3 ✓ |
-| ~~Accent attachment points~~ **done** (width variants → 5) | 12 | 4 ✓ |
-| ~~No glyph assembly; scaled tall fences~~ **done** (fences) | 19 | 5 ✓ |
-| ~~Polyline radical~~ **done** (polyline = headless fallback only) | 11 | 5b ✓ |
-| ~~Operators scaled not variant-swapped; Rule 19 formula~~ **done** | 13, 19 | 6 ✓ |
-| `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | backlog |
-| Line breaking | 21 | 9 (stretch) |
+| ~~Constants not read from font~~ **done** | §1.3 | done |
+| ~~No style lattice / script spacing rule~~ **done** | §1.2, 3, 20 | done |
+| ~~No italic correction~~ **done** | 17, 18f, 13 | done |
+| ~~No cut-in kerning~~ **done** (mechanics; live data arrives with STIX Two) | 18 | done |
+| ~~Accent attachment points~~ **done** (width variants → 5) | 12 | done |
+| ~~No glyph assembly; scaled tall fences~~ **done** (fences) | 19 | done |
+| ~~Polyline radical~~ **done** (polyline = headless fallback only) | 11 | done |
+| ~~Operators scaled not variant-swapped; Rule 19 formula~~ **done** | 13, 19 | done |
+| `\mathchoice`, `\vcenter`, `\above`, `\nonscript` | 4, 8, 15, 2 | open |
+| Line breaking | 21 | open (stretch goal) |
 
 ---
 

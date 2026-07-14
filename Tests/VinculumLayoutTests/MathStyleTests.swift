@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 2 geometry tests: the style lattice's observable behavior, headless
+/// geometry tests: the style lattice's observable behavior, headless
 /// with the deterministic mock measurer (glyphs are `count × size` cells with
 /// 0.75/0.25 ascent/descent).
 final class MathStyleTests: XCTestCase {

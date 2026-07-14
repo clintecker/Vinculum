@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 5b: the radical drawn with the font's √ glyph (variants →
+/// the radical drawn with the font's √ glyph (variants →
 /// assembly → polyline fallback), the variant shortfall heuristic, and the
 /// font's degree-placement constants (TeX Rule 11).
 final class MathRadicalTests: XCTestCase {

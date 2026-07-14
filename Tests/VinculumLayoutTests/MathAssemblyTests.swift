@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 5 tests: MathVariants parsing (variants + GlyphAssembly) against
+/// MathVariants parsing (variants + GlyphAssembly) against
 /// the committed LM Math fixture (fontTools ground truth in comments), and
 /// the pure assembly solver.
 final class MathAssemblyTests: XCTestCase {
@@ -60,7 +60,7 @@ final class MathAssemblyTests: XCTestCase {
 
     func testDegenerateExtenderInvalidatesAssembly() {
         // An extender with fullAdvance ≤ 0 would loop forever; such an
-        // assembly is dropped at parse (iosMath's load-time validation).
+        // assembly is dropped at parse.
         let parts = [
             MathGlyphAssembly.Part(glyphID: 1, startConnector: 0, endConnector: 0.1, fullAdvance: 1, isExtender: false),
             MathGlyphAssembly.Part(glyphID: 2, startConnector: 0.1, endConnector: 0.1, fullAdvance: 0, isExtender: true),

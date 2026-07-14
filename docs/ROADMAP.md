@@ -1,5 +1,10 @@
 # Vinculum Roadmap
 
+> **Status (2026-07-14):** Themes A–G and the speech/wide-accent halves of
+> H shipped in the 0.24 line, with a six-lens expert review applied on top.
+> Open: `ssty` optical scripts and width-aware line breaking (stretch,
+> droppable per decision below).
+
 **Goal: the best native math typesetting library on any platform — not
 "iosMath, but Swift."** That means closing the typographic-fidelity gaps
 where iosMath is currently ahead, then shipping the things *no* native

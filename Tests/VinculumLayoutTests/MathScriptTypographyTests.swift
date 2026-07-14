@@ -2,7 +2,7 @@ import XCTest
 import Foundation
 @testable import VinculumLayout
 
-/// Phase 3 geometry tests: per-glyph script typography (TeX Rules 17/18 +
+/// geometry tests: per-glyph script typography (TeX Rules 17/18 +
 /// OpenType cut-in kerning), headless via the mock measurer and a mock
 /// `MathGlyphTypographyProvider`.
 final class MathScriptTypographyTests: XCTestCase {

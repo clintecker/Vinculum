@@ -1,6 +1,6 @@
 import Foundation
 
-// Phase 8: MathNode → LaTeX serialization. The contract is a RENDER
+// MathNode → LaTeX serialization. The contract is a RENDER
 // round-trip, not string identity: `parse(node.toLaTeX())` must lay out to
 // the same scene as the original node (Unicode symbols serialize as
 // themselves — the parser accepts them — so no command-name reverse map is

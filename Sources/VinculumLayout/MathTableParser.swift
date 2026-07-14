@@ -1,7 +1,6 @@
 import Foundation
 
-// Phase 1 of docs/IMPLEMENTATION_PLAN.md: the font's OpenType MATH table,
-// parsed from raw bytes into pure data. This file is platform-free — bytes
+// The font's OpenType MATH table, parsed from raw bytes into pure data. This file is platform-free — bytes
 // in (obtained by the renderer via CGFont, or from a fixture on Linux),
 // values out, everything bounds-checked, `nil` on malformation, never a trap.
 //

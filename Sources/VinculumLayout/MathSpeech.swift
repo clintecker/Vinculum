@@ -6,8 +6,8 @@ import Foundation
 /// ClearSpeak conventions: name the structure, read the content, close the
 /// structure when it's compound.
 ///
-/// No native math library offers this; Vinculum generates it from the same
-/// tree it typesets, so the speech always matches the pixels.
+/// Generated from the same tree that is typeset, so the speech always
+/// matches the pixels.
 public enum MathSpeech {
 
     /// A spoken description of the expression.

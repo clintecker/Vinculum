@@ -73,6 +73,9 @@ jobs:
           # Comprehensive command charts: every symbol by atom class + structural examples.
           VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
             swift test --filter CommandGalleryGenerator/testGenerateCommandGallery || true
+          # Font showcase: the same equations in every bundled math font.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter FontShowcaseGenerator/testGenerateFontShowcase || true
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery

@@ -1,6 +1,6 @@
 import Foundation
 
-// Phase 5: OpenType MATH glyph assembly — building arbitrarily-tall (or
+// OpenType MATH glyph assembly — building arbitrarily-tall (or
 // -wide) glyphs from font-drawn parts (end caps + repeatable extenders)
 // joined at connector overlaps, at constant stroke weight. The types and
 // solver are pure geometry: platform-free, fixture-testable on Linux.
@@ -100,7 +100,7 @@ public typealias MathDelimiterAssemblyProvider =
 
 /// Solves part placement for a target extent: fewest extender repeats whose
 /// reachable range covers the target, joints opened equally from maximal
-/// overlap to land on it exactly (the iosMath/HarfBuzz algorithm).
+/// overlap to land on it exactly (the HarfBuzz algorithm).
 public enum MathAssemblySolver {
 
     public struct Placement: Sendable, Equatable {

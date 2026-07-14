@@ -42,7 +42,8 @@ public enum MathStyle: Int, Comparable, Sendable, Hashable {
             return constants.scriptPercentScaleDown
         case .script:
             guard constants.scriptPercentScaleDown > 0 else { return 1 }
-            return constants.scriptScriptPercentScaleDown / constants.scriptPercentScaleDown
+            // Never GROW on descent, even with malformed font constants.
+            return min(1, constants.scriptScriptPercentScaleDown / constants.scriptPercentScaleDown)
         case .scriptScript:
             return 1
         }

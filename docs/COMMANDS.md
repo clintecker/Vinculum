@@ -76,7 +76,7 @@ and `\mathop{…}` force the stacking (limits) form.
 Delimiters accepted after `\left`/`\right`/`\middle`/`\big…` include `( ) [ ]`,
 `\{ \}` `\lbrace \rbrace`, `| \vert \lvert \rvert`, `\| \Vert \lVert \rVert`,
 `\langle \rangle`, `\lceil \rceil \lfloor \rfloor`, `\uparrow \downarrow
-\updownarrow \Uparrow \Downarrow`, and `\backslash`. As of 0.23.0 tall
+\updownarrow \Uparrow \Downarrow`, and `\backslash`. As of 0.24.0 tall
 `( ) [ ] { }` use the font's MATH-table size-variant glyphs (constant stroke
 weight); other delimiters scale the base glyph continuously.
 

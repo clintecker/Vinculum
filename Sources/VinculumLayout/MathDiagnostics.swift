@@ -1,8 +1,7 @@
 import Foundation
 
-/// A diagnosable parse problem, locatable in the source (Phase 8c) — the
-/// squiggle-underline substrate for live-editor hosts. iosMath surfaces
-/// message-only NSErrors; the range is Vinculum's differentiator.
+/// A diagnosable parse problem, locatable in the source — the
+/// squiggle-underline substrate for live-editor hosts.
 public struct MathParseIssue: Sendable, Equatable {
     /// The offending source snippet, e.g. `"\badcmd"`.
     public let source: String

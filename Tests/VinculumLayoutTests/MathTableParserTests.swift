@@ -1,7 +1,7 @@
 import XCTest
 @testable import VinculumLayout
 
-/// Phase 1 oracle tests: `MathTableParser` against the committed raw `MATH`
+/// oracle tests: `MathTableParser` against the committed raw `MATH`
 /// table of Latin Modern Math (`Tests/fixtures/math-table/`), cross-checked
 /// with fontTools 4.62.1 ground truth (values in the assertions below were
 /// dumped independently with fontTools.ttLib; LM Math has unitsPerEm 1000).

@@ -87,7 +87,9 @@ extension MathLayoutEngine {
             if case .symbol(_, .largeOperator, _) = base { return true }; return false
         }()
         let supX = baseBox.width + (isLargeOp ? 0 : delta) + supKern
-        let subX = baseBox.width - (isLargeOp ? delta : 0) + subKern
+        // Clamped: a huge δ or negative kern must not push the subscript
+        // left of the box origin (the row would misreport the overhang).
+        let subX = max(0, baseBox.width - (isLargeOp ? delta : 0) + subKern)
         var width = baseBox.width
         var ascent = baseBox.ascent
         var descent = baseBox.descent

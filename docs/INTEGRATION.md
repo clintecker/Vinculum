@@ -13,7 +13,7 @@ pipeline yourself (images, PDF, SwiftUI `Canvas`, Linux).
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.23.0"),
+    .package(url: "https://github.com/clintecker/Vinculum.git", from: "0.24.0"),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [
