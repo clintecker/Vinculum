@@ -13,12 +13,15 @@ import VinculumLayout
 @MainActor
 final class FontShowcaseGenerator: XCTestCase {
 
-    // Two lines per font: a real equation, then the glyphs where the faces
-    // diverge most (italic bowls, Greek, display operators, blackboard).
+    // 07 (overview): ONE representative equation per font, quick to scan.
+    // Letterform detail lives in the sub-specimens: 08 (glyph grid) and
+    // 09 (alphabets).
     private static let samples = [
         #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \qquad \sum_{n=1}^{\infty} \frac{1}{n^s} = \prod_p \frac{1}{1-p^{-s}}"#,
-        #"a\, g\, x\, y\, \alpha\, \gamma\, \delta\, \xi\, \partial \qquad \mathcal{L}\, \mathbb{R}\, \mathfrak{g} \qquad \int_0^\infty \oint_C"#,
     ]
+    // 09 (alphabet specimen): the glyphs where the faces diverge most.
+    private static let alphabetSample =
+        #"a\, g\, x\, y\, \alpha\, \gamma\, \delta\, \xi\, \partial \qquad \mathcal{L}\, \mathbb{R}\, \mathfrak{g} \qquad \int_0^\infty \oint_C"#
 
     private static let fonts: [(MathFont, String, String)] = [
         (.latinModern, "Latin Modern Math", "the Computer Modern classic — Vinculum's default"),
@@ -164,6 +167,69 @@ final class FontShowcaseGenerator: XCTestCase {
         print("Wrote \(url.path)")
     }
 
+    /// 09-font-alphabets.png — the letterform sub-specimen: italic
+    /// alphabet, Greek, script/blackboard/fraktur, and the integrals, one
+    /// labeled line per font.
+    func testGenerateAlphabetSpecimen() throws {
+        guard let dir = ProcessInfo.processInfo.environment["VINCULUM_GALLERY_DIR"] else {
+            throw XCTSkip("Set VINCULUM_GALLERY_DIR to generate the alphabet specimen.")
+        }
+        let nameFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 14, nil)
+        let titleFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 18, nil)
+        func line(_ t: String, _ f: CTFont) -> (CTLine, CGFloat, CGFloat) {
+            let attr = NSAttributedString(string: t, attributes: [
+                kCTFontAttributeName as NSAttributedString.Key: f])
+            let l = CTLineCreateWithAttributedString(attr)
+            var a: CGFloat = 0, d: CGFloat = 0, lead: CGFloat = 0
+            let w = CGFloat(CTLineGetTypographicBounds(l, &a, &d, &lead))
+            return (l, w, a + d)
+        }
+        var rows: [((CTLine, CGFloat, CGFloat), NSImage)] = []
+        for (font, name, _) in Self.fonts {
+            let r = try XCTUnwrap(MathImageRenderer.rendered(
+                latex: Self.alphabetSample, display: true, mathTheme: .light,
+                baseSize: 22, font: font))
+            rows.append((line(name, nameFont), r.image))
+        }
+        let title = line("Where the faces differ — alphabets, scripts, integrals", titleFont)
+        let margin: CGFloat = 24, rowGap: CGFloat = 16, labelGap: CGFloat = 5
+        var width = title.1 + margin * 2
+        var height = margin * 2 + title.2 + rowGap
+        for (label, image) in rows {
+            width = max(width, margin * 2 + max(image.size.width, label.1))
+            height += label.2 + labelGap + image.size.height + rowGap
+        }
+        let scale: CGFloat = 2
+        let ctx = try XCTUnwrap(CGContext(data: nil, width: Int(width * scale), height: Int(height * scale),
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+        defer { NSGraphicsContext.current = nil }
+        var y = height - margin - title.2
+        ctx.textPosition = CGPoint(x: margin, y: y)
+        CTLineDraw(title.0, ctx)
+        y -= rowGap
+        for (label, image) in rows {
+            y -= label.2
+            ctx.setFillColor(CGColor(gray: 0, alpha: 1))
+            ctx.textPosition = CGPoint(x: margin, y: y)
+            CTLineDraw(label.0, ctx)
+            y -= labelGap + image.size.height
+            image.draw(in: CGRect(x: margin, y: y, width: image.size.width, height: image.size.height),
+                       from: .zero, operation: .sourceOver, fraction: 1)
+            y -= rowGap
+        }
+        let img = try XCTUnwrap(ctx.makeImage())
+        let url = URL(fileURLWithPath: dir).appendingPathComponent("09-font-alphabets.png")
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, img, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        print("Wrote \(url.path)")
+    }
+
     func testGenerateFontShowcase() throws {
         guard let dir = ProcessInfo.processInfo.environment["VINCULUM_GALLERY_DIR"] else {
             throw XCTSkip("Set VINCULUM_GALLERY_DIR to generate the font showcase poster.")
@@ -205,7 +271,7 @@ final class FontShowcaseGenerator: XCTestCase {
                                 blurb: textLine("— " + blurb, blurbFont, NSColor(white: 0.42, alpha: 1)),
                                 images: images))
         }
-        let title = textLine("One engine, four fonts (plus any OTF with a MATH table)", titleFont, .black)
+        let title = textLine("One engine, five fonts (plus any OTF with a MATH table)", titleFont, .black)
 
         var width = title.1 + margin * 2
         var height = margin + title.2 + rowGap
@@ -236,8 +302,13 @@ final class FontShowcaseGenerator: XCTestCase {
         ctx.textPosition = CGPoint(x: margin, y: y)
         CTLineDraw(title.0, ctx)
         y -= rowGap
-        for row in rows {
+        for (i, row) in rows.enumerated() {
+            if i > 0 {   // hairline separator: rows scan as distinct sections
+                ctx.setFillColor(CGColor(gray: 0.88, alpha: 1))
+                ctx.fill(CGRect(x: margin, y: y + rowGap / 2, width: width - margin * 2, height: 0.5))
+            }
             y -= row.name.2
+            ctx.setFillColor(CGColor(gray: 0, alpha: 1))
             ctx.textPosition = CGPoint(x: margin, y: y)
             CTLineDraw(row.name.0, ctx)
             ctx.textPosition = CGPoint(x: margin + row.name.1 + 8, y: y)

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Readable diagrams and specimens.** The architecture diagram is now a
+  small high-level flow plus per-stage sub-diagrams (layout pipeline,
+  render products) with the detail in prose — it previously crammed
+  four lines into every node, and a literal `\newcommand` in a Mermaid
+  label rendered as a newline escape. The font showcase (`07-fonts.png`)
+  is now a scannable one-equation-per-font overview with separators and
+  the five-font title; letterform detail moved to a new
+  `09-font-alphabets.png` sub-specimen alongside the `08` glyph grid.
+
 ## 1.1.0 — 2026-07-15
 
 **The integration release**: whole documents in one call, server-side SVG,

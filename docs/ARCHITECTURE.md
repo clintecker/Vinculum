@@ -33,23 +33,56 @@ layout stage needs them, and it must build on Linux — while the font
 
 ## The pipeline
 
-```mermaid
-flowchart TD
-    L["LaTeX string"]
-    L --> M["MathMacros.collectDefinitions / .expand<br/>host-driven pre-pass · \\newcommand / \\def<br/>expanded, definitions stripped"]
-    M --> P["MathParser.parse<br/>tokenizer → recursive-descent → MathNode tree<br/>unknown → .unsupported · never fails"]
-    P --> E["MathLayoutEngine.layout(node, display:)<br/>measures via injected MathTextMeasurer ·<br/>delimiter size-variants via optional MathDelimiterProvider ·<br/>composes MathBoxes → positioned MathElements"]
-    E --> S["MathScene<br/>{ width, ascent, descent, elements }<br/>— the DVI analog"]
-    S --> D["MathSceneRenderer.draw(scene, theme, ctx, at:)<br/>glyph runs · glyph-ID variants · rules · strokes → CGContext"]
-    S --> A["MathImageRenderer.attachmentString(…)<br/>measure→layout→render · caches → NSTextAttachment"]
+The high-level shape — two products meeting at one IR:
 
-    subgraph layout["VinculumLayout · platform-free · builds &amp; tests on Linux"]
-        M; P; E; S
-    end
-    subgraph render["VinculumRender · Apple only"]
-        D; A
-    end
+```mermaid
+flowchart LR
+    L["LaTeX"] --> LAYOUT["VinculumLayout"]
+    LAYOUT --> S["MathScene"]
+    S --> RENDER["VinculumRender"]
+    S --> SVG["SVG (server-side)"]
 ```
+
+### The layout pipeline (VinculumLayout · platform-free · Linux-tested)
+
+```mermaid
+flowchart LR
+    L["LaTeX"] --> M["MathMacros"]
+    M --> P["MathParser"]
+    P --> E["MathLayoutEngine"]
+    E --> S["MathScene"]
+    MEAS["measurer + font seams"] -. injected .-> E
+```
+
+- **MathMacros** — the host-driven pre-pass: collects `\newcommand` /
+  `\def` definitions across the whole document (they are document-scoped),
+  expands each block, strips the definitions.
+- **MathParser** — tokenizer → recursive descent → `MathNode` tree.
+  Unknown input becomes `.unsupported` leaves; the parse never fails and
+  recursion is depth-bounded.
+- **MathLayoutEngine** — TeX Appendix G over the injected seams
+  (`MathFontServices`: measurer, font constants, delimiter variants,
+  glyph assembly, per-glyph typography, wide accents). Composes
+  `MathBox`es into positioned `MathElement`s.
+
+### The render products (from one scene)
+
+```mermaid
+flowchart LR
+    S["MathScene"] --> D["MathSceneRenderer<br/>CGContext"]
+    S --> A["MathImageRenderer<br/>cached image/attachment"]
+    S --> V["MathSVGRenderer<br/>self-contained SVG"]
+    A --> UI["MathText · VinculumLabel · MathView"]
+```
+
+- **MathSceneRenderer** — draws a scene into any y-up `CGContext`
+  (requires the font the scene was measured with).
+- **MathImageRenderer** — measure → layout → rasterize, cached by
+  content + theme + size + font; feeds the attachment API, the document
+  pipeline (`MathText`), and both views.
+- **MathSVGRenderer** — platform-free; headless scenes become
+  self-contained SVG (server-side rendering).
+
 
 The macro pre-pass is deliberately outside the parser: definitions are
 *document-scoped* (a `\newcommand` in one math block applies to every block),

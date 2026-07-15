@@ -273,6 +273,7 @@ The gallery posters cover:
 | `06-symbols.png` | Standalone delimiters and the extended symbol set |
 | `07-fonts.png` | The same equations in all four bundled math fonts |
 | `08-font-glyphs.png` | Glyph-by-glyph font comparison (fonts as columns) |
+| `09-font-alphabets.png` | Alphabet/script sub-specimen per font |
 
 **The complete command charts.** A visual companion to
 [docs/COMMANDS.md](docs/COMMANDS.md): *every* command rendered — a font-specimen
@@ -368,20 +369,15 @@ layout/render seam): **layout decides *what* to draw; a renderer decides
 
 ```mermaid
 flowchart LR
-    A["LaTeX string"] --> B["MathMacros<br/>(\\newcommand/\\def)"]
-    B --> C["MathParser<br/>→ MathNode tree"]
-    C --> D["MathLayoutEngine<br/>+ MathTextMeasurer seam"]
-    D --> E["MathScene<br/>(device-independent IR)"]
-    E --> F["MathSceneRenderer<br/>→ CGContext"]
-    E --> G["MathImageRenderer<br/>→ cached NSTextAttachment"]
-    subgraph VinculumLayout["VinculumLayout · platform-free · Linux"]
-        B; C; D; E
-    end
-    subgraph VinculumRender["VinculumRender · Apple only"]
-        F; G
-        M["CoreTextMeasurer"] -.implements.-> D
-    end
+    L["LaTeX"] --> LAYOUT["VinculumLayout<br/>parse + typeset"]
+    LAYOUT --> S["MathScene<br/>device-independent IR"]
+    S --> RENDER["VinculumRender<br/>CoreText + CGContext"]
+    S --> SVG["MathSVGRenderer<br/>server-side SVG"]
+    RENDER --> OUT["attachment · label · SwiftUI view"]
 ```
+
+Stage-by-stage sub-diagrams live in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - **VinculumLayout** (Foundation only, Linux-buildable) owns parsing, macro
   expansion, and *all* typesetting geometry. `MathLayoutEngine` measures

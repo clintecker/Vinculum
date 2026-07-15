@@ -35,6 +35,11 @@ sizes. For a genuinely different voice, `.firaMath` is the bundled sans-serif â€
 unmistakable next to the serif four â€” and Noto Sans Math loads via
 `MathFont(url:)`.
 
+The alphabet sub-specimen shows each face's letterforms, Greek, and
+script alphabets side by side (CI-regenerated):
+
+![Alphabets and scripts per font](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/09-font-alphabets.png)
+
 Glyph by glyph, the designs diverge clearly (CI-regenerated):
 
 ![The same glyphs in all four fonts, side by side](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/08-font-glyphs.png)
