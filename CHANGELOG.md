@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **`ssty` optical scripts — script glyphs are redrawn, not just shrunk.**
+  Superscripts, subscripts, and deeply nested indices now use the font's
+  purpose-drawn `ssty` variants (heavier strokes, more open forms) instead
+  of point-scaled copies of the base glyph, so a shrunk glyph keeps the
+  visual weight of the surrounding text rather than thinning out — the
+  optical-size compensation TeX does and iosMath does not. A new
+  bounds-checked `GsubScriptStyleParser` reads the `ssty` map from the GSUB
+  table (995 glyphs in Latin Modern Math; all five bundled fonts ship it),
+  exposed as the `MathScriptVariantProvider` seam and drawn by glyph ID.
+  Headless/Linux layout with no provider scales the base glyph exactly as
+  before, so geometry tests are unchanged; the render goldens were re-blessed
+  to the heavier script glyphs. This closes the last typography item on the
+  roadmap.
+
 - **Minimum toolchain is now Swift 6.2** (`swift-tools-version: 6.2`). CI
   builds on the `swift:6.2` Linux image and the newest Xcode on macOS.
 

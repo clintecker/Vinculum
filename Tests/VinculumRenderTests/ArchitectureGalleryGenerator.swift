@@ -69,6 +69,18 @@ final class ArchitectureGalleryGenerator: XCTestCase {
             ]),
         ])
 
+        // ssty optical scripts: the font's script/scriptscript redraws.
+        try PosterCompositor.poster(to: out.appendingPathComponent("arch-ssty.png"),
+                                    title: "ssty optical scripts — script glyphs redrawn, not just scaled", sections: [
+            ("Superscripts, subscripts, and deep nesting take heavier optical variants", [
+                #"x^{2} + a_{i}^{k} + \Gamma^{\lambda}_{\mu\nu}"#,
+                #"e^{i\pi} = -1 \qquad x^{y^{z^{w}}}"#,
+            ]),
+            ("So a shrunk glyph keeps the base text's weight instead of thinning out", [
+                #"\sum_{i=1}^{n} \frac{1}{i^{2}} = \frac{\pi^{2}}{6}"#,
+            ]),
+        ])
+
         // The parser never fails: unknown commands degrade to legible source.
         try PosterCompositor.poster(to: out.appendingPathComponent("arch-fallback.png"),
                                     title: "Degradation, not failure — unknown input stays legible", sections: [

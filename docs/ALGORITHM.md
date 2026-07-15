@@ -62,7 +62,18 @@ size; `\genfrac`'s style argument honors all four values.
 Cramping propagates as before: radicands, denominators, and subscripts set
 `cramped`, selecting `superscriptShiftUpCramped`.
 
+**`ssty` optical scripts — Implemented.** Beyond scaling, each script /
+scriptscript symbol is swapped for the font's purpose-redrawn optical
+variant (`ssty=1` / `ssty=2`), parsed from the GSUB table
+(`GsubScriptStyleParser` → `MathScriptVariants`, 995 glyphs in LM Math) and
+injected as `MathScriptVariantProvider`. The variant carries heavier strokes
+and more open forms so a shrunk glyph keeps the base text's weight instead of
+thinning out. Emitted by glyph ID (the variants are unencoded); headless
+hosts with no provider scale the base glyph exactly as before.
+
 ![The style lattice](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-styles.png)
+
+![ssty optical scripts](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-ssty.png)
 
 ### 1.3 Font parameters — **Implemented**
 

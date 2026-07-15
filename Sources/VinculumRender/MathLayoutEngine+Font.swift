@@ -28,7 +28,8 @@ extension MathFont {
                          delimiters: CoreTextDelimiterProvider.make(font: self),
                          delimiterAssembly: CoreTextDelimiterProvider.makeAssembly(font: self),
                          typography: CoreTextTypographyProvider.make(font: self),
-                         accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: self))
+                         accentVariants: CoreTextDelimiterProvider.makeAccentVariants(font: self),
+                         scriptVariants: CoreTextScriptVariantProvider.make(font: self))
     }
 }
 #endif

@@ -132,6 +132,25 @@ public struct GlyphTypography: Sendable, Equatable {
 /// like the delimiter provider, so headless/Linux layout is unaffected.
 public typealias MathGlyphTypographyProvider = @Sendable (_ glyph: String, _ size: CGFloat) -> GlyphTypography?
 
+/// A font's optically-redrawn `ssty` variant of a glyph for a smaller math
+/// level, addressed by glyph ID (the variants are unencoded) plus its
+/// measured metrics at the requested size.
+public struct ScriptGlyph: Sendable {
+    public var glyphID: UInt16
+    public var metrics: GlyphMetrics
+    public init(glyphID: UInt16, metrics: GlyphMetrics) {
+        self.glyphID = glyphID; self.metrics = metrics
+    }
+}
+
+/// Injected `ssty` optical-script substitution: given a single rendered glyph
+/// string, a point size, and a math-script `level` (1 = script, 2 =
+/// scriptscript), returns the font's optical variant + metrics, or `nil` (no
+/// variant, multi-glyph run, or base level). Optional — headless/Linux layout
+/// simply scales the base glyph, as before.
+public typealias MathScriptVariantProvider =
+    @Sendable (_ glyph: String, _ size: CGFloat, _ level: Int) -> ScriptGlyph?
+
 /// A segment of a stroked path, in scene coordinates (y-up).
 public enum PathOp: Sendable {
     case move(CGPoint)

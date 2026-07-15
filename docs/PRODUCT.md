@@ -48,6 +48,7 @@ load and used in layout. Deep detail: [ALGORITHM.md](https://github.com/clinteck
 | TeX style lattice | display/text/script/scriptscript × cramped; style-correct constant pairs; spacing suppression in scripts; `\displaystyle` family |
 | Italic correction | Per-glyph: superscript/subscript split (`f^2_3`), integral subscript tuck (`\int_a^b`), stacked-limit skew |
 | Cut-in kerning | OpenType `MathKernInfo` staircases position scripts against the base glyph's corner profile (STIX Two ships data for 233 glyphs) |
+| Optical scripts (`ssty`) | Script/scriptscript glyphs use the font's purpose-redrawn heavier-stroked variants (parsed from GSUB, 995 glyphs in LM Math), so shrunk superscripts and deep indices keep the base text's weight instead of thinning out |
 | Accent placement | Per-glyph `topAccentAttachment` (better than TeX's `\skewchar`); `AccentBaseHeight` seat; wide accents from horizontal variant ladders; combining-mark accents (`\vec`) via the glyph-ID path for exact ink seating; `\hat{f}^2` script promotion |
 | Tall delimiters | Size-variant ladders → glyph assembly (end caps + extenders, constant stroke weight) → scaling, for every covered glyph |
 | Radicals | The font's √ glyph via variants + assembly; font-true degree kerns and 60% raise |

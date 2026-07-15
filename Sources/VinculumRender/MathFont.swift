@@ -26,6 +26,8 @@ public final class MathFont: @unchecked Sendable {
     public let constants: MathFontConstants
     let glyphInfo: MathGlyphInfo?
     let variantsData: MathVariantsData?
+    let scriptVariants: MathScriptVariants?
+    let rawGsubTable: Data?
     /// The raw MATH table bytes (fixture extraction, diagnostics).
     let rawMathTable: Data?
 
@@ -75,6 +77,11 @@ public final class MathFont: @unchecked Sendable {
             ?? .latinModern
         self.glyphInfo = table.flatMap { MathTableParser.glyphInfo(from: $0, unitsPerEm: upm) }
         self.variantsData = table.flatMap { MathTableParser.variants(from: $0, unitsPerEm: upm) }
+        // GSUB carries the `ssty` optical-script variants (script/scriptscript
+        // redraws). Parsed once at load, like MATH.
+        let gsub = font?.table(for: 0x4753_5542 /* 'GSUB' */).map { $0 as Data }
+        self.rawGsubTable = gsub
+        self.scriptVariants = gsub.map { GsubScriptStyleParser.parse(Array($0)) }
     }
 
     // MARK: - Sized CTFonts

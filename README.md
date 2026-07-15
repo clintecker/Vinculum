@@ -276,6 +276,7 @@ The gallery posters cover:
 | `09-font-alphabets.png` | Alphabet/script sub-specimen per font |
 | `arch-*.png` | Figures for [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): spacing, delimiters, styles, fallback |
 | `cmd-arrows.png` | The extensible `\x…arrow` family, each head drawn distinctly |
+| `arch-ssty.png` | `ssty` optical scripts — script glyphs redrawn, not just scaled |
 
 **The complete command charts.** A visual companion to
 [docs/COMMANDS.md](docs/COMMANDS.md): *every* command rendered — a font-specimen

@@ -26,18 +26,23 @@ public struct MathFontServices: Sendable {
     public var typography: MathGlyphTypographyProvider?
     /// Horizontal width variants for stretchy accents; nil → scaling.
     public var accentVariants: MathAccentVariantProvider?
+    /// `ssty` optical-script variants (heavier redraws for script /
+    /// scriptscript); nil → the base glyph is scaled, as before.
+    public var scriptVariants: MathScriptVariantProvider?
 
     public init(measure: @escaping MathTextMeasurer,
                 constants: MathFontConstants = .latinModern,
                 delimiters: MathDelimiterProvider? = nil,
                 delimiterAssembly: MathDelimiterAssemblyProvider? = nil,
                 typography: MathGlyphTypographyProvider? = nil,
-                accentVariants: MathAccentVariantProvider? = nil) {
+                accentVariants: MathAccentVariantProvider? = nil,
+                scriptVariants: MathScriptVariantProvider? = nil) {
         self.measure = measure
         self.constants = constants
         self.delimiters = delimiters
         self.delimiterAssembly = delimiterAssembly
         self.typography = typography
         self.accentVariants = accentVariants
+        self.scriptVariants = scriptVariants
     }
 }

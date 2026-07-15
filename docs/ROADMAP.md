@@ -1,9 +1,10 @@
 # Vinculum Roadmap
 
-> **Status (2026-07-14):** Themes A–G and the speech/wide-accent halves of
-> H shipped in the 0.24 line, with a six-lens expert review applied on top.
-> Open: `ssty` optical scripts and width-aware line breaking (stretch,
-> droppable per decision below).
+> **Status (2026-07-15):** Themes A–G and the speech/wide-accent halves of
+> H shipped in the 0.24 line, with a six-lens expert review applied on top;
+> `ssty` optical scripts now ship too (the font's script/scriptscript
+> glyph redraws, parsed from GSUB). Open: width-aware line breaking only
+> (stretch, droppable per decision below).
 
 **Goal: the best native math typesetting library on any platform — not
 "iosMath, but Swift."** That means closing the typographic-fidelity gaps
@@ -35,7 +36,7 @@ accessibility, error positions, or line breaking — that's the open lane.
 | Tall delimiters | size variants for `()[]{}`, else scaled | variants + full glyph assembly | variants + assembly, all delimiters |
 | Radical | hand-stroked polyline | font glyph + variants + assembly | font glyph + variants + assembly |
 | Accent placement | geometric centering | `topAccentAttachment` skew + width variants | same, plus `flac` flattening |
-| Script sizing | scale 0.70 / 0.50 | scale via font's `ScriptPercentScaleDown` | font scale-down + `ssty` optical glyphs |
+| Script sizing | scale 0.70 / 0.50 | scale via font's `ScriptPercentScaleDown` | **font scale-down + `ssty` optical glyphs** ✓ |
 | Style machinery | `display: Bool` + cramped bit | 4-style lattice + cramped bit | full D/T/S/SS × cramped |
 | Fonts | Latin Modern, hardcoded | 8 bundled + any OTF | multiple bundled + any OTF |
 | Parse errors | supported-Bool + command names | typed codes + messages | codes + messages + **source ranges** |

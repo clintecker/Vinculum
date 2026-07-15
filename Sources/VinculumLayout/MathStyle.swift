@@ -31,6 +31,16 @@ public enum MathStyle: Int, Comparable, Sendable, Hashable {
     /// (TeX ch. 18's "\nonscript" column of the spacing chart).
     public var isScriptLevel: Bool { self >= .script }
 
+    /// The OpenType `ssty` level for this style: 0 for display/text (no
+    /// optical substitution), 1 for script, 2 for scriptscript.
+    public var sstyLevel: Int {
+        switch self {
+        case .display, .text: return 0
+        case .script: return 1
+        case .scriptScript: return 2
+        }
+    }
+
     /// The factor the current glyph size shrinks by when descending into this
     /// style's `scriptStyle`. From text: `ScriptPercentScaleDown`. From
     /// script: the remaining ratio down to `ScriptScriptPercentScaleDown`

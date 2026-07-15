@@ -25,6 +25,9 @@ public struct MathLayoutEngine: Sendable {
     /// Optional per-glyph typography (italic correction, accent attachment,
     /// cut-in kerns); `nil` → neutral defaults (headless default).
     let typography: MathGlyphTypographyProvider?
+    /// Optional `ssty` optical-script variants; `nil` → the base glyph is
+    /// scaled (headless default), as before.
+    let scriptVariants: MathScriptVariantProvider?
     /// The active `\color` override for the current subtree; `nil` primitives
     /// take the renderer's theme ink.
     var colorOverride: MathColor?
@@ -58,6 +61,7 @@ public struct MathLayoutEngine: Sendable {
         self.baseSize = baseSize
         self.constants = services.constants
         self.typography = services.typography
+        self.scriptVariants = services.scriptVariants
         self.colorOverride = nil
         self.styleAnchorSize = baseSize
     }
@@ -126,7 +130,8 @@ public struct MathLayoutEngine: Sendable {
             if cls == .largeOperator, style.isDisplay, let opBox = largeOperatorBox(glyph, size: s) {
                 return opBox
             }
-            return glyphBox(glyph, size: s, italic: symbolStyle == .italic, bold: symbolStyle == .bold)
+            return glyphBox(glyph, size: s, italic: symbolStyle == .italic, bold: symbolStyle == .bold,
+                            sstyLevel: style.sstyLevel)
 
         case .functionName(let name):
             return glyphBox(name, size: s, italic: false)
@@ -253,8 +258,22 @@ public struct MathLayoutEngine: Sendable {
     /// A box holding one glyph run. Style is expressed by remapping to a
     /// Mathematical-Alphanumeric codepoint (`mathVariant`), so the math font
     /// draws true italic/bold; the measurer supplies the metrics.
-    func glyphBox(_ text: String, size: CGFloat, italic: Bool, bold: Bool = false, mono: Bool = false) -> MathBox {
+    func glyphBox(_ text: String, size: CGFloat, italic: Bool, bold: Bool = false,
+                  mono: Bool = false, sstyLevel: Int = 0) -> MathBox {
         let glyph = mono ? text : Self.mathVariant(text, italic: italic, bold: bold)
+        // `ssty` optical scripts: at script/scriptscript level, swap the base
+        // glyph for the font's purpose-redrawn variant (heavier strokes so a
+        // shrunk glyph keeps the base text's weight). Drawn by glyph ID —
+        // the variants are unencoded — falling through to the scaled base
+        // glyph when the font (or a headless host) provides no variant.
+        if sstyLevel > 0, !mono, let scriptVariants,
+           let sg = scriptVariants(glyph, size, sstyLevel) {
+            let m = sg.metrics
+            let element = MathElement.glyph(id: sg.glyphID, size: size,
+                                            origin: CGPoint(x: 0, y: 0), color: colorOverride)
+            return MathBox(width: m.width, ascent: m.ascent, descent: m.descent,
+                           inkAscent: m.inkAscent, elements: [element])
+        }
         let m = measure(glyph, size, mono)
         let element = MathElement.glyphs(text: glyph, size: size, mono: mono,
                                          origin: CGPoint(x: 0, y: 0), color: colorOverride)
