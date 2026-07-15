@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-07-15
+
+**The integration release**: whole documents in one call, server-side SVG,
+hit-testing, DocC + a runnable demo — and a fifth font.
+
+- **Fira Math bundled** (`.firaMath`, OFL, ~180 KB) — the sans-serif
+  option, visibly distinct from the serif four; pairs with SF/Helvetica
+  UI text. Full per-font pipeline (constants: axis 0.280, dispOpMin 1.5),
+  fixture, canary golden, showcase row.
+- **`MathView` baseline alignment** — inline math sits on the text
+  baseline in `HStack(alignment: .firstTextBaseline)` rows via automatic
+  alignment guides derived from the rendered descent.
 
 - **`MathSVGRenderer` — server-side math.** The platform-free renderer:
   a headless `MathScene` (the Linux default) becomes self-contained SVG —

@@ -27,14 +27,23 @@ public struct MathView: View {
     public var body: some View {
         if let r = MathImageRenderer.rendered(
             latex: latex, display: display, mathTheme: theme, baseSize: baseSize, font: font) {
-            #if canImport(AppKit)
-            Image(nsImage: r.image).renderingMode(r.image.isTemplate ? .template : .original)
+            image(for: r)
+                // Inline math sits on the TEXT baseline in
+                // HStack(alignment: .firstTextBaseline) rows — the image's
+                // baseline is `descent` points above its bottom edge.
+                .alignmentGuide(.firstTextBaseline) { d in d.height - r.descent }
+                .alignmentGuide(.lastTextBaseline) { d in d.height - r.descent }
                 .accessibilityLabel(r.spokenDescription)
-            #else
-            Image(uiImage: r.image)
-                .accessibilityLabel(r.spokenDescription)
-            #endif
         }
+    }
+
+    @ViewBuilder
+    private func image(for r: MathImageRenderer.RenderedMath) -> some View {
+        #if canImport(AppKit)
+        Image(nsImage: r.image).renderingMode(r.image.isTemplate ? .template : .original)
+        #else
+        Image(uiImage: r.image)
+        #endif
     }
 
     // MARK: - Modifiers

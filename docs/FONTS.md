@@ -1,7 +1,7 @@
 # Fonts
 
 Vinculum typesets with **OpenType MATH fonts** — the same font technology
-LuaTeX, XeTeX, and Microsoft Word's equation editor use. Four fonts are
+LuaTeX, XeTeX, and Microsoft Word's equation editor use. Five fonts are
 bundled, and any `.otf` carrying a MATH table loads at runtime. This
 document covers what each bundled font is for, exactly what Vinculum reads
 from a font, how to select and supply fonts, and what happens when
@@ -13,16 +13,16 @@ The always-current specimen (CI regenerates it on every push):
 
 ---
 
-## The bundled four
+## The bundled five
 
-| | `.latinModern` | `.termes` | `.pagella` | `.stixTwo` |
-| --- | --- | --- | --- | --- |
-| Full name | Latin Modern Math | TeX Gyre Termes Math | TeX Gyre Pagella Math | STIX Two Math |
-| Lineage | Computer Modern (Knuth) | Times | Palatino (Zapf) | STIX / Times tradition |
-| Pair with | LaTeX-look documents, code-adjacent docs | Times, Georgia, most serif body text | Palatino, Book Antiqua, humanist serifs | Scientific publishing stacks |
-| Voice | The classic TeX look: high contrast, fine hairlines | Narrow, upright, editorial | Round, calligraphic, warm | Sturdy, dense, designed for small print |
-| License | GUST Font License | GUST Font License | GUST Font License | SIL Open Font License |
-| File size | ~730 KB | ~530 KB | ~600 KB | ~840 KB |
+| | `.latinModern` | `.termes` | `.pagella` | `.stixTwo` | `.firaMath` |
+| --- | --- | --- | --- | --- | --- |
+| Full name | Latin Modern Math | TeX Gyre Termes Math | TeX Gyre Pagella Math | STIX Two Math | Fira Math |
+| Lineage | Computer Modern (Knuth) | Times | Palatino (Zapf) | STIX / Times tradition | Fira Sans (Mozilla) |
+| Pair with | LaTeX-look documents, code-adjacent docs | Times, Georgia, most serif body text | Palatino, Book Antiqua, humanist serifs | Scientific publishing stacks | SF, Helvetica, modern UI text |
+| Voice | The classic TeX look: high contrast, fine hairlines | Narrow, upright, editorial | Round, calligraphic, warm | Sturdy, dense, designed for small print | Sans-serif, monolinear, contemporary |
+| License | GUST Font License | GUST Font License | GUST Font License | SIL Open Font License | SIL Open Font License |
+| File size | ~730 KB | ~530 KB | ~600 KB | ~840 KB | ~180 KB |
 
 **An honest note on how different they look:** all four are serif math
 faces from the same broad tradition, so at body sizes they read as
@@ -31,8 +31,9 @@ the surrounding text face*, not to stand out from each other; the
 differences live in the italic letterforms (compare `a g x y` in the
 specimen), the script/calligraphic alphabets (each font's `\mathcal{L}`
 is practically its own design), stroke contrast, and the display-operator
-sizes. For a genuinely different voice, load a sans-serif math font
-(Fira Math, Noto Sans Math) via `MathFont(url:)`.
+sizes. For a genuinely different voice, `.firaMath` is the bundled sans-serif —
+unmistakable next to the serif four — and Noto Sans Math loads via
+`MathFont(url:)`.
 
 Glyph by glyph, the designs diverge clearly (CI-regenerated):
 
@@ -41,11 +42,11 @@ Glyph by glyph, the designs diverge clearly (CI-regenerated):
 They are not interchangeable metrics-wise — that is the point. A few
 numbers Vinculum reads from each font's `MathConstants` (em fractions):
 
-| Constant | Latin Modern | Termes | Pagella | STIX Two |
-| --- | --- | --- | --- | --- |
-| `AxisHeight` (fraction-bar height) | 0.250 | 0.250 | 0.250 | 0.258 |
-| `DisplayOperatorMinHeight` (∑/∫ display size) | 1.300 | 1.300 | 1.500 | 1.800 |
-| Cut-in kerning coverage (`MathKernInfo`) | — | — | — | **233 glyphs** |
+| Constant | Latin Modern | Termes | Pagella | STIX Two | Fira Math |
+| --- | --- | --- | --- | --- | --- |
+| `AxisHeight` (fraction-bar height) | 0.250 | 0.250 | 0.250 | 0.258 | 0.280 |
+| `DisplayOperatorMinHeight` (∑/∫ display size) | 1.300 | 1.300 | 1.500 | 1.800 | 1.500 |
+| Cut-in kerning coverage (`MathKernInfo`) | — | — | — | **233 glyphs** | — |
 
 So STIX Two draws noticeably larger display operators, sits its fraction
 bars slightly higher, and positions scripts against per-glyph corner

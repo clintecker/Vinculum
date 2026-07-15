@@ -11,8 +11,8 @@ no KaTeX, no WebView, zero dependencies.**
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 Vinculum parses LaTeX math into a TeX-style atom tree and typesets it with an
-OpenType MATH font — **four bundled** (Latin Modern, TeX Gyre Termes, TeX
-Gyre Pagella, STIX Two) or any OTF you supply — following Knuth's algorithm
+OpenType MATH font — **five bundled** (Latin Modern, TeX Gyre Termes, TeX
+Gyre Pagella, STIX Two, and the sans-serif Fira Math) or any OTF you supply — following Knuth's algorithm
 (Appendix G of *The TeXbook*) with everything **parsed from the font's MATH
 table at runtime**: all 56 layout constants, per-glyph italic corrections
 and accent attachment points, cut-in kerning staircases, delimiter size
@@ -209,6 +209,7 @@ every push** (deep dive: [docs/FONTS.md](docs/FONTS.md)):
 | `.termes` | Times, Georgia, serif body text | Narrow, upright, editorial |
 | `.pagella` | Palatino, Book Antiqua | Calligraphic warmth |
 | `.stixTwo` | Times-family scientific publishing | The STIX standard; richest kerning data |
+| `.firaMath` | SF / Helvetica / modern UI text | Sans-serif — visibly distinct from the serif four |
 
 ```swift
 label.font = .pagella                          // VinculumLabel

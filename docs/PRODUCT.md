@@ -107,7 +107,7 @@ Deep detail: [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FO
 
 | Feature | Specific |
 | --- | --- |
-| Bundled fonts | Latin Modern Math (default), TeX Gyre Termes Math, TeX Gyre Pagella Math, STIX Two Math |
+| Bundled fonts | Latin Modern Math (default), TeX Gyre Termes Math, TeX Gyre Pagella Math, STIX Two Math, Fira Math (sans-serif) |
 | Bring-your-own | `MathFont(url:)` for any OTF with a MATH table; refuses fonts without one |
 | Per-font truth | Constants/typography/variants/assemblies parsed per font at load; per-font render caching |
 | Measured differences | STIX axis 0.258 vs LM 0.250; `DisplayOperatorMinHeight` 1.8 vs 1.3/1.3/1.5 em; STIX ships cut-in kern data |

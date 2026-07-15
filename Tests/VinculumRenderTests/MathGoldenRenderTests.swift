@@ -159,6 +159,7 @@ final class MathGoldenRenderTests: XCTestCase {
         .init(name: "canary-termes", latex: canaryLaTeX, expectation: .mustRender, font: .termes),
         .init(name: "canary-pagella", latex: canaryLaTeX, expectation: .mustRender, font: .pagella),
         .init(name: "canary-stixtwo", latex: canaryLaTeX, expectation: .mustRender, font: .stixTwo),
+        .init(name: "canary-firamath", latex: canaryLaTeX, expectation: .mustRender, font: .firaMath),
     ]
 
     static let canaryLaTeX = #"T_i^j = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} + \sum_{i=1}^{n} \left( \frac{x_i}{y_i} \right)"#

@@ -25,6 +25,7 @@ final class FontShowcaseGenerator: XCTestCase {
         (.termes, "TeX Gyre Termes Math", "Times companion — for Times/serif body text"),
         (.pagella, "TeX Gyre Pagella Math", "Palatino companion — calligraphic warmth"),
         (.stixTwo, "STIX Two Math", "the scientific-publishing standard; ships cut-in kerning data"),
+        (.firaMath, "Fira Math", "sans-serif — pairs with SF/Helvetica-style UI text"),
     ]
 
     /// One-off evidence strip: a handful of glyphs at poster size, where
@@ -87,7 +88,7 @@ final class FontShowcaseGenerator: XCTestCase {
         }
         let glyphRows = [#"a"#, #"g"#, #"x"#, #"\pi"#, #"\xi"#, #"\mathcal{L}"#,
                          #"\oint"#, #"\sqrt{x}"#, #"\sum"#]
-        let headers = ["Latin Modern", "Termes", "Pagella", "STIX Two"]
+        let headers = ["Latin Modern", "Termes", "Pagella", "STIX Two", "Fira Math"]
         let headerFont = CTFontCreateWithName("HelveticaNeue-Bold" as CFString, 16, nil)
 
         func line(_ t: String) -> (CTLine, CGFloat, CGFloat) {
@@ -113,13 +114,13 @@ final class FontShowcaseGenerator: XCTestCase {
         let headerLines = headers.map(line)
 
         let margin: CGFloat = 24, colGap: CGFloat = 28, rowGap: CGFloat = 10
-        var colW = [CGFloat](repeating: 0, count: 4)
-        for c in 0..<4 {
+        var colW = [CGFloat](repeating: 0, count: headers.count)
+        for c in headers.indices {
             colW[c] = max(headerLines[c].1, cells.map { $0[c].size.width }.max() ?? 0)
         }
         let rowH = cells.map { row in row.map(\.size.height).max() ?? 0 }
         let headerH = headerLines.map(\.2).max() ?? 0
-        let width = margin * 2 + colW.reduce(0, +) + colGap * 3
+        let width = margin * 2 + colW.reduce(0, +) + colGap * CGFloat(headers.count - 1)
         let height = margin * 2 + headerH + 12 + rowH.reduce(0, +) + rowGap * CGFloat(rowH.count - 1)
 
         let scale: CGFloat = 2
@@ -134,10 +135,10 @@ final class FontShowcaseGenerator: XCTestCase {
 
         // Column headers (centered over each column).
         var colX = [CGFloat](); var x = margin
-        for c in 0..<4 { colX.append(x); x += colW[c] + colGap }
+        for c in headers.indices { colX.append(x); x += colW[c] + colGap }
         var y = height - margin - headerH
         ctx.setFillColor(CGColor(gray: 0, alpha: 1))
-        for c in 0..<4 {
+        for c in headers.indices {
             ctx.textPosition = CGPoint(x: colX[c] + (colW[c] - headerLines[c].1) / 2, y: y)
             CTLineDraw(headerLines[c].0, ctx)
         }
@@ -145,7 +146,7 @@ final class FontShowcaseGenerator: XCTestCase {
         // Cells: each glyph row, horizontally centered per column.
         for (r, row) in cells.enumerated() {
             y -= rowH[r]
-            for c in 0..<4 {
+            for c in headers.indices {
                 let img = row[c]
                 let cx = colX[c] + (colW[c] - img.size.width) / 2
                 let cy = y + (rowH[r] - img.size.height) / 2

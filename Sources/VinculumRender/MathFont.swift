@@ -4,9 +4,10 @@ import CoreText
 import CoreGraphics
 import VinculumLayout
 
-/// An OpenType math font plus its parsed MATH-table data. Four fonts are
+/// An OpenType math font plus its parsed MATH-table data. Five fonts are
 /// bundled — Latin Modern (the default), TeX Gyre Termes, TeX Gyre Pagella,
-/// and STIX Two — and any user OTF with a MATH table loads via `init?(url:)`.
+/// STIX Two, and the sans-serif Fira Math — and any user OTF with a MATH
+/// table loads via `init?(url:)`.
 ///
 /// Everything a font contributes to layout is parsed eagerly at load (so
 /// instances are immutable and freely `Sendable`): the 56 `MathConstants`,
@@ -34,7 +35,10 @@ public final class MathFont: @unchecked Sendable {
     public static let termes = MathFont(resource: "texgyretermes-math")
     public static let pagella = MathFont(resource: "texgyrepagella-math")
     public static let stixTwo = MathFont(resource: "stixtwo-math")
-    public static var bundled: [MathFont] { [latinModern, termes, pagella, stixTwo] }
+    /// The sans-serif option — visibly distinct from the four serif faces;
+    /// pairs with SF/Helvetica-style UI text.
+    public static let firaMath = MathFont(resource: "firamath")
+    public static var bundled: [MathFont] { [latinModern, termes, pagella, stixTwo, firaMath] }
 
     public var isAvailable: Bool { cgFont != nil }
 
