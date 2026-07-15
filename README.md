@@ -68,6 +68,11 @@ dependencies: [
 ]
 ```
 
+> For the **Linux raster backend** (Silica/Cairo/FreeType), add
+> `traits: ["LinuxRaster"]` to the dependency — it is off by default so
+> every other consumer keeps a Silica-free dependency graph. See
+> [docs/LINUX.md](docs/LINUX.md).
+
 Then pick your product(s):
 
 ```swift

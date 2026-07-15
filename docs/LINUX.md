@@ -12,10 +12,32 @@ and the `MathScene` IR are identical across both.
 
 ---
 
+## Enabling the backend (the `LinuxRaster` trait)
+
+The Silica raster backend is behind a **package trait**, `LinuxRaster`, which
+is **off by default** — so a plain `swift build` (and every downstream
+consumer, on any platform) resolves a **Silica-free** dependency graph. Opt in
+where you actually want the native raster backend:
+
+```swift
+// A consumer that wants Linux rendering:
+.package(url: "https://github.com/clintecker/Vinculum.git", from: "1.4.1",
+         traits: ["LinuxRaster"])
+```
+
+Or on the command line: `swift build --traits LinuxRaster` /
+`swift test --traits LinuxRaster`. Apple platforms never link Silica even with
+the trait on (the products are also `platforms: [.linux]`-gated), so enabling
+it is harmless in a cross-platform package.
+
+> `Package.resolved` is deliberately **git-ignored**: a committed trait-on
+> lockfile would re-pull the whole Cairo graph even for default (trait-off)
+> builds.
+
 ## Quick start
 
 ```swift
-import VinculumRender   // on Linux, the Silica backend is linked automatically
+import VinculumRender   // Linux backend linked when the LinuxRaster trait is on
 
 let png: Data? = MathSilicaRenderer.renderPNG(
     latex: #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#,
@@ -66,13 +88,18 @@ Cairo/FreeType/FontConfig interop modules against them):
 
 ```sh
 apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev
-swift build      # or: swift test
+swift build --traits LinuxRaster      # or: swift test --traits LinuxRaster
 ```
 
+Without `--traits LinuxRaster` the backend compiles out (no Cairo/FreeType
+needed) and `VinculumRender` is layout-only on Linux, exactly like a
+default consumer.
+
 The toolchain floor is **Swift 6.2** — pulling Silica into the graph requires
-it. `Package.resolved` pins the transitive PureSwift graph to a
-Swift-6.2-compatible commit set; keep it committed so a fresh resolve can't
-float into a manifest that fails to build.
+it (and package traits themselves are SwiftPM 6.1+). Vinculum does **not**
+commit `Package.resolved` (a trait-on lockfile would re-pull Cairo for default
+builds); the branch pins live in `Package.swift`, and enabling `LinuxRaster`
+resolves the PureSwift graph fresh.
 
 ### Docker
 
@@ -83,7 +110,7 @@ compiles:
 ```sh
 docker run --rm -v "$PWD":/work -w /work swift:6.2 bash -c '
   apt-get update && apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev
-  swift test'
+  swift test --traits LinuxRaster'
 ```
 
 No system fonts are required — FreeType loads the bundled `.otf`s from bytes.

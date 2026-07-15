@@ -28,10 +28,16 @@ jobs:
           apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev fonts-dejavu
       - name: Swift version
         run: swift --version
-      - name: Build
+      # Default (no-trait): the Silica raster backend is behind LinuxRaster
+      # (default OFF), so a plain build is Silica-free — parsing + layout only.
+      - name: Build (default, Silica-free)
         run: swift build
-      - name: Test (parser, macros, headless layout)
-        run: swift test
+      # LinuxRaster ON: build + test the Silica/Cairo/FreeType render backend,
+      # including the render smoke tests.
+      - name: Build + test (LinuxRaster)
+        run: |
+          swift build --traits LinuxRaster
+          swift test --traits LinuxRaster
 
   test:
     name: swift test (macOS)

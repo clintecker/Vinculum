@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.1 — 2026-07-15
+
+**The Silica dependency is now opt-in — default consumers are Silica-free.**
+1.4.0 declared the Silica/Cairo dependency unconditionally, so *every*
+consumer (even Apple-only, even on a stable `from:`) was forced to resolve the
+whole Silica/Cairo/PureSwift graph — SwiftPM resolves declared dependencies
+regardless of platform. Fixed with a **package trait** (`LinuxRaster`, default
+OFF): the Silica dependency and its product links are gated behind it, so a
+default resolve fetches **zero external dependencies** (verified: a downstream
+consumer on both macOS and Linux pulls nothing). Opt in for the native Linux
+raster backend with `traits: ["LinuxRaster"]` (or `--traits LinuxRaster`).
+`Package.resolved` is now git-ignored — a committed trait-on lockfile would
+re-pull Cairo even for default builds. No render logic changed.
+
 ## 1.4.0 — 2026-07-15
 
 **Linux rendering works.** `VinculumRender` now draws a `MathScene` to a PNG

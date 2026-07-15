@@ -12,3 +12,6 @@ core
 # Local Linux render artifacts
 silica-*.png
 parity-linux/
+
+# Trait-on lockfile would re-pull Cairo even for default builds — ignore it.
+Package.resolved

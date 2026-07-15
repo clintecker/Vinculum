@@ -28,11 +28,13 @@ targets: [
 
 Vinculum ships **two products**:
 
-- **`VinculumRender`** (Apple-only: macOS 14 / iOS 17 / visionOS 1 / tvOS 17) —
-  the CoreText measurer, the scene→CGContext renderer, the bundled font, the
-  `MathTheme` seam, and the one-call `MathImageRenderer`. It re-exports the
+- **`VinculumRender`** — the renderer. On Apple (macOS 14 / iOS 17 / visionOS 1
+  / tvOS 17): the CoreText measurer, the scene→CGContext renderer, the bundled
+  fonts, the `MathTheme` seam, and the one-call `MathImageRenderer`. On Linux
+  (behind the `LinuxRaster` trait): `MathSilicaRenderer.renderPNG` via
+  Silica/Cairo/FreeType — see §11b and [LINUX.md](LINUX.md). It re-exports the
   layout types you need (`MathParser`, `MathScene`, `MathLayoutEngine`,
-  `MathMacros`, …), so a typical Apple app imports **only** `VinculumRender`.
+  `MathMacros`, …), so a typical app imports **only** `VinculumRender`.
 - **`VinculumLayout`** (Foundation-only, **builds on Linux**) — the parser,
   the macro processor, the layout engine, and the device-independent
   `MathScene` IR. Depend on this alone if you want the platform-free layer
@@ -407,8 +409,11 @@ so layout code never sees a stale size).
 
 ## 11b. Linux: raster PNGs via Silica
 
-On Linux, `VinculumRender` draws with Silica/Cairo/FreeType (never on Apple —
-the products are platform-gated). One call renders LaTeX to a PNG:
+On Linux, `VinculumRender` draws with Silica/Cairo/FreeType. The backend is
+behind the **`LinuxRaster` package trait** (default OFF), so a default consumer
+pulls no Silica dependency; opt in with
+`.package(url: "…/Vinculum", from: "1.4.1", traits: ["LinuxRaster"])`
+(or `--traits LinuxRaster`). One call renders LaTeX to a PNG:
 
 ```swift
 import VinculumRender

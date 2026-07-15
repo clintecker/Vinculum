@@ -11,11 +11,25 @@ import PackageDescription
 // the typesetter draws to bind an expression together.
 //
 // On Apple platforms VinculumRender draws with CoreText/CoreGraphics and never
-// links Silica. On Linux it draws with Silica (Cairo/FontConfig) — a Linux-only
-// rendering backend. Silica and its Cairo backend track `master` (Silica itself
-// depends on Cairo by branch, so a stable version requirement can't be mixed
-// in). Pulling Silica into the graph is why the toolchain floor is Swift 6.2:
-// SwiftPM parses every manifest in the graph regardless of platform.
+// links Silica. On Linux it draws with Silica (Cairo/FreeType) — a raster
+// backend behind the `LinuxRaster` trait (default OFF).
+//
+// ── Why the Silica backend is behind a trait ──
+// Silica tracks `master` (it depends on Cairo by branch, so a stable version
+// requirement can't be mixed in). Merely platform-conditioning the products
+// (`.when(platforms: [.linux])`) was not enough: SwiftPM still RESOLVES every
+// declared dependency regardless of platform, so a plain `from:` consumer —
+// even Apple-only — was forced to fetch the whole Silica/Cairo/PureSwift graph.
+// Package traits (SwiftPM 6.1+) fix it: the Silica dependency and its product
+// links are guarded by `LinuxRaster`, which is OFF by default, so a default
+// resolve fetches zero external dependencies. Linux users who want the native
+// raster backend opt in:
+//
+//   .package(url: "…/Vinculum", from: "1.4.1", traits: ["LinuxRaster"])
+//
+// or build/test with `--traits LinuxRaster`. (`Package.resolved` is
+// git-ignored: a committed trait-on lockfile would re-pull Cairo even for
+// default builds.)
 let package = Package(
     name: "Vinculum",
     platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1), .tvOS(.v17)],
@@ -23,7 +37,18 @@ let package = Package(
         .library(name: "VinculumLayout", targets: ["VinculumLayout"]),
         .library(name: "VinculumRender", targets: ["VinculumRender"]),
     ],
+    traits: [
+        .trait(
+            name: "LinuxRaster",
+            description: "Link the Silica/Cairo raster rendering backend (Linux only). "
+                + "Off by default so no-trait consumers keep a Silica-free dependency graph."
+        ),
+    ],
     dependencies: [
+        // Guarded by `LinuxRaster`: when the trait is disabled (the default)
+        // these are pruned from resolution entirely — no branch dependency
+        // reaches a downstream `from:` consumer, and no Cairo/PureSwift graph
+        // is fetched on Apple platforms.
         .package(url: "https://github.com/PureSwift/Silica.git", branch: "master"),
         .package(url: "https://github.com/PureSwift/Cairo.git", branch: "master"),
     ],
@@ -32,15 +57,22 @@ let package = Package(
         // Raw FreeType C shim — the Linux backend loads the bundled MATH .otf
         // fonts from bytes and extracts glyph outlines directly (Silica's
         // font-by-name path can't resolve non-default families). Built only
-        // when depended on (Linux); Apple never references it.
+        // under the LinuxRaster trait; Apple never references it.
         .systemLibrary(name: "CFreetypeShim", path: "Sources/CFreetypeShim",
                        pkgConfig: "freetype2",
                        providers: [.apt(["libfreetype6-dev"]), .brew(["freetype"])]),
         .target(name: "VinculumRender", dependencies: [
                     "VinculumLayout",
-                    .product(name: "SilicaCairo", package: "Silica", condition: .when(platforms: [.linux])),
-                    .product(name: "Cairo", package: "Cairo", condition: .when(platforms: [.linux])),
-                    .target(name: "CFreetypeShim", condition: .when(platforms: [.linux])),
+                    // Both the platform AND the trait must hold: Apple platforms
+                    // use CoreGraphics/CoreText and never link these even with
+                    // the trait on; the trait gate is what keeps Silica out of
+                    // the resolved graph for every no-trait consumer.
+                    .product(name: "SilicaCairo", package: "Silica",
+                             condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
+                    .product(name: "Cairo", package: "Cairo",
+                             condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
+                    .target(name: "CFreetypeShim",
+                            condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
                 ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),
