@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0 — 2026-07-15
+
+**Linux rendering backend — foundation.** Vinculum now builds on Linux with
+the PureSwift/Silica (Cairo/FontConfig) rendering backend wired into the
+graph, behind a platform-conditioned dependency so Apple platforms never
+link it. This is the *foundation* — the dependency, the `Package.resolved`
+pins that keep the transitive graph on a Swift-6.2-compatible commit set,
+the `PlatformLinux.swift` Silica↔CoreGraphics adapter, and a CI Linux job
+that builds the whole stack with Cairo/FreeType/FontConfig installed. The
+actual Silica scene renderer (drawing a `MathScene` to a PNG on Linux, with
+the bundled MATH fonts) lands in a follow-up; `VinculumRender` is still
+inert on Linux today. Apple platforms are unchanged (258 tests green,
+Silica resolved but never linked).
+
 ## 1.2.0 — 2026-07-15
 
 **The typography + coverage release.** Optical scripts, every extensible
