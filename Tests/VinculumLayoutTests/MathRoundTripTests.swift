@@ -21,6 +21,8 @@ final class MathRoundTripTests: XCTestCase {
         #"\hat{x} + \vec{v} + \widehat{abc} + \overline{AB} + \underline{z}"#,
         #"\binom{n}{k} + \dbinom{n}{k} + \genfrac{[}{]}{0pt}{}{a}{b}"#,
         #"\overbrace{a+b}^{s} + \underbrace{c+d}_{t} + \overrightarrow{AB}"#,
+        #"A \xLongrightarrow{f} B \xhookrightarrow{g} C \xmapsto{h} D \xrightleftharpoons{k}[l] E"#,
+        #"P \xleftrightarrow{a} Q \xrightharpoonup{b} R \xleftharpoondown{c} S"#,
         #"\xrightarrow[g]{f} \quad \overset{!}{=} \quad \underset{k}{\to}"#,
         #"\boxed{E=mc^2} + \cancel{x} + \phantom{y} + \mathrlap{z}"#,
         #"\textcolor{red}{a} + \colorbox{yellow}{b}"#,

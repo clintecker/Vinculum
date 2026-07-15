@@ -60,6 +60,21 @@ final class CommandGalleryGenerator: XCTestCase {
 
         // ── Structural command examples (source + native render) ──
         try structuralPoster(to: out.appendingPathComponent("cmd-structural.png"))
+
+        // ── The extensible \x…arrow family, each with its own drawn head ──
+        try PosterCompositor.poster(to: out.appendingPathComponent("cmd-arrows.png"),
+            title: "Extensible arrows — each variant draws its own head", sections: [
+            ("Arrows: plain, double-lined, bidirectional, hooked, mapsto", [
+                #"A \xrightarrow{f} B \xleftarrow{g} C"#,
+                #"A \xLongrightarrow{\phi} B \xLongleftarrow{\psi} C \xleftrightarrow{h} D"#,
+                #"A \xhookrightarrow{\iota} B \xhookleftarrow{j} C \xmapsto{f} D"#,
+            ]),
+            ("Harpoons: single-barb heads, and the opposed pair", [
+                #"X \xrightharpoonup{a} Y \xrightharpoondown{b} Z"#,
+                #"X \xleftharpoonup{c} Y \xleftharpoondown{d} Z"#,
+                #"\text{H}_2 + \text{I}_2 \xrightleftharpoons[k_r]{k_f} 2\,\text{HI}"#,
+            ]),
+        ])
     }
 
     // MARK: - Symbol grid (font-specimen tiles)

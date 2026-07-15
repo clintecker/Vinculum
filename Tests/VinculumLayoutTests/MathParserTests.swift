@@ -563,6 +563,52 @@ final class MathParserTests: XCTestCase {
         XCTAssertNotNil(a); XCTAssertNotNil(b)
     }
 
+    func testExtensibleArrowVariantsMapToDistinctKinds() {
+        let cases: [(String, MathOverUnder)] = [
+            ("\\xleftarrow{f}", .leftarrow),
+            ("\\xLongrightarrow{f}", .longRightArrow),
+            ("\\xLongleftarrow{f}", .longLeftArrow),
+            ("\\xleftrightarrow{f}", .leftRightArrow),
+            ("\\xhookrightarrow{f}", .hookRightArrow),
+            ("\\xhookleftarrow{f}", .hookLeftArrow),
+            ("\\xmapsto{f}", .mapsToArrow),
+            ("\\xrightharpoonup{f}", .rightHarpoonUp),
+            ("\\xrightharpoondown{f}", .rightHarpoonDown),
+            ("\\xleftharpoonup{f}", .leftHarpoonUp),
+            ("\\xleftharpoondown{f}", .leftHarpoonDown),
+            ("\\xrightleftharpoons{f}", .rightLeftHarpoons),
+        ]
+        for (latex, expected) in cases {
+            guard case .overUnder(_, _, _, let kind) = MathParser.parse(latex) else {
+                XCTFail("\(latex) did not parse to an overUnder arrow"); continue
+            }
+            XCTAssertEqual(kind, expected, "\(latex) mapped to the wrong arrow kind")
+            XCTAssertTrue(MathParser.isFullySupported(MathParser.parse(latex)), "\(latex) should render")
+        }
+    }
+
+    func testExtensibleArrowsAreRelations() {
+        // Each annotated arrow spaces as a relation (thick space around it).
+        let engine = standardMockEngine()
+        for latex in ["\\xhookrightarrow{f}", "\\xmapsto{f}", "\\xrightleftharpoons{f}"] {
+            XCTAssertEqual(engine.atomClass(of: MathParser.parse(latex)), .relation, latex)
+        }
+    }
+
+    func testHarpoonDrawsFewerStrokesThanFullArrow() {
+        // A single-barb harpoon head has strictly fewer path vertices than a
+        // full (two-barb) arrowhead — a cheap proxy that the head differs.
+        func strokeVertexCount(_ latex: String) -> Int {
+            let scene = standardMockEngine().layout(MathParser.parse(latex))
+            var n = 0
+            for e in scene.elements { if case let .stroke(path, _, _, _, _) = e { n += path.count } }
+            return n
+        }
+        XCTAssertLessThan(strokeVertexCount("\\xrightharpoonup{f}"),
+                          strokeVertexCount("\\xrightarrow{f}"),
+                          "a harpoon (one barb) should draw fewer vertices than a full head")
+    }
+
     func testSubstackIsATightMatrix() {
         guard case .matrix(let rows, _, _, .substack) = MathParser.parse("\\substack{a \\\\ b \\\\ c}") else {
             return XCTFail("expected substack matrix")

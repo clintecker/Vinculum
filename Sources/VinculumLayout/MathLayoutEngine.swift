@@ -334,7 +334,15 @@ public struct MathLayoutEngine: Sendable {
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary
         case .overUnder(_, _, _, let kind):
-            return (kind == .rightarrow || kind == .leftarrow) ? .relation : .ordinary
+            switch kind {
+            case .rightarrow, .leftarrow, .longRightArrow, .longLeftArrow, .leftRightArrow,
+                 .hookRightArrow, .hookLeftArrow, .mapsToArrow,
+                 .rightHarpoonUp, .rightHarpoonDown, .leftHarpoonUp, .leftHarpoonDown,
+                 .rightLeftHarpoons:
+                return .relation   // an annotated arrow is a relation
+            default:
+                return .ordinary
+            }
         case .decorated(let base, _): return atomClass(of: base)
         case .styled(let base, _): return atomClass(of: base)
         case .mathStyle(let base, _): return atomClass(of: base)

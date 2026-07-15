@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **The extensible `\x…arrow` family now draws its real head.** Every
+  variant beyond `\xrightarrow`/`\xleftarrow` used to collapse to a plain
+  stretchy shaft; each now draws distinctly: `\xLongrightarrow`/`\xLongleftarrow`
+  as double-lined shafts (⟹ ⟸), `\xleftrightarrow` with heads on both ends,
+  `\xhookrightarrow`/`\xhookleftarrow` with a tail hook (↪ ↩), `\xmapsto`
+  with a tail bar (↦), the four `\x…harpoon…` as single-barb heads (⇀ ⇁ ↼ ↽),
+  and `\xrightleftharpoons` as two opposed stacked harpoons (⇌ — the chemical
+  equilibrium arrow). The `[under]` label also keeps its scripts now
+  (`\xrightleftharpoons[k_r]{k_f}`). New `cmd-arrows.png` specimen; closes
+  the last ⚠️ in COVERAGE.
+
 - **iosMath's full example set now renders (20/20).** Probing Vinculum
   against every equation in iosMath's README found five that fell back;
   all five traced to three classic TeX features, now added:

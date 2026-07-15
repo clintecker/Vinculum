@@ -285,12 +285,28 @@ extension MathNode {
             return "\\overbrace{\(b)}" + (over.map { "^{\($0.toLaTeX())}" } ?? "")
         case .underbrace:
             return "\\underbrace{\(b)}" + (under.map { "_{\($0.toLaTeX())}" } ?? "")
-        case .rightarrow:
+        case .rightarrow, .leftarrow, .longRightArrow, .longLeftArrow, .leftRightArrow,
+             .hookRightArrow, .hookLeftArrow, .mapsToArrow,
+             .rightHarpoonUp, .rightHarpoonDown, .leftHarpoonUp, .leftHarpoonDown,
+             .rightLeftHarpoons:
+            let cmd: String
+            switch kind {
+            case .leftarrow: cmd = "xleftarrow"
+            case .longRightArrow: cmd = "xLongrightarrow"
+            case .longLeftArrow: cmd = "xLongleftarrow"
+            case .leftRightArrow: cmd = "xleftrightarrow"
+            case .hookRightArrow: cmd = "xhookrightarrow"
+            case .hookLeftArrow: cmd = "xhookleftarrow"
+            case .mapsToArrow: cmd = "xmapsto"
+            case .rightHarpoonUp: cmd = "xrightharpoonup"
+            case .rightHarpoonDown: cmd = "xrightharpoondown"
+            case .leftHarpoonUp: cmd = "xleftharpoonup"
+            case .leftHarpoonDown: cmd = "xleftharpoondown"
+            case .rightLeftHarpoons: cmd = "xrightleftharpoons"
+            default: cmd = "xrightarrow"
+            }
             let opt = under.map { "[\($0.toLaTeX())]" } ?? ""
-            return "\\xrightarrow\(opt){\(over?.toLaTeX() ?? "")}"
-        case .leftarrow:
-            let opt = under.map { "[\($0.toLaTeX())]" } ?? ""
-            return "\\xleftarrow\(opt){\(over?.toLaTeX() ?? "")}"
+            return "\\\(cmd)\(opt){\(over?.toLaTeX() ?? "")}"
         case .overRightArrow: return "\\overrightarrow{\(b)}"
         case .overLeftArrow: return "\\overleftarrow{\(b)}"
         case .overLeftRightArrow: return "\\overleftrightarrow{\(b)}"

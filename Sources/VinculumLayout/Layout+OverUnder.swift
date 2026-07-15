@@ -13,33 +13,33 @@ extension MathLayoutEngine {
         let gap = size * MathLayout.overUnderGap
 
         switch kind {
-        case .rightarrow, .leftarrow:
+        case .rightarrow, .leftarrow, .longRightArrow, .longLeftArrow, .leftRightArrow,
+             .hookRightArrow, .hookLeftArrow, .mapsToArrow,
+             .rightHarpoonUp, .rightHarpoonDown, .leftHarpoonUp, .leftHarpoonDown,
+             .rightLeftHarpoons:
             let labelWidth = max(overBox?.width ?? 0, underBox?.width ?? 0)
             let arrowWidth = max(size * MathLayout.Arrow.minWidth, labelWidth + size * MathLayout.Arrow.labelPadding)
             let arrowThickness = max(1, size * constants.defaultRuleThickness)
             let headLength = size * MathLayout.Arrow.headLength
             let axis = size * constants.axisHeight
-            var ascent = axis + arrowThickness / 2
-            var descent = arrowThickness / 2 - axis
+            // Double shafts and the stacked harpoons paint above/below the
+            // axis, so the box must grow to cover the outer shaft.
+            let shaftSpread = kind == .rightLeftHarpoons ? headLength * 0.5
+                : (kind == .longRightArrow || kind == .longLeftArrow) ? arrowThickness : 0
+            var ascent = axis + arrowThickness / 2 + shaftSpread
+            var descent = arrowThickness / 2 - axis + shaftSpread
             if let overBox { ascent += gap + overBox.height }
             if let underBox { descent += gap + underBox.height }
-            let left = kind == .leftarrow
-            let tipX = left ? 0 : arrowWidth
-            let dir: CGFloat = left ? 1 : -1
 
-            var elements: [MathElement] = [stroke([
-                .move(CGPoint(x: 0, y: axis)), .line(CGPoint(x: arrowWidth, y: axis)),
-                .move(CGPoint(x: tipX + dir * headLength, y: axis + headLength * 0.5)),
-                .line(CGPoint(x: tipX, y: axis)),
-                .line(CGPoint(x: tipX + dir * headLength, y: axis - headLength * 0.5)),
-            ], width: arrowThickness, cap: .round)]
+            var elements = stretchyArrow(kind: kind, width: arrowWidth, axis: axis,
+                                         thickness: arrowThickness, head: headLength)
             if let overBox {
                 elements += overBox.placed(at: CGPoint(x: (arrowWidth - overBox.width) / 2,
-                                                       y: axis + arrowThickness / 2 + gap + overBox.descent))
+                                                       y: axis + arrowThickness / 2 + shaftSpread + gap + overBox.descent))
             }
             if let underBox {
                 elements += underBox.placed(at: CGPoint(x: (arrowWidth - underBox.width) / 2,
-                                                        y: axis - arrowThickness / 2 - gap - underBox.ascent))
+                                                        y: axis - arrowThickness / 2 - shaftSpread - gap - underBox.ascent))
             }
             return MathBox(width: arrowWidth, ascent: ascent, descent: max(descent, 0), elements: elements)
 
@@ -116,6 +116,85 @@ extension MathLayoutEngine {
             }
             return MathBox(width: width, ascent: ascent, descent: descent, elements: elements)
         }
+    }
+
+    /// The stretchy `\x…arrow` family, each with its own drawn shaft and
+    /// head(s): plain/long(double)/bidirectional arrows, hooks, the mapsto
+    /// tail bar, and single- or paired-barb harpoons. `axis` is the shaft
+    /// centerline; the arrow spans `0…width`.
+    private func stretchyArrow(kind: MathOverUnder, width: CGFloat, axis: CGFloat,
+                               thickness: CGFloat, head: CGFloat) -> [MathElement] {
+        let halfBarb: CGFloat = head * 0.5
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y) }
+
+        // A full or half arrowhead at one end. `dir` is +1 for a head opening
+        // rightward (drawn at the right tip) and -1 for the left tip.
+        func headOps(tipX: CGFloat, dir: CGFloat, upper: Bool, lower: Bool) -> [PathOp] {
+            let backX: CGFloat = tipX + dir * head
+            // A full head is one connected V through the tip (a crisp point);
+            // a harpoon is the single barb.
+            if upper && lower {
+                return [.move(pt(backX, axis + halfBarb)), .line(pt(tipX, axis)),
+                        .line(pt(backX, axis - halfBarb))]
+            }
+            let barbY: CGFloat = upper ? axis + halfBarb : axis - halfBarb
+            return [.move(pt(backX, barbY)), .line(pt(tipX, axis))]
+        }
+
+        // The stacked opposed harpoons (⇌): upper points right, lower left.
+        if kind == .rightLeftHarpoons {
+            let dy: CGFloat = halfBarb
+            let topY: CGFloat = axis + dy, botY: CGFloat = axis - dy
+            let top: [PathOp] = [.move(pt(0, topY)), .line(pt(width, topY)),
+                                 .move(pt(width - head, topY + halfBarb)), .line(pt(width, topY))]
+            let bot: [PathOp] = [.move(pt(0, botY)), .line(pt(width, botY)),
+                                 .move(pt(head, botY - halfBarb)), .line(pt(0, botY))]
+            return [stroke(top, width: thickness, cap: .round), stroke(bot, width: thickness, cap: .round)]
+        }
+
+        var ops: [PathOp] = []
+        let leftward = kind == .leftarrow || kind == .longLeftArrow || kind == .hookLeftArrow
+            || kind == .leftHarpoonUp || kind == .leftHarpoonDown
+        let doubled = kind == .longRightArrow || kind == .longLeftArrow
+
+        // Shaft: a single centerline, or two parallel rails for the long
+        // (double-lined) arrows.
+        if doubled {
+            let hi: CGFloat = axis + thickness, lo: CGFloat = axis - thickness
+            ops += [.move(pt(0, hi)), .line(pt(width, hi)), .move(pt(0, lo)), .line(pt(width, lo))]
+        } else {
+            ops += [.move(pt(0, axis)), .line(pt(width, axis))]
+        }
+
+        // Heads.
+        switch kind {
+        case .leftRightArrow:
+            ops += headOps(tipX: width, dir: -1, upper: true, lower: true)
+            ops += headOps(tipX: 0, dir: 1, upper: true, lower: true)
+        case .rightHarpoonUp:   ops += headOps(tipX: width, dir: -1, upper: true, lower: false)
+        case .rightHarpoonDown: ops += headOps(tipX: width, dir: -1, upper: false, lower: true)
+        case .leftHarpoonUp:    ops += headOps(tipX: 0, dir: 1, upper: true, lower: false)
+        case .leftHarpoonDown:  ops += headOps(tipX: 0, dir: 1, upper: false, lower: true)
+        default:
+            let tipX: CGFloat = leftward ? 0 : width
+            ops += headOps(tipX: tipX, dir: leftward ? 1 : -1, upper: true, lower: true)
+        }
+
+        // Tail decorations: the mapsto bar, and the hook curl.
+        if kind == .mapsToArrow {
+            let barTop: CGFloat = axis + head * 0.6, barBot: CGFloat = axis - head * 0.6
+            ops += [.move(pt(0, barTop)), .line(pt(0, barBot))]
+        }
+        if kind == .hookRightArrow {
+            // A downward curl at the LEFT (tail) end of a rightward arrow.
+            let curlX: CGFloat = head * 0.9, curlY: CGFloat = axis - head
+            ops += [.move(pt(0, axis)), .quad(to: pt(curlX, curlY), control: pt(0, curlY))]
+        }
+        if kind == .hookLeftArrow {
+            let curlX: CGFloat = width - head * 0.9, curlY: CGFloat = axis - head
+            ops += [.move(pt(width, axis)), .quad(to: pt(curlX, curlY), control: pt(width, curlY))]
+        }
+        return [stroke(ops, width: thickness, cap: .round)]
     }
 
     /// A horizontal shaft from `x0` to `x1` at height `y`, with a drawn

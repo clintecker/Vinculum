@@ -103,9 +103,14 @@ public enum MathSpeech {
             case .underbrace, .underbracket, .underparen:
                 let ann = under.map { ", labeled \(speak($0))" } ?? ""
                 return "\(speak(base))\(ann)"
-            case .rightarrow, .leftarrow:
+            case .rightarrow, .leftarrow, .longRightArrow, .longLeftArrow, .leftRightArrow,
+                 .hookRightArrow, .hookLeftArrow, .mapsToArrow,
+                 .rightHarpoonUp, .rightHarpoonDown, .leftHarpoonUp, .leftHarpoonDown,
+                 .rightLeftHarpoons:
+                let word = (kind == .mapsToArrow) ? "maps to" : "arrow"
                 let label = over.map(speak) ?? ""
-                return "arrow \(label)"
+                let sub = under.map { " under \(speak($0))" } ?? ""
+                return "\(word) \(label)\(sub)"
             default:
                 var s = speak(base)
                 if let over { s = "\(speak(over)) over \(s)" }

@@ -156,14 +156,22 @@ Each takes one following atom: `\hat{x}`, `\widehat{AB}`, etc.
 | `\overleftrightarrow` | `\overleftrightarrow{AB}` | Bidirectional arrow above |
 | `\underrightarrow` / `\underleftarrow` / `\underleftrightarrow` | `\underrightarrow{x}` | Arrow below base |
 
-**Extensible (stretchy) arrows** — `\xrightarrow[under]{over}`, optional `[under]`
-then `{over}`. All approximate to a stretchy left- or right-pointing shaft:
-`\xrightarrow`, `\xleftarrow`, `\xLongrightarrow`, `\xLongleftarrow`,
-`\xhookrightarrow`, `\xhookleftarrow`, `\xmapsto`, `\xrightharpoonup`,
-`\xrightharpoondown`, `\xleftharpoonup`, `\xleftharpoondown`, `\xleftrightarrow`,
-`\xrightleftharpoons`.
+**Extensible (stretchy) arrows** — `\x…arrow[under]{over}`, optional `[under]`
+then `{over}`, stretched to the wider label. Each variant draws its own head:
 
-Example: `\xrightarrow[\text{below}]{f}`.
+| Command(s) | Head |
+| --- | --- |
+| `\xrightarrow` `\xleftarrow` | Single full head |
+| `\xLongrightarrow` `\xLongleftarrow` | Double-lined shaft (⟹ ⟸) |
+| `\xleftrightarrow` | Heads on both ends (↔) |
+| `\xhookrightarrow` `\xhookleftarrow` | Full head + tail hook (↪ ↩) |
+| `\xmapsto` | Full head + tail bar (↦) |
+| `\xrightharpoonup` `\xrightharpoondown` `\xleftharpoonup` `\xleftharpoondown` | Single-barb harpoon |
+| `\xrightleftharpoons` | Opposed stacked harpoons (⇌) |
+
+Example: `\text{H}_2 + \text{I}_2 \xrightleftharpoons[k_r]{k_f} 2\,\text{HI}`.
+
+![Extensible arrows](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/cmd-arrows.png)
 
 ## Boxes & decorations
 
@@ -492,5 +500,4 @@ These parse to an `.unsupported` leaf (host shows its own fallback). See the
 
 Caveats on supported commands: `\mathcal` / `\mathscr` / `\mathfrak` render
 letters only (no digits); `\mathbf` uses a bold system font rather than a
-Mathematical-Alphanumeric codepoint; the `\x…arrow` family all approximate to a
-single stretchy left/right shaft regardless of arrowhead style.
+Mathematical-Alphanumeric codepoint.

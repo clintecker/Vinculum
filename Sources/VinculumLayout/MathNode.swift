@@ -136,6 +136,14 @@ public enum MathOverUnder: Hashable, Sendable {
     case underbrace   // ⏟ drawn below the base
     case rightarrow   // stretchy → with the annotation(s) over/under it
     case leftarrow    // stretchy ←
+    // The rest of the \x…arrow family, each with its own drawn head/shaft:
+    case longRightArrow, longLeftArrow      // ⟹ ⟸ double-lined shafts
+    case leftRightArrow                     // ↔ heads on both ends
+    case hookRightArrow, hookLeftArrow      // ↪ ↩ hook at the tail
+    case mapsToArrow                        // ↦ tail bar
+    case rightHarpoonUp, rightHarpoonDown   // ⇀ ⇁ half-barb heads
+    case leftHarpoonUp, leftHarpoonDown     // ↼ ↽
+    case rightLeftHarpoons                  // ⇌ two opposed stacked harpoons
     // Arrows drawn OVER / UNDER the base itself, stretched to its width —
     // \overrightarrow{AB} (vectors), \overleftarrow, \overleftrightarrow, and
     // the \under… mirrors.

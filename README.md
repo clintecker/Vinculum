@@ -275,6 +275,7 @@ The gallery posters cover:
 | `08-font-glyphs.png` | Glyph-by-glyph font comparison (fonts as columns) |
 | `09-font-alphabets.png` | Alphabet/script sub-specimen per font |
 | `arch-*.png` | Figures for [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): spacing, delimiters, styles, fallback |
+| `cmd-arrows.png` | The extensible `\x…arrow` family, each head drawn distinctly |
 
 **The complete command charts.** A visual companion to
 [docs/COMMANDS.md](docs/COMMANDS.md): *every* command rendered — a font-specimen

@@ -480,22 +480,37 @@ public enum MathParser {
              "xhookrightarrow", "xhookleftarrow", "xmapsto", "xrightharpoonup",
              "xrightharpoondown", "xleftharpoonup", "xleftharpoondown",
              "xleftrightarrow", "xrightleftharpoons":
-            // \xrightarrow[under]{over} — optional [under], then {over}.
-            // All the variant arrows approximate to a stretchy left/right shaft.
+            // \xrightarrow[under]{over} — optional [under], then {over}. Each
+            // variant draws its own head/shaft (hook, harpoon, mapsto, double).
             var under: MathNode?
             if tokens.first == .character("[") {
                 tokens.removeFirst()
                 var nodes: [MathNode] = []
                 while let t = tokens.first, t != .character("]") {
-                    if let atom = parseAtom(&tokens) { nodes.append(atom) }
+                    // parseAtomWithScripts so `[k_r]` keeps its subscript.
+                    if let atom = parseAtomWithScripts(&tokens) { nodes.append(atom) }
                 }
                 if tokens.first == .character("]") { tokens.removeFirst() }
                 under = nodes.count == 1 ? nodes[0] : .row(nodes)
             }
             let over = parseAtom(&tokens) ?? .row([])
-            let leftish = name.contains("left") && !name.contains("rightleft")
-            return .overUnder(base: .row([]), over: over, under: under,
-                              kind: leftish ? .leftarrow : .rightarrow)
+            let kind: MathOverUnder
+            switch name {
+            case "xleftarrow":         kind = .leftarrow
+            case "xLongrightarrow":    kind = .longRightArrow
+            case "xLongleftarrow":     kind = .longLeftArrow
+            case "xleftrightarrow":    kind = .leftRightArrow
+            case "xhookrightarrow":    kind = .hookRightArrow
+            case "xhookleftarrow":     kind = .hookLeftArrow
+            case "xmapsto":            kind = .mapsToArrow
+            case "xrightharpoonup":    kind = .rightHarpoonUp
+            case "xrightharpoondown":  kind = .rightHarpoonDown
+            case "xleftharpoonup":     kind = .leftHarpoonUp
+            case "xleftharpoondown":   kind = .leftHarpoonDown
+            case "xrightleftharpoons": kind = .rightLeftHarpoons
+            default:                   kind = .rightarrow   // xrightarrow
+            }
+            return .overUnder(base: .row([]), over: over, under: under, kind: kind)
 
         case "substack":
             return parseSubstack(&tokens)

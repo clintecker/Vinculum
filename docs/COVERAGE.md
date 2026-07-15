@@ -273,16 +273,25 @@ shaft plus a drawn head sized to fit the label.
 
 ## Extensible ("stretchy") arrows
 
-`\xrightarrow[under]{over}` / `\xleftarrow[under]{over}`: an arrow shaft that
-stretches to the wider of its optional `[under]` and `{over}` labels.
+`\x…arrow[under]{over}`: an arrow that stretches to the wider of its optional
+`[under]` and `{over}` labels. **Each variant draws its own head** — plain,
+double-lined, bidirectional, hooked, the mapsto bar, and single-barb harpoons.
 
-| Command | Status | Note |
+![The extensible arrow family](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/cmd-arrows.png)
+
+| Command | Status | Head drawn |
 | --- | :---: | --- |
-| `\xrightarrow` / `\xleftarrow` | ✅ | Right / left shaft with head |
-| `\xLongrightarrow` / `\xLongleftarrow` / `\xhookrightarrow` / `\xhookleftarrow` / `\xmapsto` / `\xrightharpoonup` / `\xrightharpoondown` / `\xleftharpoonup` / `\xleftharpoondown` / `\xleftrightarrow` / `\xrightleftharpoons` | ⚠️ | **Accepted and stretched, but all approximate to a plain left/right shaft** — the hook / harpoon / mapsto / double-line arrowheads are not drawn distinctly |
+| `\xrightarrow` / `\xleftarrow` | ✅ | Single full head, right / left |
+| `\xLongrightarrow` / `\xLongleftarrow` | ✅ | Double-lined shaft (⟹ ⟸) |
+| `\xleftrightarrow` | ✅ | Heads on both ends (↔) |
+| `\xhookrightarrow` / `\xhookleftarrow` | ✅ | Full head + hook curl at the tail (↪ ↩) |
+| `\xmapsto` | ✅ | Full head + tail bar (↦) |
+| `\xrightharpoonup` / `\xrightharpoondown` | ✅ | Single upper / lower barb (⇀ ⇁) |
+| `\xleftharpoonup` / `\xleftharpoondown` | ✅ | Single barb, left (↼ ↽) |
+| `\xrightleftharpoons` | ✅ | Two opposed stacked harpoons (⇌) |
 
 ```latex
-A \xrightarrow{f} B \xrightarrow[g]{} C
+\text{H}_2 + \text{I}_2 \xrightleftharpoons[k_r]{k_f} 2\,\text{HI}
 ```
 
 ---
@@ -420,8 +429,6 @@ a definition in one block applies everywhere; later definitions win (matching
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- **Extensible-arrow variety** — the `\x…arrow` hook / harpoon / mapsto /
-  double-line heads render as a plain shaft (⚠️ above).
 - `\sideset`, `\mathchoice`, `\DeclareMathOperator` (needs a macro-table
   branch) — ❌.
 - `\utilde` and harpoon accents (`\overrightharpoon`, `\overleftharpoon`, …) — ❌.
