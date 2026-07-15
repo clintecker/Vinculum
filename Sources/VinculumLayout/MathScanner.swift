@@ -8,8 +8,16 @@ import Foundation
 /// sidesteps that entirely; the non-math remainder is re-parsed as inline
 /// markdown by the converter.
 ///
+/// The slice handed in must still contain the whole span. Display math may
+/// cross physical lines, and markdown BLOCK parsing splits such spans before
+/// any inline pass runs — to cmark, a lone `=` under the opening line is a
+/// setext-heading underline (issue #1). Scan the raw source, or slices cut
+/// only at blank lines, never cmark's block boundaries.
+///
 /// Rules (the KaTeX/Pandoc common subset):
 /// - `$$…$$` is display math and may span newlines.
+/// - `\[…\]` is display math and, like `$$…$$`, may span newlines;
+///   `\(…\)` is inline math.
 /// - `$…$` is inline math; the opener must not be followed by whitespace,
 ///   the closer must not be preceded by whitespace nor followed by a digit,
 ///   and the span must not cross a blank line.

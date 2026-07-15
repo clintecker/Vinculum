@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Issue #1 investigated: the scanner was innocent.** The reported
+  multi-line `\[…\]` fall-through reproduces only when a *host*
+  block-parses markdown before scanning — to cmark, the stress document's
+  lone `=` line is a setext-heading underline, so the span is split before
+  any math pass sees it. MathScanner claims every reported shape correctly
+  (verified against the verbatim block, ~1,000 fuzzed variants, and every
+  historical version of the file). The scanner header now states the
+  integration contract — scan raw source or blank-line-cut slices, never
+  cmark block boundaries — and five new tests pin the multi-line claiming
+  behavior, including `\[…\]` across blank lines (matching `$$…$$`) and
+  the unterminated-opener case. The remaining fix belongs in Quoin.
+
 - **COVERAGE.md and INTEGRATION.md caught up with the engine.** COVERAGE
   gains a figure per section and sheds stale claims (glyph assembly and
   un-gated delimiter variants shipped in 0.24 but were still listed as
