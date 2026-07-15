@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **`MathText.attributedString(from:)` — the document pipeline.** One call
+  takes a whole string of prose with embedded math and returns an
+  `NSAttributedString` with the math flowed inline: all four delimiter
+  styles (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`), display math on its own
+  centered paragraph, document-scoped `\newcommand`/`\def` macros,
+  escaped `\$` as prose, and unsupported math degrading to VISIBLE styled
+  source. The API for the dominant real-world case — markdown notes, chat
+  messages, and LLM output are documents with math in them, not isolated
+  LaTeX strings.
+- **Fixed (scanner):** inline math ending in a command (`$x \in \R$`)
+  never closed — the escape-skip didn't count the escaped character as
+  ink, so the closing `$` looked whitespace-preceded. Found by the new
+  pipeline's macro test; pinned by new `MathScannerTests`.
+
 ## 1.0.0 — 2026-07-14
 
 **1.0.** The promise, as the roadmap wrote it: *TeX-quality output measured

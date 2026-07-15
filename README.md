@@ -123,6 +123,16 @@ See [CHANGELOG.md](CHANGELOG.md) for the full arc.
 
 ## Quick Start
 
+**Whole documents** — prose with embedded math (markdown notes, chat
+messages, LLM output) in one call. All four delimiter styles (`$…$`,
+`$$…$$`, `\(…\)`, `\[…\]`), document-scoped `\newcommand` macros, and
+unsupported math stays visible as styled source:
+
+```swift
+textView.textStorage?.setAttributedString(
+    MathText.attributedString(from: modelResponse))
+```
+
 The one-liner — a drop-in view (AppKit/UIKit), or SwiftUI:
 
 ```swift

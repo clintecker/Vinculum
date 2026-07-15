@@ -143,7 +143,14 @@ public enum MathScanner {
         var newlineRun = 0
         while i < chars.count {
             let ch = chars[i]
-            if ch == "\\" { i += 2; continue }
+            if ch == "\\" {
+                // The escaped character counts as ink — without this, math
+                // ENDING in a command (`$x \in \R$`) never closes, because
+                // the `$` looks whitespace-preceded.
+                if i + 1 < chars.count, !chars[i + 1].isWhitespace { lastNonSpace = i + 1 }
+                i += 2
+                continue
+            }
             if ch == "\n" {
                 newlineRun += 1
                 // A blank line terminates an inline `$…$` scan (no closer found).
