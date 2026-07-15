@@ -13,9 +13,9 @@ detail is linked per item.
 | --- | --- |
 | Name | Vinculum |
 | What it is | Native LaTeX math typesetting library for Apple platforms (layout engine also runs on Linux) |
-| Version | 1.0.0+ (SemVer; see [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md)) |
+| Version | 1.1.0+ (SemVer; see [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md)) |
 | License (code) | MIT |
-| License (bundled fonts) | GUST Font License (Latin Modern, TeX Gyre Termes/Pagella), SIL OFL (STIX Two) — redistribution/embedding permitted |
+| License (bundled fonts) | GUST Font License (Latin Modern, TeX Gyre Termes/Pagella), SIL OFL (STIX Two, Fira Math) — redistribution/embedding permitted |
 | Repo | https://github.com/clintecker/Vinculum |
 | Install | SwiftPM: `.package(url: "https://github.com/clintecker/Vinculum.git", from: "1.0.0")` |
 | Products | `VinculumRender` (Apple, everything), `VinculumLayout` (Foundation-only, Linux-capable parsing + layout) |
@@ -48,16 +48,20 @@ load and used in layout. Deep detail: [ALGORITHM.md](https://github.com/clinteck
 | TeX style lattice | display/text/script/scriptscript × cramped; style-correct constant pairs; spacing suppression in scripts; `\displaystyle` family |
 | Italic correction | Per-glyph: superscript/subscript split (`f^2_3`), integral subscript tuck (`\int_a^b`), stacked-limit skew |
 | Cut-in kerning | OpenType `MathKernInfo` staircases position scripts against the base glyph's corner profile (STIX Two ships data for 233 glyphs) |
-| Accent placement | Per-glyph `topAccentAttachment` (better than TeX's `\skewchar`); `AccentBaseHeight` seat; wide accents from horizontal variant ladders; `\hat{f}^2` script promotion |
+| Accent placement | Per-glyph `topAccentAttachment` (better than TeX's `\skewchar`); `AccentBaseHeight` seat; wide accents from horizontal variant ladders; combining-mark accents (`\vec`) via the glyph-ID path for exact ink seating; `\hat{f}^2` script promotion |
 | Tall delimiters | Size-variant ladders → glyph assembly (end caps + extenders, constant stroke weight) → scaling, for every covered glyph |
 | Radicals | The font's √ glyph via variants + assembly; font-true degree kerns and 60% raise |
 | Display operators | Font's display-size variants at `DisplayOperatorMinHeight`, axis-centered; TeX Rule 13a limit clearances |
 | Fence sizing | TeX's `\delimiterfactor`/`\delimitershortfall` formula |
-| Inter-atom spacing | Real TeX atom classes (thin/medium/thick), suppressed in script styles |
+| Inter-atom spacing | The complete TeXbook p. 170 pair table — all 8 atom classes including Inner (fractions, `\left…\right` groups, ellipses), transcribed cell-for-cell and test-pinned against an independent transcription; parenthesized entries suppressed in script styles; binary→unary reclassification (Appendix G rules 5–6) |
 
 Screenshots (CI-regenerated from current code, stable raw URLs):
 - Real equations: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/04-equations.png
 - Tall fences/assembly: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/02-structures.png
+- The pair-spacing table in action (reclassification, Inner atoms, script suppression): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-spacing.png
+- The delimiter stretch chain (variants → assembly → \big family): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-delimiters.png
+- The style lattice (script shrink, forced styles, display operators): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-styles.png
+- Per-rule figures (radicals, accents, operators, fractions, scripts, decorations): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-radicals.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-accents.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-operators.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-fractions.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-scripts.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-decorations.png
 - Stress corpus page: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/page-06.png
 
 ### G2 — LaTeX coverage
@@ -67,7 +71,7 @@ Deep detail: [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs
 
 | Feature | Specific |
 | --- | --- |
-| Symbols | ~400 commands (Greek, operators, relations, arrows, delimiters, letterlike sets), each with its correct TeX atom class |
+| Symbols | 404 symbol commands + 37 named operators (Greek, operators, relations, arrows, delimiters, letterlike sets), each with its correct TeX atom class — including the Inner class for ellipses (`f(x_1,\ldots,x_n)` spaces as TeX sets it) |
 | Structures | Fractions (`\frac`/`\cfrac`/`\genfrac`/`\binom`), radicals with degree, scripts, accents, over/under constructs, boxes/rules/strikes, `\phantom` family, colors |
 | Environments | All matrix variants, `cases`, `aligned`/`align`/`gather`/`split`/`multline`, `array` with column specs + `\hline`/`\cline`, `\substack`, `\tag` |
 | Macros | Document-scoped `\newcommand`/`\renewcommand`/`\def` with `#1…#9`, recursion-capped |
@@ -75,9 +79,16 @@ Deep detail: [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs
 | Named operators | 37 function names; `\operatorname`/`\operatorname*` |
 | Explicitly out of scope | mhchem, siunitx, `\href`, embedded HTML, `\begin{CD}` |
 
-Screenshot: full command charts, e.g.
-https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-binary.png
-(one chart per atom class on the [gallery branch](https://github.com/clintecker/Vinculum/tree/gallery)).
+Screenshots: one specimen chart per atom class, CI-regenerated with a sync
+guard (a new atom class cannot silently drop commands from the charts):
+- Relations: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-relations.png
+- Binary operators: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-binary.png
+- Big operators: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-operators.png
+- Ordinary/Greek/letterlike/arrows: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-ordinary.png
+- Opening/closing delimiters: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-open.png · https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-close.png
+- Punctuation: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-punct.png · Inner (ellipses): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-inner.png
+- Function-name operators: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-functions.png
+- Structural commands, source beside render: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/cmd-structural.png
 
 ### G3 — Integration surfaces
 
@@ -110,11 +121,12 @@ Deep detail: [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FO
 | Bundled fonts | Latin Modern Math (default), TeX Gyre Termes Math, TeX Gyre Pagella Math, STIX Two Math, Fira Math (sans-serif) |
 | Bring-your-own | `MathFont(url:)` for any OTF with a MATH table; refuses fonts without one |
 | Per-font truth | Constants/typography/variants/assemblies parsed per font at load; per-font render caching |
-| Measured differences | STIX axis 0.258 vs LM 0.250; `DisplayOperatorMinHeight` 1.8 vs 1.3/1.3/1.5 em; STIX ships cut-in kern data |
+| Measured differences | Axis heights 0.250 (LM) / 0.258 (STIX) / 0.280 (Fira); `DisplayOperatorMinHeight` 1.3–1.8 em across faces; STIX ships cut-in kern data for 233 glyphs |
 
 Screenshots:
-- Equation specimen, all four fonts: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/07-fonts.png
-- Glyph-by-glyph comparison grid: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/08-font-glyphs.png
+- One equation per font (scannable overview): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/07-fonts.png
+- Glyph-by-glyph comparison grid (fonts as columns): https://raw.githubusercontent.com/clintecker/Vinculum/gallery/08-font-glyphs.png
+- Alphabet/script letterform sub-specimen per font: https://raw.githubusercontent.com/clintecker/Vinculum/gallery/09-font-alphabets.png
 
 ### G5 — Accessibility
 
@@ -152,11 +164,12 @@ Screenshots:
 
 | Feature | Specific |
 | --- | --- |
-| Test suite | 209 tests: headless geometry (Linux), golden-image regression with coverage ratchet, per-font canaries, fuzz, performance ceilings |
+| Test suite | 235 tests: headless geometry (Linux), golden-image regression with coverage ratchet, per-font canaries, fuzz, performance ceilings, the p. 170 spacing chart pinned cell-by-cell |
 | CI matrix | Linux (headless layout), macOS (full suite), iOS simulator (runtime tests), gallery auto-publish |
-| Golden discipline | ~95 pixel-pinned fixtures; a fixture that *starts* rendering fails CI until promoted (coverage can't silently change) |
-| Ground truth | MATH-table parsing pinned against committed raw font bytes and fontTools |
-| Docs | Rule-by-rule TeX Appendix G audit ([ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md)) stating Implemented/Partial/ABSENT honestly |
+| Golden discipline | 93 pixel-pinned fixtures; a fixture that *starts* rendering fails CI until promoted (coverage can't silently change) |
+| Ground truth | MATH-table parsing pinned against committed raw font bytes and fontTools; inter-atom spacing pinned against the TeXbook p. 170 chart |
+| Docs as verification | ~38 gallery images regenerate from the live engine on every push to `main`; a wrong-looking figure means a wrong engine (this pipeline caught a mis-seated `\vec` arrow and a chart-coverage regression) |
+| Docs | Rule-by-rule TeX Appendix G audit ([ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md)) stating Implemented/Partial/ABSENT honestly, with a rendered figure per rule cluster |
 
 ## Approach matrix (generic, no named competitors)
 
@@ -170,17 +183,44 @@ Screenshots:
 | Deterministic/testable output | Engine-version dependent | Service dependent | Golden-pinned, headless-testable |
 | Accessibility of math content | Varies | None (image) | Generated spoken math everywhere |
 
+## Image asset inventory (all stable URLs, CI-refreshed on every push to `main`)
+
+Every image regenerates from the live engine — always current, never
+hand-made. Base URL: `https://raw.githubusercontent.com/clintecker/Vinculum/gallery/`.
+White background, 2× resolution, PNG. Full set browsable on the
+[gallery branch](https://github.com/clintecker/Vinculum/tree/gallery).
+
+| Asset | Shows | Suited for |
+| --- | --- | --- |
+| `01-core.png` | Fractions, roots, scripts, big operators with limits — source beside render | Hero/feature: core typesetting |
+| `02-structures.png` | Auto-sized delimiters, matrices, cases, aligned environments | Feature: structures/environments |
+| `03-notation.png` | Accents, binomials, braces, arrows, math alphabets, color | Feature: notation breadth |
+| `04-equations.png` | Six famous real-world equations (quadratic, Euler, Schrödinger, Bayes, Maxwell, ζ) | Hero: "what the output looks like" |
+| `05-macros.png` | Document-scoped `\newcommand` definitions in use | Feature: macros |
+| `06-symbols.png` | Standalone delimiters, relations/operators symbol coverage | Feature: symbol breadth |
+| `07-fonts.png` | The same equation in each of the five bundled fonts, separated rows | Feature: font choice |
+| `08-font-glyphs.png` | Glyph-by-glyph grid, fonts as columns | Font comparison detail |
+| `09-font-alphabets.png` | Italic/Greek/script alphabets per font | Font letterform detail |
+| `arch-spacing.png` | The TeXbook p. 170 pair table's visible consequences (classes, reclassification, Inner atoms, script suppression) | Typography-quality proof |
+| `arch-delimiters.png` | Delimiter stretch chain: size variants → glyph assembly → `\big` family | Typography-quality proof |
+| `arch-styles.png` | Style lattice: script shrink to the 50% floor, `\dfrac`/`\tfrac`, display operators | Typography-quality proof |
+| `arch-fallback.png` | Unknown commands degrading to legible in-place source cards | Reliability/fallback story |
+| `alg-radicals.png` · `alg-accents.png` · `alg-operators.png` · `alg-fractions.png` · `alg-scripts.png` · `alg-decorations.png` | One figure per TeX Appendix G rule cluster (matches ALGORITHM.md sections) | Deep-dive/algorithm pages |
+| `sym-relations.png` · `sym-binary.png` · `sym-operators.png` · `sym-ordinary.png` · `sym-open.png` · `sym-close.png` · `sym-punct.png` · `sym-inner.png` · `sym-functions.png` | Specimen chart per atom class — every one of the 404+37 commands rendered | Command-reference pages |
+| `cmd-structural.png` | Every structural command, source beside render | Command-reference pages |
+| `page-01.png` … `page-09.png` | The 66-equation real-world stress corpus, all rendering natively | Depth/credibility ("it handles real documents") |
+
 ## Documentation index (link targets for any site)
 
 | Module | Content |
 | --- | --- |
 | [README](https://github.com/clintecker/Vinculum/blob/main/README.md) | Overview, quick start, support matrix, gallery |
-| [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FONTS.md) | The four fonts, comparisons, BYO fonts, licensing |
-| [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs/COMMANDS.md) | Every supported command |
-| [COVERAGE.md](https://github.com/clintecker/Vinculum/blob/main/docs/COVERAGE.md) | Feature-by-feature support with examples |
-| [ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md) | TeX Appendix G audit |
-| [ARCHITECTURE.md](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md) | The layout/render split, seams, IR |
-| [INTEGRATION.md](https://github.com/clintecker/Vinculum/blob/main/docs/INTEGRATION.md) | Host integration guide |
+| [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FONTS.md) | The five fonts, specimen comparisons, BYO fonts, licensing |
+| [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs/COMMANDS.md) | Every supported command, with a rendered specimen chart per section |
+| [COVERAGE.md](https://github.com/clintecker/Vinculum/blob/main/docs/COVERAGE.md) | Feature-by-feature support matrix, one figure per section |
+| [ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md) | TeX Appendix G audit, illustrated per rule; sources (TeXbook, *Appendix G Illuminated*) |
+| [ARCHITECTURE.md](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md) | The layout/render split, seams, IR — with design rationale ("why") sections and figures |
+| [INTEGRATION.md](https://github.com/clintecker/Vinculum/blob/main/docs/INTEGRATION.md) | Host integration guide: attachments, documents, views, SVG, accessibility, hit-testing, threading, caching |
 | [ROADMAP.md](https://github.com/clintecker/Vinculum/blob/main/docs/ROADMAP.md) / [IMPLEMENTATION_PLAN.md](https://github.com/clintecker/Vinculum/blob/main/docs/IMPLEMENTATION_PLAN.md) | History + open items (internal planning) |
 | [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md) | Release history |
 | DocC catalog | In-Xcode API reference |

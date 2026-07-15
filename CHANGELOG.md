@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **PRODUCT.md refreshed against the shipped reality.** Version, Fira
+  Math licensing, exact command counts (404+37), the p. 170-verified
+  spacing and `\vec` seating in the typography table, five-font specimen
+  links, test/golden counts (235/93), and a new image-asset inventory: all
+  38 CI-refreshed gallery URLs cataloged with what each shows and what
+  page it suits — every referenced asset verified present on the gallery
+  branch. Documentation-index descriptions updated to reflect the
+  illustrated docs.
+
 - **Issue #1 investigated: the scanner was innocent.** The reported
   multi-line `\[…\]` fall-through reproduces only when a *host*
   block-parses markdown before scanning — to cmark, the stress document's
