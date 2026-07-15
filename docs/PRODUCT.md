@@ -20,7 +20,7 @@ detail is linked per item.
 | Install | SwiftPM: `.package(url: "https://github.com/clintecker/Vinculum.git", from: "1.0.0")` |
 | Products | `VinculumRender` (Apple, everything), `VinculumLayout` (Foundation-only, Linux-capable parsing + layout) |
 | Platforms | macOS 14+, iOS 17+, visionOS 1+, tvOS 17+; Linux (layout product) |
-| Language/runtime | Swift 6, strict concurrency, `Sendable` API, zero third-party dependencies |
+| Language/runtime | Swift 6.2+ toolchain (Swift 6 language mode), strict concurrency, `Sendable` API, zero third-party dependencies |
 | Origin | Extracted from [Quoin](https://github.com/clintecker/quoin); sibling of [MermaidKit](https://github.com/clintecker/MermaidKit) |
 
 ## Target audiences

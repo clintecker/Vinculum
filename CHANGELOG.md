@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Minimum toolchain is now Swift 6.2** (`swift-tools-version: 6.2`). CI
+  builds on the `swift:6.2` Linux image and the newest Xcode on macOS.
+
 - **The extensible `\x…arrow` family now draws its real head.** Every
   variant beyond `\xrightarrow`/`\xleftarrow` used to collapse to a plain
   stretchy shaft; each now draws distinctly: `\xLongrightarrow`/`\xLongleftarrow`

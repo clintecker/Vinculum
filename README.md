@@ -5,7 +5,7 @@ metrics from the font's MATH table, a device-independent scene IR — no MathJax
 no KaTeX, no WebView, zero dependencies.**
 
 <!-- badges: replace with real shields once CI/tags are public -->
-![Swift 6](https://img.shields.io/badge/swift-6.0-orange)
+![Swift 6.2](https://img.shields.io/badge/swift-6.2%2B-orange)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20visionOS%20·%20tvOS%20·%20Linux-blue)
 ![SwiftPM](https://img.shields.io/badge/SwiftPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -427,7 +427,7 @@ per-subtree during layout. That's the whole surface — see
 - **macOS 14+, iOS 17+, visionOS 1+, tvOS 17+** — full package (VinculumRender).
 - **Linux** — VinculumLayout only (parsing + geometry; supply your own
   measurer/renderer).
-- Swift 6 language mode, strict concurrency. Zero third-party dependencies.
+- Swift 6.2+ toolchain, Swift 6 language mode, strict concurrency. Zero third-party dependencies.
 
 > Not Mac Catalyst-tuned: on Catalyst `canImport(AppKit)` is true, so the
 > AppKit path compiles but is untested there.

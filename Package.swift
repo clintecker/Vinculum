@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 // Vinculum — native LaTeX math parsing and typesetting for Apple platforms.
