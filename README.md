@@ -77,9 +77,10 @@ Then pick your product(s):
 ])
 ```
 
-- **VinculumRender** — Apple platforms. Everything below, including the
-  bundled font, the MATH-table delimiter provider, and the one-call
-  attachment API.
+- **VinculumRender** — the renderer. On Apple platforms it draws with
+  CoreText/CoreGraphics (attachments, views, the one-call API); on **Linux**
+  it draws with Silica/Cairo/FreeType and produces PNGs
+  (`MathSilicaRenderer.renderPNG`, see [docs/LINUX.md](docs/LINUX.md)).
 - **VinculumLayout** — platform-free (Foundation only, builds on Linux):
   parsing, macros, and all typesetting geometry, emitting a `MathScene`. Use
   it alone if you supply your own measurer and renderer.
@@ -390,7 +391,7 @@ Stage-by-stage sub-diagrams live in
   CoreText, no CoreGraphics — just geometry. The font's MATH-table constants
   live in `MathConstants`; Vinculum's own drawing proportions (radical hook,
   brace arcs, arrowhead) live in `MathLayout`. Every number is named.
-- **VinculumRender** (Apple only) is the thin platform seam:
+- **VinculumRender** (Apple: CoreText/CoreGraphics; Linux: Silica/Cairo/FreeType) is the platform seam:
   `CoreTextMeasurer` implements the measurer via `CTLine`,
   `CoreTextDelimiterProvider` reads MATH-table delimiter size variants,
   `MathSceneRenderer` draws a scene into a `CGContext`, `MathFont` bundles
@@ -426,7 +427,9 @@ per-subtree during layout. That's the whole surface — see
 ## Platforms
 
 - **macOS 14+, iOS 17+, visionOS 1+, tvOS 17+** — full package (VinculumRender).
-- **Linux** — VinculumLayout only (parsing + geometry; supply your own
+- **Linux** — full rendering via Silica/Cairo/FreeType (`MathSilicaRenderer`,
+  [docs/LINUX.md](docs/LINUX.md)), server-side SVG (`MathSVGRenderer`), or
+  VinculumLayout alone (parsing + geometry; supply your own
   measurer/renderer).
 - Swift 6.2+ toolchain, Swift 6 language mode, strict concurrency. Zero third-party dependencies.
 

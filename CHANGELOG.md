@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.4.0 — 2026-07-15
+
+**Linux rendering works.** `VinculumRender` now draws a `MathScene` to a PNG
+on Linux via Silica/Cairo and FreeType — the render half to go with the
+already-platform-free layout stage. `MathSilicaRenderer.renderPNG(latex:…)`
+is the one-call entry; all five bundled MATH fonts render.
+
+- **How it draws.** `FreeTypeFont` loads a bundled `.otf` from bytes
+  (`FT_New_Memory_Face`) and provides glyph advances, real per-glyph ink
+  extents (so accents seat on the actual ink), and outlines via
+  `FT_Outline_Decompose` → `PathOp`s. `MathSilicaRenderer` fills those
+  outlines, rules, and strokes into a Silica `CairoContext` and encodes PNG.
+  It loads fonts with FreeType directly because Silica's font-by-name path
+  never runs `FcFontMatch` and so can't resolve our non-default families.
+- **macOS parity.** A 20-equation corpus (`Tests/fixtures/parity-corpus.txt`)
+  renders near-identically on both backends — fractions, radicals, scripts,
+  matrices, cases, delimiters, binomials, the arrow family, braces, boxes,
+  color, alphabets, sums, limits, Stirling numbers. Documented gaps
+  (Linux, base services only): large-operator display variants, `ssty`
+  optical scripts, and `ec`/`ar` accent glyphs — follow-ups, not limits.
+- **New docs:** [docs/LINUX.md](docs/LINUX.md) — usage, build recipe, the
+  parity report, and the known gaps. INTEGRATION/ARCHITECTURE/PRODUCT/README
+  updated to reflect that Linux is now a rendering platform, not layout-only.
+- Linux CI runs the render tests (all five fonts) alongside the headless
+  layout suite; Apple builds are unchanged (Silica never linked).
+
 ## 1.3.0 — 2026-07-15
 
 **Linux rendering backend — foundation.** Vinculum now builds on Linux with

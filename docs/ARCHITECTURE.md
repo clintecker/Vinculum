@@ -109,6 +109,13 @@ of them:
   platform-free end to end. Font-specific `.glyph(id:)` elements (delimiter
   variants, `ssty` scripts) render via an optional `GlyphOutlineProvider`
   (CoreText on Apple, FreeType on Linux); a headless scene carries none.
+- **MathSilicaRenderer** is the **Linux raster** backend — a fourth
+  projection of the same scene, drawn with Silica/Cairo and FreeType glyph
+  outlines to a PNG. It exists because a Linux host that wants *pixels* (not
+  SVG) has no CoreGraphics: it loads the bundled MATH `.otf` with FreeType
+  (Silica's font-by-name path can't resolve non-default families), fills
+  glyph outlines and rules into a Cairo surface, and encodes PNG. On Apple
+  it is never compiled. See [LINUX.md](LINUX.md).
 
 Each is a thin projection of the same `MathScene`; the alternative — one
 renderer with three output modes — would drag CoreText into the SVG path,

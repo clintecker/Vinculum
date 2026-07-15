@@ -405,6 +405,29 @@ so layout code never sees a stale size).
 
 ---
 
+## 11b. Linux: raster PNGs via Silica
+
+On Linux, `VinculumRender` draws with Silica/Cairo/FreeType (never on Apple —
+the products are platform-gated). One call renders LaTeX to a PNG:
+
+```swift
+import VinculumRender
+
+let png: Data? = MathSilicaRenderer.renderPNG(
+    latex: #"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#,
+    resource: "latinmodern-math",   // any bundled font
+    baseSize: 24, display: true)
+```
+
+Build needs the Cairo/FreeType/FontConfig dev packages
+(`libcairo2-dev libfreetype6-dev libfontconfig1-dev`) and the Swift 6.2
+toolchain. It loads the bundled MATH fonts from their bytes with FreeType, so
+no system fonts are required. Layout is the same platform-free engine as Apple,
+so geometry matches; a few font-truth refinements (large-operator display
+variants, `ssty` optical scripts, some accent glyphs) are not yet wired on the
+Linux path. Full guide, build recipe, and the macOS-parity report:
+[docs/LINUX.md](LINUX.md).
+
 ## 12. Server-side / headless output: SVG
 
 `MathSVGRenderer` lives in **VinculumLayout** (platform-free), so a Linux

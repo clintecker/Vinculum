@@ -12,14 +12,14 @@ detail is linked per item.
 | Key | Value |
 | --- | --- |
 | Name | Vinculum |
-| What it is | Native LaTeX math typesetting library for Apple platforms (layout engine also runs on Linux) |
-| Version | 1.1.0+ (SemVer; see [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md)) |
+| What it is | Native LaTeX math typesetting library. Renders on Apple platforms (CoreText) and on Linux (Silica/Cairo/FreeType → PNG); layout is platform-free |
+| Version | 1.4.0+ (SemVer; see [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md)) |
 | License (code) | MIT |
 | License (bundled fonts) | GUST Font License (Latin Modern, TeX Gyre Termes/Pagella), SIL OFL (STIX Two, Fira Math) — redistribution/embedding permitted |
 | Repo | https://github.com/clintecker/Vinculum |
 | Install | SwiftPM: `.package(url: "https://github.com/clintecker/Vinculum.git", from: "1.0.0")` |
-| Products | `VinculumRender` (Apple, everything), `VinculumLayout` (Foundation-only, Linux-capable parsing + layout) |
-| Platforms | macOS 14+, iOS 17+, visionOS 1+, tvOS 17+; Linux (layout product) |
+| Products | `VinculumRender` (rendering — CoreText on Apple, Silica/Cairo/FreeType on Linux), `VinculumLayout` (Foundation-only parsing + layout, all platforms) |
+| Platforms | macOS 14+, iOS 17+, visionOS 1+, tvOS 17+; **Linux (rendering via Silica + layout)** |
 | Language/runtime | Swift 6.2+ toolchain (Swift 6 language mode), strict concurrency, `Sendable` API, zero third-party dependencies |
 | Origin | Extracted from [Quoin](https://github.com/clintecker/quoin); sibling of [MermaidKit](https://github.com/clintecker/MermaidKit) |
 
@@ -105,6 +105,7 @@ Product ▸ Build Documentation).
 | Image + metadata | `MathImageRenderer.rendered(latex:…)` | Image, baseline descent, spoken description |
 | Scene IR + custom renderer | `MathLayoutEngine.make(font:baseSize:)` → `MathScene` → `MathSceneRenderer.draw` or your own (glyph resolution via public `MathFont.ctFont(size:)`) | PDF pipelines, custom drawing, headless layout |
 | SVG (server-side) | `MathSVGRenderer.svg(for: scene, embeddedFont: otfBytes)` | Linux/Vapor/static-site rendering; self-contained SVG with embedded font |
+| Linux PNG | `MathSilicaRenderer.renderPNG(latex:resource:baseSize:display:)` | Native raster rendering on Linux via Silica/Cairo/FreeType; loads the bundled MATH fonts from bytes ([LINUX.md](https://github.com/clintecker/Vinculum/blob/main/docs/LINUX.md)) |
 
 Code example (the LLM case):
 
@@ -222,6 +223,7 @@ White background, 2× resolution, PNG. Full set browsable on the
 | [ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md) | TeX Appendix G audit, illustrated per rule; sources (TeXbook, *Appendix G Illuminated*) |
 | [ARCHITECTURE.md](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md) | The layout/render split, seams, IR — with design rationale ("why") sections and figures |
 | [INTEGRATION.md](https://github.com/clintecker/Vinculum/blob/main/docs/INTEGRATION.md) | Host integration guide: attachments, documents, views, SVG, accessibility, hit-testing, threading, caching |
+| [LINUX.md](https://github.com/clintecker/Vinculum/blob/main/docs/LINUX.md) | The Linux rendering backend (Silica/Cairo/FreeType): usage, build, macOS parity, known gaps |
 | [ROADMAP.md](https://github.com/clintecker/Vinculum/blob/main/docs/ROADMAP.md) / [IMPLEMENTATION_PLAN.md](https://github.com/clintecker/Vinculum/blob/main/docs/IMPLEMENTATION_PLAN.md) | History + open items (internal planning) |
 | [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md) | Release history |
 | DocC catalog | In-Xcode API reference |
