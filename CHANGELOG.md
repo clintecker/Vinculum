@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **`\vec` seats its arrow on the letter.** The arrow (U+20D7, the one
+  point accent whose only spelling is a combining mark) rendered off the
+  base's top-right: a lone combining mark drawn as a *string* gets
+  shaping-dependent ink placement, defeating attachment-point math. It now
+  routes through the glyph-ID variant path, whose metrics locate the ink
+  exactly; the accent-variants provider returns the base glyph when no
+  wider cut fits, so the same path serves `\widehat` on narrow bases too.
+  The amsmath `\dotsb`/`\dotsc`/`\dotsm`/`\dotsi`/`\dotso` join
+  `\ldots`/`\cdots` as Inner atoms.
+- **ALGORITHM.md and COMMANDS.md show their work.** Every major Appendix G
+  rule cluster now has a CI-regenerated figure beside its audit entry
+  (`alg-*.png`: radicals, accents, operators, fractions, scripts,
+  decorations — via the new `AlgorithmGalleryGenerator`), and COMMANDS.md
+  embeds the symbol charts under the sections they document, including the
+  new `sym-inner.png` (with a sync guard so a future atom class can't
+  silently drop its commands from the charts). `\mathinner` gets its own
+  row in the atom-class table; stale phase-scrub artifacts cleaned up.
+
 - **The complete TeXbook p. 170 spacing chart, including the Inner class.**
   Verified cell-by-cell against the book: operators now set tight against
   parentheses (`\log n(x)` — Op→Open is 0, we inserted a thin space),

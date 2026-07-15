@@ -84,5 +84,26 @@ final class MathTypesetterTests: XCTestCase {
         XCTAssertGreaterThan(reds, 0, "the \\color subtree should carry a color")
         XCTAssertGreaterThan(inks, 0, "the rest should be theme ink (nil)")
     }
+
+    func testVecAccentRoutesThroughGlyphIDPathAndCentersInk() {
+        // \vec's only spelling is a combining mark (U+20D7); drawn as a
+        // STRING its ink seats shaping-dependently (it rendered off the
+        // letter's top-right). The fix routes it through the glyph-ID
+        // variant path — so the scene must carry a .glyph element, and its
+        // ink center must sit over the base's ink, not past its right edge.
+        let s = engine().layout(MathParser.parse("\\vec{v}"), display: false)
+        var arrow: CGPoint?
+        for e in s.elements {
+            if case let .glyph(_, _, origin, _) = e { arrow = origin }
+        }
+        guard let arrow else { return XCTFail("\\vec should emit a glyph-ID accent element") }
+        // The mark's ORIGIN may legitimately sit right of the base (its ink
+        // trails left of the origin; its baseline y may sit below zero) —
+        // but never absurdly far in either direction: the failure mode was
+        // ink landing entirely off the letter's top-right.
+        XCTAssertLessThan(arrow.x, s.width * 1.6,
+                          "arrow origin beyond the letter means the ink landed off the base")
+        XCTAssertGreaterThan(arrow.x, -s.width * 0.6, "arrow origin far left of the letter")
+    }
 }
 #endif

@@ -37,7 +37,13 @@ final class CommandGalleryGenerator: XCTestCase {
             (.closing, "Closing delimiters", "sym-close"),
             (.punctuation, "Punctuation", "sym-punct"),
             (.ordinary, "Ordinary · Greek · letterlike · arrows", "sym-ordinary"),
+            (.inner, "Inner — ellipses (thin-spaced subformula atoms)", "sym-inner"),
         ]
+        // Every class that has symbols must have a poster — a new
+        // MathAtomClass case must not silently drop its commands from
+        // the charts (the dots did exactly that when .inner landed).
+        XCTAssertEqual(Set(byClass.keys), Set(classPosters.map(\.0)),
+                       "sym-chart posters out of sync with MathAtomClass usage")
         for (cls, title, file) in classPosters {
             let names = (byClass[cls] ?? []).sorted()
             guard !names.isEmpty else { continue }

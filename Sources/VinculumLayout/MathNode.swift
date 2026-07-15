@@ -171,6 +171,15 @@ public enum MathAccent: Hashable, Sendable {
 
     public var isStretchy: Bool { self == .widehat || self == .widetilde || self == .widecheck }
 
+    /// Accents whose ONLY spelling is a combining mark (no spacing form).
+    /// A lone combining mark drawn as a string gets shaping-dependent ink
+    /// placement (CTLine may seat it at, before, or after the pen), which
+    /// defeats attachment-point math — so these route through the glyph-ID
+    /// variant path, whose metrics locate the ink exactly.
+    public var combiningGlyph: String? {
+        self == .vec ? "\u{20D7}" : nil   // combining right arrow above
+    }
+
     /// The combining-mark spelling of a stretchy accent — the glyph whose
     /// MATH-table horizontal variants provide the wider drawn cuts.
     public var stretchyGlyph: String? {

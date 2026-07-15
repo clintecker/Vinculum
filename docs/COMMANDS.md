@@ -28,6 +28,10 @@ so they're always current — e.g.
 
 # Part 1 — Structural & layout commands
 
+Every structural command below, rendered source-beside-result (CI-regenerated):
+
+![Structural commands](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/cmd-structural.png)
+
 ## Fractions & stacks
 
 | Command | Example | Note |
@@ -213,7 +217,8 @@ Force the inter-atom spacing class of a subexpression.
 | Command | Class | Command | Class |
 | --- | --- | --- | --- |
 | `\mathbin{…}` | binary | `\mathrel{…}` | relation |
-| `\mathop{…}` | large operator (stacks limits) | `\mathord{…}` / `\mathinner{…}` | ordinary |
+| `\mathop{…}` | large operator (stacks limits) | `\mathord{…}` | ordinary |
+| `\mathinner{…}` | inner (thin-spaced subformula) | | |
 | `\mathopen{…}` | opening | `\mathclose{…}` | closing |
 | `\mathpunct{…}` | punctuation | | |
 
@@ -257,6 +262,10 @@ glyph itself carries a style.
 
 ## Greek — lowercase
 
+Every ordinary-class symbol — Greek, letterlike, arrows — in one grid:
+
+![Ordinary symbols chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-ordinary.png)
+
 `\alpha` α · `\beta` β · `\gamma` γ · `\delta` δ · `\epsilon` ε ·
 `\varepsilon` ε · `\zeta` ζ · `\eta` η · `\theta` θ · `\vartheta` ϑ ·
 `\iota` ι · `\kappa` κ · `\lambda` λ · `\mu` μ · `\nu` ν · `\xi` ξ ·
@@ -271,12 +280,16 @@ glyph itself carries a style.
 
 ## Big operators
 
+![Big operators chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-operators.png)
+
 `\sum` ∑ · `\prod` ∏ · `\coprod` ∐ · `\int` ∫ · `\iint` ∬ · `\iiint` ∭ ·
 `\iiiint` ⨌ · `\oint` ∮ · `\oiint` ∯ · `\oiiint` ∰ · `\bigcup` ⋃ ·
 `\bigcap` ⋂ · `\bigsqcup` ⨆ · `\biguplus` ⨄ · `\bigvee` ⋁ · `\bigwedge` ⋀ ·
 `\bigoplus` ⨁ · `\bigotimes` ⨂ · `\bigodot` ⨀
 
 ## Binary operators
+
+![Binary operators chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-binary.png)
 
 `\pm` ± · `\mp` ∓ · `\times` × · `\div` ÷ · `\cdot` ⋅ · `\ast` ∗ ·
 `\star` ⋆ · `\circ` ∘ · `\bullet` • · `\diamond` ⋄ · `\cup` ∪ · `\cap` ∩ ·
@@ -293,6 +306,10 @@ glyph itself carries a style.
 `\bigtriangledown` ▽
 
 ## Relations — equality, order & set
+
+All relation commands (this and the next two sections), as a specimen grid:
+
+![Relations chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-relations.png)
 
 `\leq` / `\le` ≤ · `\geq` / `\ge` ≥ · `\neq` / `\ne` ≠ · `\equiv` ≡ ·
 `\approx` ≈ · `\thickapprox` ≈ · `\approxeq` ≊ · `\sim` ∼ · `\thicksim` ∼ ·
@@ -362,6 +379,10 @@ delimiters inside `\left…\right`.
 
 ## Delimiters (as symbols)
 
+![Opening delimiters chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-open.png)
+
+![Closing delimiters chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-close.png)
+
 `\langle` ⟨ · `\rangle` ⟩ · `\lceil` ⌈ · `\rceil` ⌉ · `\lfloor` ⌊ ·
 `\rfloor` ⌋ · `\lbrace` { · `\rbrace` } · `\lbrack` [ · `\rbrack` ] ·
 `\{` { · `\}` } · `\lvert` | · `\rvert` | · `\vert` | · `\|` ‖ · `\lVert` ‖ ·
@@ -371,6 +392,12 @@ delimiters inside `\left…\right`.
 
 `\dots` / `\ldots` … · `\cdots` ⋯ · `\vdots` ⋮ · `\ddots` ⋱ ·
 `\dotsb` ⋯ · `\dotsc` … · `\dotsm` ⋯ · `\dotsi` ⋯ · `\dotso` …
+
+Ellipses are **Inner** atoms (plain TeX defines them as `\mathinner`), so
+they draw a thin space against neighbors on *both* sides — `f(x_1,\ldots,x_n)`
+spaces the way the TeXbook sets it. `\vdots` is a plain box: ordinary.
+
+![Inner atoms chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-inner.png)
 
 ## Letterlike & ordinary symbols
 
@@ -391,11 +418,15 @@ delimiters inside `\left…\right`.
 
 ## Punctuation & literals
 
+![Punctuation chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-punct.png)
+
 `\colon` : · `\$` $ · `\%` % · `\&` & · `\#` #
 
 ---
 
 # Part 3 — Function-name operators
+
+![Function-name operators chart](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-functions.png)
 
 Recognized as upright multi-letter operators with correct operator spacing;
 `\lim`-family members stack their `_{…}` limits below in display style.
@@ -411,6 +442,10 @@ For any operator name not on this list, use `\operatorname{name}` (or
 ---
 
 # Part 4 — Not supported (degrades to fallback)
+
+What degradation looks like — unknown commands stay legible, in place:
+
+![Fallback rendering](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-fallback.png)
 
 These parse to an `.unsupported` leaf (host shows its own fallback). See the
 "Not yet supported" tail of [COVERAGE.md](COVERAGE.md) for the maintained list.

@@ -68,14 +68,18 @@ enum MathVariantTable {
     /// because combining marks draw behind their origin.
     static func wideAccent(for accentGlyph: String, maxWidth: CGFloat, size: CGFloat,
                            font: MathFont) -> DelimiterShape? {
-        guard let data = font.variantsData,
-              let ctFont = font.ctFont(size: size),
-              let baseID = font.glyphID(for: accentGlyph, size: size),
-              let con = data.horizontal[baseID] else { return nil }
-        var chosen: MathVariantsData.Variant?
-        for v in con.variants where v.advance * size <= maxWidth { chosen = v }
-        guard let chosen else { return nil }
-        var glyph = CGGlyph(chosen.glyphID)
+        guard let ctFont = font.ctFont(size: size),
+              let baseID = font.glyphID(for: accentGlyph, size: size) else { return nil }
+        // Widest drawn cut not exceeding maxWidth; the BASE glyph when none
+        // fits (or the mark has no ladder). Returning the base — with exact
+        // ink metrics — matters beyond stretching: a lone combining mark
+        // drawn as a *string* gets shaping-dependent ink placement, so
+        // point accents like \vec route through here with maxWidth 0.
+        var chosenID = baseID
+        if let con = font.variantsData?.horizontal[baseID] {
+            for v in con.variants where v.advance * size <= maxWidth { chosenID = v.glyphID }
+        }
+        var glyph = CGGlyph(chosenID)
         var rect = CGRect.zero
         CTFontGetBoundingRectsForGlyphs(ctFont, .horizontal, &glyph, &rect, 1)
         guard rect.width > 0 else { return nil }
@@ -83,7 +87,7 @@ enum MathVariantTable {
                                    ascent: max(0, rect.maxY), descent: max(0, -rect.minY),
                                    inkAscent: max(0, rect.maxY), inkDescent: rect.minY,
                                    inkLeft: rect.minX)
-        return DelimiterShape(glyphID: chosen.glyphID, metrics: metrics)
+        return DelimiterShape(glyphID: chosenID, metrics: metrics)
     }
 }
 

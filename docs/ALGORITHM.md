@@ -8,7 +8,7 @@ README honest: each rule is marked **Implemented**, **Partial**,
 
 It is a living document. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 phases land against it — a phase isn't done until its rules here flip
-status. Audited at v0.24.0 (a later release baseline).
+status. First audited at v0.24.0; figures and the Rule 20 chart re-verified against the TeXbook at v1.1.
 
 Appendix G's big takeaway — and Vinculum's design premise — is that TeX
 does **not** lay out mathematics as decorated text. It compiles a list of
@@ -61,6 +61,8 @@ size; `\genfrac`'s style argument honors all four values.
 
 Cramping propagates as before: radicands, denominators, and subscripts set
 `cramped`, selecting `superscriptShiftUpCramped`.
+
+![The style lattice](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-styles.png)
 
 ### 1.3 Font parameters — **Implemented**
 
@@ -117,6 +119,8 @@ the `*` cells in the Rule 20 chart.
 Rule + gap from `overbarVerticalGap`/`underbarVerticalGap` and rule
 thickness constants (`Layout+Decorations.swift`); inner cramped.
 
+![Rules 9/10 — lines, braces, boxes](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-decorations.png)
+
 ### Rule 11 — radicals — **Implemented**
 The surd is the font's √ glyph: size variants first (with the shortfall
 heuristic — a variant within 3% beats a ≥1.3× jump, so the sign hugs the
@@ -127,7 +131,9 @@ tucks the sign back over the degree) and the 60%
 `RadicalDegreeBottomRaisePercent`. The hand-stroked polyline survives only
 as the no-provider fallback (headless/Linux, mock-measurer tests).
 
-### Rule 12 — accents — **Implemented (a later release, minus width variants)**
+![Rule 11 — radicals](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-radicals.png)
+
+### Rule 12 — accents — **Implemented, including width variants**
 Accent x comes from the font's `topAccentAttachment` points (base minus
 accent, via the typography provider; advance-center fallback) — strictly
 better than TeX's `\skewchar`. Vertically the accent hugs the base's ink
@@ -138,6 +144,8 @@ accents (`\widehat` family) walk the font's HORIZONTAL variant ladder —
 carried by the combining-mark glyphs — taking the widest drawn cut not
 exceeding the accentee; scaling is the headless fallback.
 
+![Rule 12 — accents with skew and width variants](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-accents.png)
+
 ### Rule 13 — large operators — **Implemented**
 In display style, large operators (∑, ∏, ∫, …) swap in the font's
 display-size **variant glyph** at `DisplayOperatorMinHeight`, centered on
@@ -147,6 +155,8 @@ headless fallback. Limits attach at the Rule 13a clearances —
 mirror — and split ±δ/2 by the italic correction. Integrals are
 `\nolimits` with the δ-tucked subscript; the `\lim` family stacks.
 Remaining: no `\displaylimits` tri-state.
+
+![Rules 13/13a — operators and limits](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-operators.png)
 
 ### Rule 14 — Ord runs, ligatures, kerns — **Partial**
 Adjacent symbols share glyph runs via the measurer. Math ligatures and
@@ -161,6 +171,8 @@ and `Stack[DisplayStyle]GapMin`. The 1.35 display boost and the hand-tuned
 `ruleGap`/`atopGap` numbers retired. `\cfrac` uses the display constants.
 Remaining deviation: part-scales 0.9/0.8 (deliberate, see §1.3);
 `\above`/`*withdelims` unparsed.
+
+![Rule 15 — fractions on the math axis](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-fractions.png)
 
 ### Rule 16 — retype to Ord — **Implemented** via each builder returning a classed box consumed by the spacing walk.
 
@@ -187,6 +199,8 @@ Math ships no kern data (staircases exercised with synthetic bytes); STIX
 Two in a later release lights this up for real. Ink-clearance floors are retained
 so exponents clear tall bases' ink.
 
+![Rules 17/18 — geometric script placement](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-scripts.png)
+
 ### Rule 19 — `\left…\right` — **Implemented / minor deviation**
 The full stretch chain: MATH size variants (any covered glyph — the old
 `()[]{}`-only gate is gone; `⟨ ⟩ ‖ ⌈ ⌋` now step through variants) →
@@ -199,6 +213,8 @@ constant stroke weight. Fences size by TeX's formula:
 fence may sit up to ~10% short of an extreme body, exactly as TeX's
 `\delimiterfactor` intends.
 
+![Rule 19 — the delimiter stretch chain](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-delimiters.png)
+
 ### Rule 20 — inter-atom spacing — **Implemented (the full 8×8 chart)**
 The complete p. 170 pair table over all 8 atom classes **including Inner**
 (`pairSpacing` in `MathLayoutEngine.swift`), transcribed cell for cell and
@@ -210,13 +226,15 @@ them as `\mathinner`) classify as Inner; `\mathinner{…}` reclassifies
 explicitly and round-trips through `toLaTeX()`. ABSENT: fixed muskips
 (`\thinmuskip` etc. are not user-settable).
 
+![Rule 20 — the pair table in action](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-spacing.png)
+
 ### Rules 21/22 — line-break penalties, `\mathsurround` — **ABSENT**
 Math lays out atomically; breaking is the host's problem. Automatic
-breaking is a a later release stretch goal.
+breaking is a stretch goal.
 
 ---
 
-## 3. Constants ledger (post-a later release)
+## 3. Constants ledger
 
 **Read from the font at runtime:** the full 56-value `MathConstants`
 sub-table (`MathFontConstants`), the `MathGlyphInfo` sub-table (italic

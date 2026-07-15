@@ -46,11 +46,15 @@ extension MathLayoutEngine {
         // accent seat (AccentBaseHeight ≈ x-height).
         let seat = max(baseBox.inkAscent, size * constants.accentBaseHeight)
 
-        // Stretchy accents first try the font's HORIZONTAL width variants
-        // (TeX Rule 12's successor walk): the widest drawn cut not exceeding
-        // the accentee, centered on its attachment point.
-        if accent.isStretchy, let stretchy = accent.stretchyGlyph,
-           let shape = accentVariants?(stretchy, coreBox.width, size) {
+        // The glyph-ID path serves two accent families the string path
+        // can't: stretchy accents walking the font's HORIZONTAL width
+        // variants (TeX Rule 12's successor walk — widest drawn cut not
+        // exceeding the accentee), and combining-only accents like \vec,
+        // whose lone mark a text engine seats unpredictably when drawn as a
+        // string. Target width 0 for the latter: the design-size cut.
+        let markGlyph = accent.isStretchy ? accent.stretchyGlyph : accent.combiningGlyph
+        if let markGlyph,
+           let shape = accentVariants?(markGlyph, accent.isStretchy ? coreBox.width : 0, size) {
             let m = shape.metrics
             let accentBaselineY = seat + clearance - m.inkDescent
             let ascent = max(baseBox.ascent, accentBaselineY + m.inkAscent)

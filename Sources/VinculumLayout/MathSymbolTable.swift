@@ -44,8 +44,9 @@ extension MathParser {
         "gets": ("←", .relation), "rightleftharpoons": ("⇌", .relation),
         "triangleq": ("≜", .relation), "coloneqq": ("≔", .relation),
         "colon": (":", .punctuation), "bigstar": ("★", .ordinary),
-        "dotsb": ("⋯", .ordinary), "dotsc": ("…", .ordinary), "dotsm": ("⋯", .ordinary),
-        "dotsi": ("⋯", .ordinary), "dotso": ("…", .ordinary),
+        // The amsmath \dots* variants are ellipses too → Inner, like \ldots.
+        "dotsb": ("⋯", .inner), "dotsc": ("…", .inner), "dotsm": ("⋯", .inner),
+        "dotsi": ("⋯", .inner), "dotso": ("…", .inner),
         // ── Batch 11 symbol sweep ──────────────────────────────────────────
         // Relations (extended).
         "leqslant": ("⩽", .relation), "geqslant": ("⩾", .relation), "eqsim": ("≂", .relation),

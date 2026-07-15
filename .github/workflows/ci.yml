@@ -106,6 +106,9 @@ jobs:
           # Architecture-doc figures: spacing table, delimiter chain, styles, fallback.
           VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
             swift test --filter ArchitectureGalleryGenerator || true
+          # Algorithm-doc figures: one poster per Appendix G rule cluster.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter AlgorithmGalleryGenerator || true
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery
