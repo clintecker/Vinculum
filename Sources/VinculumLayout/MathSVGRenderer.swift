@@ -17,19 +17,23 @@ import Foundation
 /// SVG fully self-contained (`@font-face` with a data URI); otherwise the
 /// `fontFamily` must be available wherever the SVG is viewed.
 ///
-/// Designed for HEADLESS scenes (engines without delimiter/assembly
-/// providers, which is the Linux default): those contain no font-specific
-/// `.glyph(id:)` elements. If a scene does carry them, they are skipped
-/// with an XML comment — lay out headless for SVG, or draw glyph-ID scenes
-/// with `MathSceneRenderer` on Apple platforms.
+/// Scenes may carry font-specific `.glyph(id:)` elements — delimiter size
+/// variants and `ssty` optical scripts, which have no character spelling.
+/// Pass an `outlines` provider (`CoreTextGlyphOutlineProvider.make(font:)`
+/// on Apple; FreeType on Linux) and they're emitted as filled `<path>`s;
+/// omit it and they're skipped with an XML comment (fine for headless
+/// scenes laid out without font providers, the Linux default).
 public enum MathSVGRenderer {
 
     /// SVG markup for `scene`. `ink` is any CSS color; `\color` overrides
-    /// inside the scene take precedence per element.
+    /// inside the scene take precedence per element. `outlines`, if given,
+    /// draws `.glyph(id:)` elements (variants, `ssty` scripts) as filled
+    /// paths — otherwise they're skipped.
     public static func svg(for scene: MathScene,
                            fontFamily: String = "Latin Modern Math",
                            ink: String = "#000000",
                            embeddedFont: Data? = nil,
+                           outlines: GlyphOutlineProvider? = nil,
                            padding: CGFloat = 2) -> String {
         let width = scene.width + padding * 2
         let height = scene.ascent + scene.descent + padding * 2
@@ -72,28 +76,27 @@ public enum MathSVGRenderer {
                 """
 
             case let .stroke(path, width, cap, join, color):
-                var d = ""
-                for op in path {
-                    switch op {
-                    case .move(let p): d += "M \(sx(p.x)) \(sy(p.y)) "
-                    case .line(let p): d += "L \(sx(p.x)) \(sy(p.y)) "
-                    case let .quad(to, control):
-                        d += "Q \(sx(control.x)) \(sy(control.y)) \(sx(to.x)) \(sy(to.y)) "
-                    case .close: d += "Z "
-                    }
-                }
+                let d = pathData(path, sx: sx, sy: sy)
                 out += """
 
-                <path d="\(d.trimmingCharacters(in: .whitespaces))" fill="none" \
+                <path d="\(d)" fill="none" \
                 stroke="\(fill(color, ink))" stroke-width="\(fmt(width))" \
                 stroke-linecap="\(capName(cap))" stroke-linejoin="\(joinName(join))"/>
                 """
 
-            case .glyph:
-                // Font-specific variant glyph ID — unrenderable without the
-                // exact font's glyph table. Headless scenes never contain
-                // these; see the type documentation.
-                out += "\n<!-- skipped font-specific glyph element; lay out headless for SVG -->"
+            case let .glyph(id, size, origin, color):
+                // A font-specific glyph (delimiter variant or ssty script)
+                // has no character spelling — draw its outline as a filled
+                // path when the host supplies one, else skip it.
+                if let outlines, let ops = outlines(id, size) {
+                    let moved = ops.map { $0.offset(by: origin) }
+                    out += """
+
+                    <path d="\(pathData(moved, sx: sx, sy: sy))" fill="\(fill(color, ink))"/>
+                    """
+                } else {
+                    out += "\n<!-- skipped .glyph(id:); pass an `outlines` provider to render it -->"
+                }
 
             case .region:
                 break   // hit-test metadata, not ink
@@ -104,6 +107,25 @@ public enum MathSVGRenderer {
     }
 
     // MARK: - Helpers
+
+    /// An SVG path `d` string for a list of ops, mapped through the scene's
+    /// y-flip. Cubic ops (glyph outlines) become `C`, quads become `Q`.
+    private static func pathData(_ path: [PathOp],
+                                 sx: (CGFloat) -> String, sy: (CGFloat) -> String) -> String {
+        var d = ""
+        for op in path {
+            switch op {
+            case .move(let p): d += "M \(sx(p.x)) \(sy(p.y)) "
+            case .line(let p): d += "L \(sx(p.x)) \(sy(p.y)) "
+            case let .quad(to, c):
+                d += "Q \(sx(c.x)) \(sy(c.y)) \(sx(to.x)) \(sy(to.y)) "
+            case let .cubic(to, c1, c2):
+                d += "C \(sx(c1.x)) \(sy(c1.y)) \(sx(c2.x)) \(sy(c2.y)) \(sx(to.x)) \(sy(to.y)) "
+            case .close: d += "Z "
+            }
+        }
+        return d.trimmingCharacters(in: .whitespaces)
+    }
 
     private static func fill(_ color: MathColor?, _ ink: String) -> String {
         guard let c = color else { return ink }

@@ -151,12 +151,35 @@ public struct ScriptGlyph: Sendable {
 public typealias MathScriptVariantProvider =
     @Sendable (_ glyph: String, _ size: CGFloat, _ level: Int) -> ScriptGlyph?
 
+/// The filled outline of a glyph addressed by ID, at a point size, as
+/// `PathOp`s in scene coordinates (y-up, origin at the glyph's baseline).
+/// Lets a path-only renderer (SVG) draw `.glyph(id:)` size variants and
+/// `ssty` scripts that have no character spelling. On Apple, back it with
+/// `CTFontCreatePathForGlyph`; a Linux host can back it with FreeType.
+public typealias GlyphOutlineProvider =
+    @Sendable (_ glyphID: UInt16, _ size: CGFloat) -> [PathOp]?
+
 /// A segment of a stroked path, in scene coordinates (y-up).
 public enum PathOp: Sendable {
     case move(CGPoint)
     case line(CGPoint)
     case quad(to: CGPoint, control: CGPoint)
+    /// Cubic Bézier — glyph outlines (CFF) are cubic; the hand-stroked
+    /// primitives only ever use `quad`.
+    case cubic(to: CGPoint, control1: CGPoint, control2: CGPoint)
     case close
+
+    /// This op with every point translated by `d`.
+    public func offset(by d: CGPoint) -> PathOp {
+        func t(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x + d.x, y: p.y + d.y) }
+        switch self {
+        case .move(let p): return .move(t(p))
+        case .line(let p): return .line(t(p))
+        case let .quad(to, c): return .quad(to: t(to), control: t(c))
+        case let .cubic(to, c1, c2): return .cubic(to: t(to), control1: t(c1), control2: t(c2))
+        case .close: return .close
+        }
+    }
 }
 
 /// Platform-free stroke styling (CoreGraphics' CGLineCap/Join aren't on all
@@ -207,6 +230,10 @@ public enum MathElement: Sendable {
                 case .line(let pt): return .line(CGPoint(x: pt.x + d.x, y: pt.y + d.y))
                 case let .quad(to, ctl): return .quad(to: CGPoint(x: to.x + d.x, y: to.y + d.y),
                                                       control: CGPoint(x: ctl.x + d.x, y: ctl.y + d.y))
+                case let .cubic(to, c1, c2):
+                    return .cubic(to: CGPoint(x: to.x + d.x, y: to.y + d.y),
+                                  control1: CGPoint(x: c1.x + d.x, y: c1.y + d.y),
+                                  control2: CGPoint(x: c2.x + d.x, y: c2.y + d.y))
                 case .close: return .close
                 }
             }, width: w, cap: cap, join: join, color: c)

@@ -51,12 +51,27 @@ final class MathSVGRendererTests: XCTestCase {
         XCTAssertTrue(svg.contains("data:font/otf;base64,T1RUTw=="))
     }
 
-    func testGlyphIDElementsAreSkippedWithBreadcrumb() {
+    func testGlyphIDElementsAreSkippedWithoutOutlineProvider() {
         var s = scene("x")
         s = MathScene(width: s.width, ascent: s.ascent, descent: s.descent,
                       elements: s.elements + [.glyph(id: 42, size: 10, origin: .zero, color: nil)])
         let svg = MathSVGRenderer.svg(for: s)
-        XCTAssertTrue(svg.contains("skipped font-specific glyph"))
+        XCTAssertTrue(svg.contains("skipped .glyph(id:)"))
+    }
+
+    func testGlyphIDElementsDrawAsPathsWithOutlineProvider() {
+        var s = scene("x")
+        s = MathScene(width: s.width, ascent: s.ascent, descent: s.descent,
+                      elements: s.elements + [.glyph(id: 42, size: 10, origin: .zero, color: nil)])
+        // A trivial outline provider: a unit triangle for any glyph.
+        let outlines: GlyphOutlineProvider = { _, _ in
+            [.move(CGPoint(x: 0, y: 0)), .line(CGPoint(x: 5, y: 0)),
+             .cubic(to: CGPoint(x: 0, y: 5), control1: CGPoint(x: 3, y: 2), control2: CGPoint(x: 1, y: 4)),
+             .close]
+        }
+        let svg = MathSVGRenderer.svg(for: s, outlines: outlines)
+        XCTAssertFalse(svg.contains("skipped .glyph(id:)"))
+        XCTAssertTrue(svg.contains(" C "), "the cubic outline op becomes an SVG C command")
     }
 
     func testViewBoxMatchesSceneMetricsPlusPadding() {

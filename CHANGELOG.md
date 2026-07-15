@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **SVG renders `.glyph(id:)` — no more missing scripts or fences.** The SVG
+  renderer skipped font-specific glyphs (delimiter size variants, and — after
+  `ssty` — every optical superscript/subscript). It now takes an optional
+  `outlines` provider and draws them as filled `<path>`s;
+  `CoreTextGlyphOutlineProvider.make(font:)` supplies them on Apple (a Linux
+  host can back the same seam with FreeType). `PathOp` gains a `.cubic` case
+  for glyph outlines (CFF curves). Without a provider the elements are still
+  skipped with a comment, so headless scenes are unchanged.
+
 - **`ssty` optical scripts — script glyphs are redrawn, not just shrunk.**
   Superscripts, subscripts, and deeply nested indices now use the font's
   purpose-drawn `ssty` variants (heavier strokes, more open forms) instead

@@ -74,6 +74,10 @@ public enum MathSceneRenderer {
                     case let .quad(to, control):
                         ctx.addQuadCurve(to: CGPoint(x: origin.x + to.x, y: origin.y + to.y),
                                          control: CGPoint(x: origin.x + control.x, y: origin.y + control.y))
+                    case let .cubic(to, c1, c2):
+                        ctx.addCurve(to: CGPoint(x: origin.x + to.x, y: origin.y + to.y),
+                                     control1: CGPoint(x: origin.x + c1.x, y: origin.y + c1.y),
+                                     control2: CGPoint(x: origin.x + c2.x, y: origin.y + c2.y))
                     case .close: ctx.closePath()
                     }
                 }
