@@ -223,6 +223,22 @@ if let custom = MathFont(url: fontURL) { label.font = custom }
 
 ---
 
+## Documentation & demo
+
+- **API documentation** ships as a DocC catalog — open the package in
+  Xcode and *Product ▸ Build Documentation* for the full curated reference
+  (getting started, the document pipeline, fonts, the rendering pipeline).
+- **Reference docs** in the repo: [docs/FONTS.md](docs/FONTS.md),
+  [docs/ALGORITHM.md](docs/ALGORITHM.md) (the rule-by-rule TeX Appendix G
+  audit), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
+  [docs/COMMANDS.md](docs/COMMANDS.md) and
+  [docs/COVERAGE.md](docs/COVERAGE.md).
+- **Try it live**: `swift run VinculumDemo` opens a macOS window — paste
+  any text with math in it (an LLM response works beautifully), switch
+  fonts, toggle dark rendering.
+
+---
+
 ## Gallery
 
 Vinculum renders the everyday math people actually write. **CI regenerates

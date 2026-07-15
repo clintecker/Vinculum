@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **DocC documentation catalog** — open the package in Xcode and build
+  documentation for the curated API reference (landing page, getting
+  started, the document-pipeline article), built on the existing symbol
+  docs.
+- **`VinculumDemo`** — `swift run VinculumDemo` opens a macOS demo: paste
+  prose with math (LLM output, markdown), watch it render live, switch
+  among the four bundled fonts, toggle dark rendering.
 - **`MathText.attributedString(from:)` — the document pipeline.** One call
   takes a whole string of prose with embedded math and returns an
   `NSAttributedString` with the math flowed inline: all four delimiter

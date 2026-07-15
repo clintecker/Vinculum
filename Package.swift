@@ -28,6 +28,8 @@ let package = Package(
                             .copy("Resources/README-TeX-Gyre-Termes-Math.txt"),
                             .copy("Resources/README-TeX-Gyre-Pagella-Math.txt"),
                             .copy("Resources/OFL-STIXTwo.txt")]),
+        .executableTarget(name: "VinculumDemo", dependencies: ["VinculumRender"],
+                          path: "Sources/VinculumDemo"),
         .testTarget(name: "VinculumLayoutTests", dependencies: ["VinculumLayout"], path: "Tests/VinculumLayoutTests"),
         .testTarget(name: "VinculumRenderTests", dependencies: ["VinculumRender", "VinculumLayout"], path: "Tests/VinculumRenderTests"),
     ]
