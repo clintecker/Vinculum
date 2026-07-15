@@ -13,7 +13,7 @@ detail is linked per item.
 | --- | --- |
 | Name | Vinculum |
 | What it is | Native LaTeX math typesetting library for Apple platforms (layout engine also runs on Linux) |
-| Version | 1.0.0+ (SemVer; see [CHANGELOG.md](../CHANGELOG.md)) |
+| Version | 1.0.0+ (SemVer; see [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md)) |
 | License (code) | MIT |
 | License (bundled fonts) | GUST Font License (Latin Modern, TeX Gyre Termes/Pagella), SIL OFL (STIX Two) — redistribution/embedding permitted |
 | Repo | https://github.com/clintecker/Vinculum |
@@ -39,8 +39,8 @@ detail is linked per item.
 ### G1 — Typography quality (the font is the authority)
 
 Everything the OpenType MATH standard defines, read from the live font at
-load and used in layout. Deep detail: [ALGORITHM.md](ALGORITHM.md)
-(rule-by-rule TeX Appendix G audit), [ARCHITECTURE.md](ARCHITECTURE.md).
+load and used in layout. Deep detail: [ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md)
+(rule-by-rule TeX Appendix G audit), [ARCHITECTURE.md](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md).
 
 | Feature | Specific |
 | --- | --- |
@@ -62,8 +62,8 @@ Screenshots (CI-regenerated from current code, stable raw URLs):
 
 ### G2 — LaTeX coverage
 
-Deep detail: [COMMANDS.md](COMMANDS.md) (every supported command),
-[COVERAGE.md](COVERAGE.md) (feature-by-feature with examples).
+Deep detail: [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs/COMMANDS.md) (every supported command),
+[COVERAGE.md](https://github.com/clintecker/Vinculum/blob/main/docs/COVERAGE.md) (feature-by-feature with examples).
 
 | Feature | Specific |
 | --- | --- |
@@ -81,7 +81,7 @@ https://raw.githubusercontent.com/clintecker/Vinculum/gallery/sym-binary.png
 
 ### G3 — Integration surfaces
 
-Deep detail: [INTEGRATION.md](INTEGRATION.md), DocC catalog (Xcode ▸
+Deep detail: [INTEGRATION.md](https://github.com/clintecker/Vinculum/blob/main/docs/INTEGRATION.md), DocC catalog (Xcode ▸
 Product ▸ Build Documentation).
 
 | Surface | Call | Use case |
@@ -103,7 +103,7 @@ textView.textStorage?.setAttributedString(
 
 ### G4 — Fonts
 
-Deep detail: [FONTS.md](FONTS.md).
+Deep detail: [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FONTS.md).
 
 | Feature | Specific |
 | --- | --- |
@@ -156,7 +156,7 @@ Screenshots:
 | CI matrix | Linux (headless layout), macOS (full suite), iOS simulator (runtime tests), gallery auto-publish |
 | Golden discipline | ~95 pixel-pinned fixtures; a fixture that *starts* rendering fails CI until promoted (coverage can't silently change) |
 | Ground truth | MATH-table parsing pinned against committed raw font bytes and fontTools |
-| Docs | Rule-by-rule TeX Appendix G audit ([ALGORITHM.md](ALGORITHM.md)) stating Implemented/Partial/ABSENT honestly |
+| Docs | Rule-by-rule TeX Appendix G audit ([ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md)) stating Implemented/Partial/ABSENT honestly |
 
 ## Approach matrix (generic, no named competitors)
 
@@ -174,15 +174,15 @@ Screenshots:
 
 | Module | Content |
 | --- | --- |
-| [README](../README.md) | Overview, quick start, support matrix, gallery |
-| [FONTS.md](FONTS.md) | The four fonts, comparisons, BYO fonts, licensing |
-| [COMMANDS.md](COMMANDS.md) | Every supported command |
-| [COVERAGE.md](COVERAGE.md) | Feature-by-feature support with examples |
-| [ALGORITHM.md](ALGORITHM.md) | TeX Appendix G audit |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | The layout/render split, seams, IR |
-| [INTEGRATION.md](INTEGRATION.md) | Host integration guide |
-| [ROADMAP.md](ROADMAP.md) / [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | History + open items (internal planning) |
-| [CHANGELOG.md](../CHANGELOG.md) | Release history |
+| [README](https://github.com/clintecker/Vinculum/blob/main/README.md) | Overview, quick start, support matrix, gallery |
+| [FONTS.md](https://github.com/clintecker/Vinculum/blob/main/docs/FONTS.md) | The four fonts, comparisons, BYO fonts, licensing |
+| [COMMANDS.md](https://github.com/clintecker/Vinculum/blob/main/docs/COMMANDS.md) | Every supported command |
+| [COVERAGE.md](https://github.com/clintecker/Vinculum/blob/main/docs/COVERAGE.md) | Feature-by-feature support with examples |
+| [ALGORITHM.md](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md) | TeX Appendix G audit |
+| [ARCHITECTURE.md](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md) | The layout/render split, seams, IR |
+| [INTEGRATION.md](https://github.com/clintecker/Vinculum/blob/main/docs/INTEGRATION.md) | Host integration guide |
+| [ROADMAP.md](https://github.com/clintecker/Vinculum/blob/main/docs/ROADMAP.md) / [IMPLEMENTATION_PLAN.md](https://github.com/clintecker/Vinculum/blob/main/docs/IMPLEMENTATION_PLAN.md) | History + open items (internal planning) |
+| [CHANGELOG.md](https://github.com/clintecker/Vinculum/blob/main/CHANGELOG.md) | Release history |
 | DocC catalog | In-Xcode API reference |
 | [Gallery branch](https://github.com/clintecker/Vinculum/tree/gallery) | Every screenshot above, CI-refreshed |
 
