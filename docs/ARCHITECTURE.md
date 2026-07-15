@@ -106,7 +106,9 @@ of them:
 - **MathSVGRenderer** exists for hosts where the other two *can't run at
   all*: no CoreGraphics, no display — a Linux server, a static-site
   pipeline. It trades pixels for markup, so it's the one renderer that is
-  platform-free end to end.
+  platform-free end to end. Font-specific `.glyph(id:)` elements (delimiter
+  variants, `ssty` scripts) render via an optional `GlyphOutlineProvider`
+  (CoreText on Apple, FreeType on Linux); a headless scene carries none.
 
 Each is a thin projection of the same `MathScene`; the alternative — one
 renderer with three output modes — would drag CoreText into the SVG path,

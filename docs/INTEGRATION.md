@@ -427,6 +427,22 @@ font installed (the font travels inside the file). On Apple platforms you
 can reuse `CoreTextMeasurer.make()` as the measurer and ship the same SVG a
 server would.
 
+**Font-specific glyphs (delimiter variants, `ssty` optical scripts).** A
+scene laid out with the font providers (`MathLayoutEngine.make(font:)`)
+carries `.glyph(id:)` elements — tall fences and optical super/subscripts
+that have no character spelling. Pass an `outlines` provider to draw them
+as filled `<path>`s:
+
+```swift
+let svg = MathSVGRenderer.svg(for: scene, embeddedFont: fontData,
+                              outlines: CoreTextGlyphOutlineProvider.make(font: .latinModern))
+```
+
+Without it those elements are skipped (with an XML comment) — fine for a
+scene laid out *headless* (a bare measurer, no font providers), which emits
+only text/rect/stroke. The provider is a seam: a Linux host with no CoreText
+can back it with FreeType (`FT_Load_Glyph` → outline → `PathOp`s).
+
 ---
 
 ## 13. Accessibility and hit-testing
