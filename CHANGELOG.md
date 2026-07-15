@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **COVERAGE.md and INTEGRATION.md caught up with the engine.** COVERAGE
+  gains a figure per section and sheds stale claims (glyph assembly and
+  un-gated delimiter variants shipped in 0.24 but were still listed as
+  gaps; the ellipses moved to the Inner class; `\vec`'s seating documented).
+  INTEGRATION's §7 sample used a dead initializer
+  (`MathLayoutEngine(measure:baseSize:delimiters:)`) and omitted the
+  now-required `font:` in the draw call — both fixed against the real API —
+  plus four new sections for everything 1.0–1.1 added: the `MathText`
+  document pipeline, `MathView`/`VinculumLabel`, server-side SVG, and
+  accessibility + hit-testing. The DocC landing page gains the design
+  rationale and pointers to the illustrated GitHub docs.
+
 - **`\vec` seats its arrow on the letter.** The arrow (U+20D7, the one
   point accent whose only spelling is a combining mark) rendered off the
   base's top-right: a lone combining mark drawn as a *string* gets

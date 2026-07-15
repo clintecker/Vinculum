@@ -4,7 +4,11 @@ A host-app guide: add the package, pick a theme, produce inline attachments,
 and understand caching and threading. Vinculum was extracted from Quoin (a
 native Markdown editor), so the integration story is "drop a math attachment
 into a TextKit run" — but every stage is exposed if you want to drive the
-pipeline yourself (images, PDF, SwiftUI `Canvas`, Linux).
+pipeline yourself (images, PDF, SwiftUI `Canvas`, SVG, Linux).
+
+What the integration produces (CI-regenerated):
+
+![Real-world equations](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/04-equations.png)
 
 ---
 
@@ -34,8 +38,24 @@ Vinculum ships **two products**:
   `MathScene` IR. Depend on this alone if you want the platform-free layer
   without CoreText (see §7).
 
-The bundled **Latin Modern Math** font ships as a package resource — no font
-installation, no `Info.plist` entry, nothing for the host to register.
+**Five math fonts ship as package resources** — no font installation, no
+`Info.plist` entry, nothing for the host to register. Every API that renders
+takes an optional `font:` (default `.latinModern`):
+
+| Preset | Face | Character |
+| --- | --- | --- |
+| `.latinModern` | Latin Modern Math | The TeX default — Computer Modern's successor |
+| `.termes` | TeX Gyre Termes Math | Times-like, compact |
+| `.pagella` | TeX Gyre Pagella Math | Palatino-like, open |
+| `.stixTwo` | STIX Two Math | The STM-publishing standard |
+| `.firaMath` | Fira Math | Humanist sans — UI/slide-friendly |
+
+`MathFont(url:)` loads any other OpenType MATH font. Each font's MATH table
+(constants, glyph info, variant ladders, assemblies) is parsed once at load —
+layout is font-true under all of them, so switching fonts is a one-argument
+change. See [FONTS.md](FONTS.md) for specimens and selection guidance:
+
+![One engine, five fonts](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/07-fonts.png)
 
 ---
 
@@ -94,7 +114,8 @@ func mathRun(_ latex: String, display: Bool) -> NSAttributedString? {
         latex: latex,
         display: display,          // true = display style (stacked limits, larger parts)
         mathTheme: currentTheme,
-        baseSize: bodyFont.pointSize)   // match the surrounding text
+        baseSize: bodyFont.pointSize,   // match the surrounding text
+        font: .latinModern)             // any of the five bundled fonts, or MathFont(url:)
 }
 ```
 
@@ -159,7 +180,7 @@ build a precise fallback caption.
 ## 5. Caching behavior
 
 - `MathImageRenderer` caches rendered images in an `NSCache`, keyed by
-  `display | theme.fingerprint | baseSize | latex`. The key is fully determined
+  `font | display | theme.fingerprint | baseSize | latex`. The key is fully determined
   by the arguments, so the cache is consulted **before** parsing — a hit costs
   no parse/layout/raster. Re-requesting the same equation at the same size and
   theme is a dictionary hit, cheap to call in a `layoutManager` / cell-reuse
@@ -223,17 +244,20 @@ Reuse the shipped CoreText pieces and the scene renderer; this is exactly what
 ```swift
 import VinculumRender
 
-let measure  = CoreTextMeasurer.make()                 // @Sendable measurer
-let delims   = CoreTextDelimiterProvider.make()         // MATH-table variant provider (optional)
-
 let node  = MathParser.parse(#"\left( \sum_{i=1}^n x_i \right)"#)
 guard MathParser.isFullySupported(node) else { /* fallback */ return }
 
-let engine = MathLayoutEngine(measure: measure, baseSize: 17, delimiters: delims)
+// The factory wires the measurer, the font's parsed MATH constants, and
+// every provider seam (delimiter variants, glyph assembly, per-glyph
+// typography, wide accents) in one call — the one correct construction
+// on Apple platforms.
+let engine = MathLayoutEngine.make(font: .latinModern, baseSize: 17)
 let scene  = engine.layout(node, display: true)         // -> MathScene (device-independent)
 
 // Draw into a y-up CGContext with the baseline origin at `at:`.
-MathSceneRenderer.draw(scene, theme: .light, in: cgContext, at: CGPoint(x: 4, y: scene.descent + 4))
+MathSceneRenderer.draw(scene, theme: .light, in: cgContext,
+                       at: CGPoint(x: 4, y: scene.descent + 4),
+                       font: .latinModern)   // the font the scene was measured with
 ```
 
 `scene.width`, `scene.ascent`, `scene.descent` (and `scene.height`) give the
@@ -241,11 +265,14 @@ bounding box; the scene is **y-up with the origin on the baseline**.
 `MathSceneRenderer.draw` expects a y-up context (flip a UIKit/PDF context as
 `MathImageRenderer` does for UIKit).
 
-The **`delimiters:` provider is optional.** `CoreTextDelimiterProvider.make()`
-supplies the font's MATH-table size variants so tall `( ) [ ] { }` fences use
-purpose-drawn taller glyphs at constant stroke weight; pass `nil` (the default)
-and delimiters fall back to continuous glyph scaling — which is also the
-headless/Linux default.
+**Why a factory instead of an initializer?** An engine built bare
+(`MathLayoutEngine(measure:baseSize:)`) deliberately carries no font
+capabilities — tall fences point-scale, radicals hand-stroke. That is the
+right degraded behavior for a headless host injecting its own seams, and the
+wrong one for an Apple app that has a real font sitting right there. The
+factory makes the fully-wired construction the easy one; the bare initializer
+(or a custom `MathFontServices` bundle) remains for hosts that supply their
+own measurer and providers.
 
 ### On any platform (incl. Linux / SwiftUI) — walk the scene
 
@@ -278,8 +305,9 @@ for element in scene.elements {
 
 A `nil` element `color` means "use your ink"; a non-nil `MathColor` is a
 resolved `\color` you should honor. The `.glyph(id:…)` case only appears when
-you passed a `MathDelimiterProvider` that returned a variant — without one you
-will only see the other three cases.
+the engine's delimiter/accent providers returned a font size-variant — an
+engine built without providers (the bare initializer, headless hosts) only
+emits the other three cases.
 
 **SwiftUI:** lay out a `MathScene` off-main, then translate `scene.elements`
 into `Path`/`Text` inside a `Canvas` — the same primitives.
@@ -319,3 +347,109 @@ numbering are a host concern** — they need the column/line width, which layout
 (a device-independent stage) doesn't have. If you want AMS-style right-aligned
 tags, measure the scene, position it yourself in your line box, and lay the tag
 out as a separate run at the right margin.
+
+---
+
+## 10. Whole documents: `MathText`
+
+If the input is a *document* with math scattered through prose (a markdown
+note, an LLM response) rather than a single equation, don't scan it yourself —
+`MathText` runs the whole pipeline (segment → collect document-scoped macros →
+expand → render → splice) in one call:
+
+```swift
+let attributed = MathText.attributedString(
+    from: source,                    // prose with $…$, $$…$$, \(…\), \[…\]
+    baseFont: .systemFont(ofSize: 15),
+    textColor: .labelColor,
+    mathTheme: .light,
+    mathFont: .latinModern)
+textView.textStorage?.setAttributedString(attributed)
+```
+
+Inline math rides the prose baseline; `$$…$$` / `\[…\]` blocks become
+centered display paragraphs; a `\newcommand` in any block applies to every
+block (that's *why* this entry point exists — macro scope is document-wide,
+so per-equation calls can't honor it); unsupported math stays visible as
+monospaced source, never vanishes. `swift run VinculumDemo` is a live
+playground for exactly this API — paste a document, switch fonts and themes.
+
+---
+
+## 11. Drop-in views: `MathView` (SwiftUI) and `VinculumLabel` (AppKit/UIKit)
+
+For a single equation in UI, skip the attachment plumbing:
+
+```swift
+// SwiftUI — participates in text baselines:
+HStack(alignment: .firstTextBaseline) {
+    Text("Euler:")
+    MathView(#"e^{i\pi} + 1 = 0"#)
+        .inlineStyle()               // inline (side scripts); omit for display
+        .mathFont(.stixTwo)
+        .mathTheme(.dark)
+        .mathSize(17)
+}
+```
+
+`MathView` exposes `firstTextBaseline`/`lastTextBaseline` alignment guides
+derived from the rendered descent, so math aligns with neighboring `Text` the
+way an attachment aligns in an `NSAttributedString`. It also carries the
+spoken description as its accessibility label (see §13).
+
+`VinculumLabel` is the AppKit/UIKit equivalent — a view with `latex`,
+`displayMode`, `font`, `mathTheme` properties, intrinsic content size, and
+coalesced re-rendering (set properties freely; it renders once per runloop
+turn, and reading `isRendered` / `intrinsicContentSize` flushes synchronously
+so layout code never sees a stale size).
+
+---
+
+## 12. Server-side / headless output: SVG
+
+`MathSVGRenderer` lives in **VinculumLayout** (platform-free), so a Linux
+service can typeset LaTeX to self-contained SVG with no display and no
+CoreGraphics — the reason it exists at all:
+
+```swift
+import VinculumLayout
+
+let node  = MathParser.parse(#"\frac{a}{b} + \sqrt{c}"#)
+let scene = MathLayoutEngine(measure: myMeasurer, baseSize: 17).layout(node, display: true)
+let svg   = MathSVGRenderer.svg(for: scene,
+                                fontFamily: "Latin Modern Math",
+                                ink: "#1a1a1a",
+                                embeddedFont: fontData)  // optional @font-face data-URI
+```
+
+With `embeddedFont`, the SVG renders identically on machines without the
+font installed (the font travels inside the file). On Apple platforms you
+can reuse `CoreTextMeasurer.make()` as the measurer and ship the same SVG a
+server would.
+
+---
+
+## 13. Accessibility and hit-testing
+
+**Speech is automatic.** Every render carries a ClearSpeak-style spoken
+description (`MathSpeech.describe`): attachments and both views expose it, so
+VoiceOver reads "fraction with numerator … " instead of "image". If you drive
+the pipeline yourself, `MathImageRenderer.rendered(...)` returns it as
+`spokenDescription`.
+
+**Hit-testing** (for editors and inspectors): build the engine with
+`collectHitRegions: true`, and the scene maps points back to source:
+
+```swift
+let engine = MathLayoutEngine(services: MathFont.latinModern.layoutServices,
+                              baseSize: 17, collectHitRegions: true)
+let scene  = engine.layout(MathParser.parse(#"\frac{a}{b}"#), display: true)
+if let hit = scene.hitTest(CGPoint(x: 12, y: 3)) {
+    hit.node      // the deepest MathNode under the point
+    hit.latex     // its round-tripped source, e.g. "a"
+    hit.rect      // its box in scene coordinates
+}
+```
+
+Regions ride the same element pipeline as drawing, so they are exact — this
+is the substrate a structure-aware editor selects and edits through.

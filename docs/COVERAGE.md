@@ -1,8 +1,12 @@
 # Vinculum Coverage
 
-The honest, code-checked support matrix for **Vinculum v0.24.0**. Every claim
-here is verified against `MathSymbolTable.swift`, `MathParser.swift`, the
-`Layout+*.swift` builders, and the golden fixtures in `Tests/fixtures/math-golden/`.
+The honest, code-checked support matrix for **Vinculum**. Every claim here
+is verified against `MathSymbolTable.swift`, `MathParser.swift`, the
+`Layout+*.swift` builders, and the golden fixtures in
+`Tests/fixtures/math-golden/`. The figures are CI-regenerated from the live
+engine on every push to `main` — if a figure looks wrong, the engine is
+wrong, and that has already caught real bugs (a mis-seated `\vec` arrow,
+dots dropped from the symbol charts).
 
 **How degradation works.** Vinculum never throws and never half-renders. An
 unknown command becomes an `.unsupported` leaf; `MathParser.isFullySupported`
@@ -24,6 +28,8 @@ spacing class.
 
 ## Fractions & stacks
 
+![Fractions and stacks](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-fractions.png)
+
 | Command | Status | Example | Note |
 | --- | :---: | --- | --- |
 | `\frac` | ✅ | `\frac{a}{b}` | Ruled, axis-aligned |
@@ -41,6 +47,8 @@ spacing class.
 
 ## Roots
 
+![Radicals](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-radicals.png)
+
 | Command | Status | Example |
 | --- | :---: | --- |
 | `\sqrt` | ✅ | `\sqrt{2}` |
@@ -49,6 +57,8 @@ spacing class.
 ---
 
 ## Scripts
+
+![Script placement](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-scripts.png)
 
 | Feature | Status | Example |
 | --- | :---: | --- |
@@ -64,6 +74,8 @@ Cramped style (denominators, radicands) lowers superscripts per TeX.
 ---
 
 ## Big operators (with display limits)
+
+![Operators and limits](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-operators.png)
 
 Operators whose limits **stack** above/below in display style and sit as
 scripts inline:
@@ -115,8 +127,12 @@ All carry correct TeX atom classes, so inter-atom spacing is real.
   \varnothing \hbar \hslash \ell \Re \Im \aleph \beth \gimel \daleth \angle
   \measuredangle \sphericalangle \neg \top \bot \flat \sharp \natural
   \clubsuit \heartsuit \wp \complement \square \blacksquare \checkmark
-  \lozenge \blacktriangle \imath \jmath \Bbbk \eth …` and dots `\dots
-  \ldots \cdots \vdots \ddots \dotsb \dotsc`.
+  \lozenge \blacktriangle \imath \jmath \Bbbk \eth …`.
+- **Ellipses** — `\dots \ldots \cdots \ddots \dotsb \dotsc \dotsm
+  \dotsi \dotso` are **Inner** atoms (plain TeX defines them as
+  `\mathinner`), so they draw thin spaces on both sides —
+  `f(x_1,\ldots,x_n)` spaces the way the TeXbook sets it. `\vdots` is
+  ordinary.
 - **Standalone delimiters** (usable *outside* `\left…\right`): `\langle
   \rangle \lceil \rceil \lfloor \rfloor \lbrace \rbrace \lbrack \rbrack
   \lvert \rvert \lVert \rVert \vert \Vert \backslash`.
@@ -124,8 +140,12 @@ All carry correct TeX atom classes, so inter-atom spacing is real.
 - **Direct Unicode** — typing `∫ ∑ ≤ α →` directly gets the same atom class
   its command spelling would, so spacing and operator limits still work.
 
-For the exhaustive command-by-command index see [COMMANDS.md](COMMANDS.md); for the raw set see `MathSymbolTable.swift` (`symbolTable`, 404 entries) and
-the `functionNames` set (37 entries).
+For the exhaustive command-by-command index — with a rendered specimen
+chart per atom class — see [COMMANDS.md](COMMANDS.md); for the raw set see
+`MathSymbolTable.swift` (`symbolTable`, 404 entries) and the `functionNames`
+set (37 entries).
+
+![Standalone delimiters and symbol coverage](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/06-symbols.png)
 
 ---
 
@@ -138,7 +158,8 @@ Force the inter-atom spacing class of a subexpression:
 | `\mathbin` | binary | `a \mathbin{\star} b` |
 | `\mathrel` | relation | |
 | `\mathop` | large operator | **Also takes stacked display limits** (`\mathop{\oplus}\limits_{i}`) |
-| `\mathord` / `\mathinner` | ordinary | |
+| `\mathord` | ordinary | |
+| `\mathinner` | inner | Thin-spaced subformula (what fractions and `\left…\right` get automatically) |
 | `\mathopen` | opening | |
 | `\mathclose` | closing | |
 | `\mathpunct` | punctuation | |
@@ -148,6 +169,8 @@ All ✅.
 ---
 
 ## Matrices & environments
+
+![Delimiters, matrices, cases, aligned](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/02-structures.png)
 
 | Environment | Status | Fences / alignment |
 | --- | :---: | --- |
@@ -183,6 +206,8 @@ All ✅.
 
 ## Math alphabets
 
+![Accents, binomials, braces, arrows, alphabets, color](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/03-notation.png)
+
 Mapped to Unicode Mathematical Alphanumeric Symbols; CoreText resolves them
 through STIX Two / Apple Symbols (no bundled font needed). The pre-Unicode
 "Letterlike Symbols" holes (ℝ ℂ ℋ ℯ …) are handled by exception tables.
@@ -206,13 +231,19 @@ through STIX Two / Apple Symbols (no bundled font needed). The pre-Unicode
 
 ## Accents
 
+![Accents](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-accents.png)
+
 | Kind | Commands | Status |
 | --- | --- | :---: |
 | Point accents | `\hat \check \tilde \bar \vec \dot \ddot \breve \mathring \acute \grave` | ✅ |
-| Stretchy | `\widehat \widetilde \widecheck` | ✅ (grow toward base width, clamped) |
+| Stretchy | `\widehat \widetilde \widecheck` | ✅ (walk the font's horizontal width-variant ladder; widest drawn cut that fits) |
 | Rules | `\overline \underline` | ✅ (drawn rule, not a glyph) |
 
-Point accents use ink extents (not the loose typographic box) for placement.
+Point accents use ink extents (not the loose typographic box) for
+placement, with the skew coming from each glyph's `topAccentAttachment` —
+that's why `\hat{f}` leans with the f. `\vec` (the one accent whose only
+spelling is a combining mark) routes through the font's glyph-ID path so its
+arrow seats exactly on the letter.
 
 ```latex
 \hat{x} \quad \vec{v} \quad \bar{z} \quad \widehat{ABC} \quad \widecheck{f} \quad \overline{AB}
@@ -221,6 +252,8 @@ Point accents use ink extents (not the loose typographic box) for placement.
 ---
 
 ## Over/under constructs
+
+![Lines, braces, boxes](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/alg-decorations.png)
 
 | Command | Status | Example |
 | --- | :---: | --- |
@@ -317,6 +350,8 @@ E = mc^2 \tag{1} \qquad F = ma \tag*{Newton}
 
 ## Spacing
 
+![Atom-class spacing](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-spacing.png)
+
 | Command | Width |
 | --- | --- |
 | `\,` / `\thinspace` | thin (3/18 em) |
@@ -337,18 +372,21 @@ Length units understood: `em`, `mu` (1/18 em), `ex` (≈0.43 em), `pt` (1/10 em)
 
 ## Delimiter sizing
 
+![The delimiter stretch chain](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-delimiters.png)
+
 | Command | Status | Note |
 | --- | :---: | --- |
 | `\left … \right` | ✅ | Auto-sizes fences to the body: `( ) [ ]`, `\{ \}`, `\| \langle \rangle \lvert \rvert \lVert \Vert`, `\lceil \rceil \lfloor \rfloor`, arrows (`\uparrow \downarrow \updownarrow \Uparrow \Downarrow`), `\backslash`, and `\left.`/`\right.` for a null fence |
 | `\middle` | ✅ | `\left( \frac{a}{b} \,\middle\|\, c \right)` — interior fence stretched to the same height, splitting the body into segments |
 | `\big \Big \bigg \Bigg` (+`l`/`r`/`m`) | ✅ | Enlarges the delimiter to 1.2 / 1.8 / 2.4 / 3.0× base size; the `l`/`r`/`m` suffix sets opening / closing / relation spacing |
 
-**MATH-table size variants.** For clearly-tall fences, Vinculum prefers the
-bundled Latin Modern Math font's purpose-drawn size-variant glyphs (constant
-stroke weight) over continuous point-scaling. This variant path is **gated to
-`( ) [ ] { }`** (verified to map correctly); every other delimiter — and every
-fence taller than the largest available variant — falls back to smooth
-point-scaling, which very slightly fattens strokes on extreme heights.
+**The stretch chain.** Every covered delimiter tries, in order: the font's
+purpose-drawn **size-variant** glyphs (constant stroke weight), then **glyph
+assembly** (end caps + repeatable extenders, for heights beyond the largest
+cut), then point-scaling as the last resort. This runs against whichever of
+the five bundled fonts is active — each font's MATH table is parsed at load.
+The `\big…\Bigg` family always scales, deliberately: those commands request
+a *size*, not a fit.
 
 ```latex
 \left( \sum_{k=0}^{n} a_k \right) \qquad
@@ -358,6 +396,8 @@ point-scaling, which very slightly fattens strokes on extreme heights.
 ---
 
 ## Macros
+
+![Document-scoped macros](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/05-macros.png)
 
 Document-scoped `\newcommand` / `\renewcommand` / `\def`, expanded before
 typesetting. Supports `#1`…`#9` parameters, an optional `[argc]`, and a hard
@@ -379,12 +419,6 @@ a definition in one block applies everywhere; later definitions win (matching
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- **Extensible delimiter assembly** — arbitrarily-tall fences beyond the
-  font's largest discrete size variant are point-scaled rather than assembled
-  from repeatable segments, so a very tall fence has slightly heavy strokes.
-- **Remaining variant delimiters** — `⟨ ⟩ ‖ ⌈ ⌉ ⌊ ⌋` are not yet on the
-  verified MATH-variant path and fall back to scaling (the `( ) [ ] { }` set
-  uses true variants).
 - **Extensible-arrow variety** — the `\x…arrow` hook / harpoon / mapsto /
   double-line heads render as a plain shaft (⚠️ above).
 - `\sideset`, `\mathchoice`, `\DeclareMathOperator` (needs a macro-table

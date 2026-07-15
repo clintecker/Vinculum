@@ -33,6 +33,26 @@ Every equation carries a spoken-math description, so VoiceOver reads
 mathematics aloud. Unsupported input degrades to visible styled source —
 never a broken half-render.
 
+### Why it's built this way
+
+Vinculum borrows TeX's own separation: layout compiles LaTeX into a
+device-independent `MathScene` (positioned primitives, y-up baseline
+coordinates), and thin renderers project that scene into pixels, an
+attachment, or SVG. The layout stage is Foundation-only — it builds and
+tests headlessly on Linux — because glyph measurement is *injected* rather
+than imported. That one seam is what makes the geometry unit-testable, the
+caching sound, and the SVG backend possible.
+
+The reference documentation on GitHub shows every claim as a CI-regenerated
+render: [ARCHITECTURE](https://github.com/clintecker/Vinculum/blob/main/docs/ARCHITECTURE.md)
+(the design and its whys, illustrated),
+[ALGORITHM](https://github.com/clintecker/Vinculum/blob/main/docs/ALGORITHM.md)
+(the rule-by-rule TeX Appendix G audit, one figure per rule cluster),
+[COMMANDS](https://github.com/clintecker/Vinculum/blob/main/docs/COMMANDS.md)
+(every supported command with specimen charts), and
+[FONTS](https://github.com/clintecker/Vinculum/blob/main/docs/FONTS.md)
+(the five bundled faces, compared).
+
 ## Topics
 
 ### Getting started
