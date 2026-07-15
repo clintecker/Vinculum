@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-07-15
+
+**The typography + coverage release.** Optical scripts, every extensible
+arrowhead, iosMath's whole example set, and SVG that draws them all — on a
+Swift 6.2 toolchain. Highlights below; the API additions are source-additive
+(new `MathAtomClass.inner`, new `MathOverUnder` arrow cases, `PathOp.cubic`,
+and optional provider parameters), but adding cases to these public enums can
+break exhaustive `switch`es in client code, and the toolchain floor moved to
+Swift 6.2 — hence the minor bump, called out here for anyone pattern-matching
+the scene primitives.
 
 - **SVG renders `.glyph(id:)` — no more missing scripts or fences.** The SVG
   renderer skipped font-specific glyphs (delimiter size variants, and — after
