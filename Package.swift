@@ -29,10 +29,18 @@ let package = Package(
     ],
     targets: [
         .target(name: "VinculumLayout", path: "Sources/VinculumLayout"),
+        // Raw FreeType C shim — the Linux backend loads the bundled MATH .otf
+        // fonts from bytes and extracts glyph outlines directly (Silica's
+        // font-by-name path can't resolve non-default families). Built only
+        // when depended on (Linux); Apple never references it.
+        .systemLibrary(name: "CFreetypeShim", path: "Sources/CFreetypeShim",
+                       pkgConfig: "freetype2",
+                       providers: [.apt(["libfreetype6-dev"]), .brew(["freetype"])]),
         .target(name: "VinculumRender", dependencies: [
                     "VinculumLayout",
                     .product(name: "SilicaCairo", package: "Silica", condition: .when(platforms: [.linux])),
                     .product(name: "Cairo", package: "Cairo", condition: .when(platforms: [.linux])),
+                    .target(name: "CFreetypeShim", condition: .when(platforms: [.linux])),
                 ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),
@@ -47,6 +55,8 @@ let package = Package(
                             .copy("Resources/OFL-FiraMath.txt")]),
         .executableTarget(name: "VinculumDemo", dependencies: ["VinculumRender"],
                           path: "Sources/VinculumDemo"),
+        .executableTarget(name: "VinculumLinuxSmoke", dependencies: ["VinculumRender"],
+                          path: "Sources/VinculumLinuxSmoke"),
         .testTarget(name: "VinculumLayoutTests", dependencies: ["VinculumLayout"], path: "Tests/VinculumLayoutTests"),
         .testTarget(name: "VinculumRenderTests", dependencies: ["VinculumRender", "VinculumLayout"], path: "Tests/VinculumRenderTests"),
     ]

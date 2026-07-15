@@ -8,3 +8,7 @@ DerivedData/
 # QEMU/swiftc crash dumps from Docker cross-builds
 *.core
 core
+
+# Local Linux render artifacts
+silica-*.png
+parity-linux/
