@@ -10,6 +10,16 @@ import VinculumLayout
 ///     swift run VinculumDemo
 @main
 struct VinculumDemoApp: App {
+    init() {
+        // An SPM executable has no app bundle, so AppKit defaults it to a
+        // background process — no window, no Dock icon. Promote and
+        // activate so `swift run VinculumDemo` actually shows the demo.
+        NSApplication.shared.setActivationPolicy(.regular)
+        DispatchQueue.main.async {
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
+
     var body: some Scene {
         WindowGroup("Vinculum") {
             DemoView()

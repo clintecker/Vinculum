@@ -92,6 +92,7 @@ Product ▸ Build Documentation).
 | Attachment | `MathImageRenderer.attachmentString(latex:…)` | Rich-text composition; baseline-aligned `NSTextAttachment`; cached |
 | Image + metadata | `MathImageRenderer.rendered(latex:…)` | Image, baseline descent, spoken description |
 | Scene IR + custom renderer | `MathLayoutEngine.make(font:baseSize:)` → `MathScene` → `MathSceneRenderer.draw` or your own (glyph resolution via public `MathFont.ctFont(size:)`) | PDF pipelines, custom drawing, headless layout |
+| SVG (server-side) | `MathSVGRenderer.svg(for: scene, embeddedFont: otfBytes)` | Linux/Vapor/static-site rendering; self-contained SVG with embedded font |
 
 Code example (the LLM case):
 

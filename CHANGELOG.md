@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`MathSVGRenderer` — server-side math.** The platform-free renderer:
+  a headless `MathScene` (the Linux default) becomes self-contained SVG —
+  baseline-exact `<text>` runs, `<rect>` bars, `<path>` strokes, `\color`
+  fills, optional `@font-face`-embedded font bytes. `VinculumLayout`
+  already laid out on Linux; now it renders there too (Vapor, static
+  sites, email pipelines).
+- **Fixed: `swift run VinculumDemo` showed no window** — an SPM
+  executable has no app bundle, so AppKit kept it a background process;
+  the demo now promotes itself to a regular activated app.
 - **Hit-testing substrate** — build the engine with
   `collectHitRegions: true` and every laid-out subtree records its
   footprint; `MathScene.hitTest(_:)` maps a scene point to the DEEPEST
