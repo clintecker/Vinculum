@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Hit-testing substrate** — build the engine with
+  `collectHitRegions: true` and every laid-out subtree records its
+  footprint; `MathScene.hitTest(_:)` maps a scene point to the DEEPEST
+  containing subtree (`MathHitRegion`: rect + node + round-tripped
+  LaTeX). Tap a numerator, get the numerator and its source. Off by
+  default (zero cost for plain rendering); ignored by renderers. The
+  foundation for tap-to-inspect, selection, and editing.
 - **DocC documentation catalog** — open the package in Xcode and build
   documentation for the curated API reference (landing page, getting
   started, the document-pipeline article), built on the existing symbol

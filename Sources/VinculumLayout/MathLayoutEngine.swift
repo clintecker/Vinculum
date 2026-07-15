@@ -42,8 +42,15 @@ public struct MathLayoutEngine: Sendable {
     /// propagated by sub-context copies, like `cramped`.
     var styleAnchorSize: CGFloat = 0
 
+    /// When true, every laid-out subtree also emits a `.region` element —
+    /// the hit-testing substrate (`MathScene.hitTest`). Off by default:
+    /// plain rendering shouldn't pay for metadata it never reads.
+    let collectHitRegions: Bool
+
     /// The primary initializer: a services bundle plus the base size.
-    public init(services: MathFontServices, baseSize: CGFloat) {
+    public init(services: MathFontServices, baseSize: CGFloat,
+                collectHitRegions: Bool = false) {
+        self.collectHitRegions = collectHitRegions
         self.measure = services.measure
         self.delimiters = services.delimiters
         self.delimiterAssembly = services.delimiterAssembly
@@ -57,8 +64,10 @@ public struct MathLayoutEngine: Sendable {
 
     /// Headless convenience: measurement only, Latin Modern preset
     /// constants, no per-glyph refinements (they all degrade gracefully).
-    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat) {
-        self.init(services: MathFontServices(measure: measure), baseSize: baseSize)
+    public init(measure: @escaping MathTextMeasurer, baseSize: CGFloat,
+                collectHitRegions: Bool = false) {
+        self.init(services: MathFontServices(measure: measure), baseSize: baseSize,
+                  collectHitRegions: collectHitRegions)
     }
 
     /// Per-glyph typography of a node that renders as a single glyph run —
@@ -89,6 +98,26 @@ public struct MathLayoutEngine: Sendable {
     // MARK: - Node dispatch
 
     func box(for node: MathNode, size s: CGFloat, style: MathStyle) -> MathBox {
+        let box = dispatch(node, size: s, style: style)
+        // Hit-testing substrate: record where this subtree landed. Parents
+        // translate the region with the other elements via placed(at:).
+        if collectHitRegions, !isInvisible(node) {
+            var b = box
+            b.elements.append(.region(
+                CGRect(origin: CGPoint(x: 0, y: -b.descent),
+                       size: CGSize(width: b.width, height: b.ascent + b.descent)),
+                node: node))
+            return b
+        }
+        return box
+    }
+
+    private func isInvisible(_ node: MathNode) -> Bool {
+        if case .space = node { return true }
+        return false
+    }
+
+    private func dispatch(_ node: MathNode, size s: CGFloat, style: MathStyle) -> MathBox {
         switch node {
         case .symbol(let glyph, let cls, let symbolStyle):
             // TeX Rule 13: in display style a large operator swaps in the

@@ -57,6 +57,9 @@ public enum MathSceneRenderer {
                                 width: r.size.width, height: r.size.height))
                 ctx.restoreGState()
 
+            case .region:
+                break   // hit-test metadata, not ink
+
             case let .stroke(path, width, cap, join, color):
                 ctx.saveGState()
                 ctx.setStrokeColor(cgColor(color, theme))

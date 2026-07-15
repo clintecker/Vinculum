@@ -157,12 +157,18 @@ public enum MathElement: Sendable {
     /// A single glyph addressed by ID (a MATH-table delimiter size variant),
     /// drawn in the math font at `size` with its origin at the baseline.
     case glyph(id: UInt16, size: CGFloat, origin: CGPoint, color: MathColor?)
+    /// A hit-test region: the bounding rect of a laid-out subtree and the
+    /// node it came from. Emitted only when the engine's
+    /// `collectHitRegions` is on; renderers ignore it. The substrate for
+    /// tap-to-inspect, selection, and (eventually) editing.
+    case region(CGRect, node: MathNode)
 
     /// The explicit `\color` this primitive carries, or `nil` for theme ink.
     public var color: MathColor? {
         switch self {
         case let .glyphs(_, _, _, _, c), let .rule(_, c), let .stroke(_, _, _, _, c),
              let .glyph(_, _, _, c): return c
+        case .region: return nil
         }
     }
 
@@ -187,8 +193,20 @@ public enum MathElement: Sendable {
             }, width: w, cap: cap, join: join, color: c)
         case let .glyph(id, s, o, c):
             return .glyph(id: id, size: s, origin: CGPoint(x: o.x + d.x, y: o.y + d.y), color: c)
+        case let .region(r, node):
+            return .region(CGRect(origin: CGPoint(x: r.origin.x + d.x, y: r.origin.y + d.y),
+                                  size: r.size), node: node)
         }
     }
+}
+
+/// A subtree's laid-out footprint, for hit-testing: where it landed in the
+/// scene and which node produced it. `latex` round-trips the subtree.
+public struct MathHitRegion: Sendable {
+    public let rect: CGRect
+    public let node: MathNode
+    /// LaTeX source for the subtree (render-equivalent round-trip).
+    public var latex: String { node.toLaTeX() }
 }
 
 /// A fully laid-out expression: overall metrics plus its positioned
@@ -206,6 +224,31 @@ public struct MathScene: Sendable {
     /// scene is theme ink, so a renderer can emit a tintable template image
     /// (which inverts under selection and adapts to appearance for free).
     public var hasExplicitColor: Bool { elements.contains { $0.color != nil } }
+
+    /// Every recorded subtree footprint (empty unless the engine was built
+    /// with `collectHitRegions: true`).
+    public var hitRegions: [MathHitRegion] {
+        elements.compactMap {
+            if case let .region(rect, node) = $0 { return MathHitRegion(rect: rect, node: node) }
+            return nil
+        }
+    }
+
+    /// The DEEPEST (smallest-area) subtree containing `point`, in scene
+    /// coordinates (y-up, origin on the baseline at the left edge) — tap a
+    /// numerator, get the numerator; its `latex` is copy-ready.
+    public func hitTest(_ point: CGPoint) -> MathHitRegion? {
+        // Field math, not CGRect.contains — VinculumLayout is Foundation-
+        // only and CGRect's CoreGraphics conveniences aren't available.
+        func contains(_ r: CGRect) -> Bool {
+            point.x >= r.origin.x && point.x <= r.origin.x + r.size.width
+                && point.y >= r.origin.y && point.y <= r.origin.y + r.size.height
+        }
+        return hitRegions
+            .filter { contains($0.rect) }
+            .min { $0.rect.size.width * $0.rect.size.height
+                 < $1.rect.size.width * $1.rect.size.height }
+    }
 
     public init(width: CGFloat, ascent: CGFloat, descent: CGFloat, elements: [MathElement]) {
         self.width = width; self.ascent = ascent; self.descent = descent; self.elements = elements
