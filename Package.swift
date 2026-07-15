@@ -9,6 +9,13 @@ import PackageDescription
 //
 // The vinculum is the bar in a fraction, the line over a root — the stroke
 // the typesetter draws to bind an expression together.
+//
+// On Apple platforms VinculumRender draws with CoreText/CoreGraphics and never
+// links Silica. On Linux it draws with Silica (Cairo/FontConfig) — a Linux-only
+// rendering backend. Silica and its Cairo backend track `master` (Silica itself
+// depends on Cairo by branch, so a stable version requirement can't be mixed
+// in). Pulling Silica into the graph is why the toolchain floor is Swift 6.2:
+// SwiftPM parses every manifest in the graph regardless of platform.
 let package = Package(
     name: "Vinculum",
     platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1), .tvOS(.v17)],
@@ -16,9 +23,17 @@ let package = Package(
         .library(name: "VinculumLayout", targets: ["VinculumLayout"]),
         .library(name: "VinculumRender", targets: ["VinculumRender"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/PureSwift/Silica.git", branch: "master"),
+        .package(url: "https://github.com/PureSwift/Cairo.git", branch: "master"),
+    ],
     targets: [
         .target(name: "VinculumLayout", path: "Sources/VinculumLayout"),
-        .target(name: "VinculumRender", dependencies: ["VinculumLayout"], path: "Sources/VinculumRender",
+        .target(name: "VinculumRender", dependencies: [
+                    "VinculumLayout",
+                    .product(name: "SilicaCairo", package: "Silica", condition: .when(platforms: [.linux])),
+                    .product(name: "Cairo", package: "Cairo", condition: .when(platforms: [.linux])),
+                ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),
                             .copy("Resources/texgyrepagella-math.otf"),

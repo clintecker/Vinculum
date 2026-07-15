@@ -4,3 +4,7 @@ DerivedData/
 *.xcodeproj
 .DS_Store
 .claude/
+
+# QEMU/swiftc crash dumps from Docker cross-builds
+*.core
+core
