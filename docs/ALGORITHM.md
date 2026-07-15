@@ -10,6 +10,24 @@ It is a living document. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 phases land against it — a phase isn't done until its rules here flip
 status. Audited at v0.24.0 (a later release baseline).
 
+Appendix G's big takeaway — and Vinculum's design premise — is that TeX
+does **not** lay out mathematics as decorated text. It compiles a list of
+*classified* objects (typed atoms) into a geometric box structure, using
+font-supplied constants plus explicit collision-avoidance rules:
+classification first, measurement and assembly second. That separation is
+why the spacing in `a+b=c` comes from the class sequence Ord–Bin–Ord–Rel–Ord
+(never from the characters), and why deeply nested expressions stay
+consistent.
+
+**Sources:** [The TeXbook, Appendix G,
+p. 440ff](https://web.math.ucsb.edu/~bigelow/books/texbook.pdf) is the
+normative text; Bogusław Jackowski's [*Appendix G
+Illuminated*](https://www.ntg.nl/maps/34/09.pdf) diagrams the radical,
+accent, fraction, limit, and script-collision rules and is the best visual
+companion. Chapter 18 (pp. 170–172) carries the inter-atom pair chart, the
+`\bigl`-vs-`\left` atom classes, and the `\ldots`/`\cdots` conventions this
+engine implements.
+
 ---
 
 ## 1. Big picture
@@ -88,7 +106,10 @@ forces style + implied size (`\dfrac`/`\tfrac`, `\genfrac` styles 0–3).
 ### Rules 5/6 — Bin↔Ord reclassification — **Implemented**
 `reclassifyBinaries` (`MathLayoutEngine.swift`) retypes a binary with no
 left operand, or one following Bin/Rel/Open/Punct/Op, to ordinary, and a
-binary before Rel/Close/Punct likewise (TeXbook p.170 chart).
+binary before Rel/Close/Punct likewise — the precise Appendix G rules whose
+consequence p. 170 states ("Bin atoms must be preceded and followed by
+atoms compatible with the nature of binary operations"), and what licenses
+the `*` cells in the Rule 20 chart.
 
 ### Rule 8 — `\vcenter` — **ABSENT**
 
@@ -178,12 +199,16 @@ constant stroke weight. Fences size by TeX's formula:
 fence may sit up to ~10% short of an extreme body, exactly as TeX's
 `\delimiterfactor` intends.
 
-### Rule 20 — inter-atom spacing — **Implemented (a later release, minus Inner)**
-A hand-written switch over 7 atom classes (`spacing(between:and:style:)`,
-`MathLayoutEngine.swift`) with thin/med/thick = 3/4/5 mu, driven by real
-atom classes from `MathSymbolTable`. Medium and thick vanish in script
-styles (TeX's parenthesized chart entries); thin applies everywhere.
-ABSENT: the `Inner` class as a distinct row/column. Fixed muskips.
+### Rule 20 — inter-atom spacing — **Implemented (the full 8×8 chart)**
+The complete p. 170 pair table over all 8 atom classes **including Inner**
+(`pairSpacing` in `MathLayoutEngine.swift`), transcribed cell for cell and
+pinned by `MathSpacingTableTests` against an independent transcription.
+Thin/med/thick = 3/4/5 mu; the chart's parenthesized entries (which include
+the entire Punct row) vanish in script styles. Fractions, `\left…\right`
+groups, fenced matrices, and `\ldots`/`\cdots`/`\ddots` (plain TeX defines
+them as `\mathinner`) classify as Inner; `\mathinner{…}` reclassifies
+explicitly and round-trips through `toLaTeX()`. ABSENT: fixed muskips
+(`\thinmuskip` etc. are not user-settable).
 
 ### Rules 21/22 — line-break penalties, `\mathsurround` — **ABSENT**
 Math lays out atomically; breaking is the host's problem. Automatic

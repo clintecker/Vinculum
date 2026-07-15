@@ -320,8 +320,16 @@ public struct MathLayoutEngine: Sendable {
         case .limitsOperator(let base): return atomClass(of: base)
         case .classified(_, let cls): return cls
         case .raised(let base, _): return atomClass(of: base)
-        case .fraction, .cfrac, .radical, .delimited, .fenced, .row, .matrix,
-             .ruleBox, .colorbox: return .ordinary
+        // Fractions and delimited subformulas are TeX's Inner class (TeXbook
+        // p. 170: "fractions are treated as type Inner") — they attract a thin
+        // space against an adjacent Ord where two Ords would touch.
+        case .fraction, .cfrac, .delimited, .fenced: return .inner
+        case .matrix(_, let left, let right, _):
+            // A fenced matrix (pmatrix, cases) is a delimited subformula →
+            // Inner, exactly as TeX's \left(\vcenter{…}\right). A bare grid
+            // (aligned, substack) is a \vcenter box → Ord.
+            return (!left.isEmpty || !right.isEmpty) ? .inner : .ordinary
+        case .radical, .row, .ruleBox, .colorbox: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary
@@ -335,12 +343,16 @@ public struct MathLayoutEngine: Sendable {
         }
     }
 
-    /// TeX's binary/unary reclassification (TeXbook p.170): a Bin atom with no
-    /// valid left operand (at the start, or after Bin/Op/Rel/Open/Punct) is
-    /// really a unary sign, so it becomes Ord; and a Bin immediately left of a
-    /// Rel/Close/Punct becomes Ord too. This is what makes `x = -1` set a thick
-    /// space after `=` and a tight unary minus, not a medium space around it.
-    /// `nil` classes (spacing/unsupported) don't participate or reset state.
+    /// TeX's binary/unary reclassification (Appendix G rules 5–6; TeXbook
+    /// p. 170 states the consequence — "Bin atoms must be preceded and
+    /// followed by atoms compatible with the nature of binary operations",
+    /// which is why the pair table can leave `*` in the Bin cells): a Bin
+    /// atom with no valid left operand (at the start, or after
+    /// Bin/Op/Rel/Open/Punct) is really a unary sign, so it becomes Ord; and
+    /// a Bin immediately left of a Rel/Close/Punct becomes Ord too. This is
+    /// what makes `x = -1` set a thick space after `=` and a tight unary
+    /// minus, not a medium space around it. `nil` classes (spacing /
+    /// unsupported) don't participate or reset state.
     static func reclassifyBinaries(_ input: [MathAtomClass?]) -> [MathAtomClass?] {
         var classes = input
         var prevIdx: Int?
@@ -360,30 +372,36 @@ public struct MathLayoutEngine: Sendable {
         return classes
     }
 
-    /// TeX inter-atom spacing (in ems): thin 3/18 · medium 4/18 · thick 5/18.
-    /// Medium and thick are parenthesized in TeX's chart (ch. 18) — they
-    /// vanish in script styles; thin space applies in every style.
+    /// TeX's full 8×8 inter-atom pair table, transcribed cell-for-cell from
+    /// The TeXbook p. 170. Values: 0 none · 1 thin (3mu) · 2 medium (4mu) ·
+    /// 3 thick (5mu). NEGATIVE entries are TeX's parenthesized ones — applied
+    /// only in display/text style, suppressed at script level. TeX's `*`
+    /// cells (a Bin beside something it can't operate on) are 0 here: by the
+    /// time spacing runs, `reclassifyBinaries` has retyped those Bins to Ord,
+    /// so the cells genuinely never arise — exactly Knuth's argument for `*`.
+    private static let pairSpacing: [[Int8]] = [
+        // right:  Ord  Op  Bin  Rel Open Close Punct Inner    left:
+        [           0,   1,  -2,  -3,   0,   0,   0,  -1],  // Ord
+        [           1,   1,   0,  -3,   0,   0,   0,  -1],  // Op
+        [          -2,  -2,   0,   0,  -2,   0,   0,  -2],  // Bin
+        [          -3,  -3,   0,   0,  -3,   0,   0,  -3],  // Rel
+        [           0,   0,   0,   0,   0,   0,   0,   0],  // Open
+        [           0,   1,  -2,  -3,   0,   0,   0,  -1],  // Close
+        [          -1,  -1,   0,  -1,  -1,  -1,  -1,  -1],  // Punct
+        [          -1,   1,  -2,  -3,  -1,   0,  -1,  -1],  // Inner
+    ]
+
+    /// TeX inter-atom spacing in ems: thin 3/18 · medium 4/18 · thick 5/18,
+    /// looked up in the p. 170 pair table above.
     func spacing(between left: MathAtomClass, and right: MathAtomClass,
                  style: MathStyle = .text) -> CGFloat {
-        let thin = MathSpacing.thin
-        let medium = style.isScriptLevel ? 0 : MathSpacing.medium
-        let thick = style.isScriptLevel ? 0 : MathSpacing.thick
-        switch (left, right) {
-        case (.ordinary, .binary), (.binary, .ordinary),
-             (.closing, .binary), (.binary, .opening),
-             (.binary, .largeOperator), (.largeOperator, .binary):
-            return medium
-        case (.ordinary, .relation), (.relation, .ordinary),
-             (.closing, .relation), (.relation, .opening),
-             (.largeOperator, .relation), (.relation, .largeOperator):
-            return thick
-        case (.ordinary, .largeOperator), (.largeOperator, .ordinary),
-             (.closing, .largeOperator), (.largeOperator, .opening):
-            return thin
-        case (.punctuation, _):
-            return thin
-        default:
-            return 0
+        let entry = Self.pairSpacing[left.spacingIndex][right.spacingIndex]
+        if entry < 0 && style.isScriptLevel { return 0 }
+        switch abs(entry) {
+        case 1: return MathSpacing.thin
+        case 2: return MathSpacing.medium
+        case 3: return MathSpacing.thick
+        default: return 0
         }
     }
 

@@ -103,6 +103,9 @@ jobs:
           # Font specimens: 07 overview, 08 glyph grid, 09 alphabets.
           VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
             swift test --filter FontShowcaseGenerator || true
+          # Architecture-doc figures: spacing table, delimiter chain, styles, fallback.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter ArchitectureGalleryGenerator || true
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery

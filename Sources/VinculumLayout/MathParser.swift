@@ -326,8 +326,8 @@ public enum MathParser {
         case "mathbin":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .binary)
         case "mathrel":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .relation)
         case "mathop":    return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .largeOperator)
-        case "mathord", "mathinner":
-                          return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .ordinary)
+        case "mathord":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .ordinary)
+        case "mathinner": return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .inner)
         case "mathopen":  return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .opening)
         case "mathclose": return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .closing)
         case "mathpunct": return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .punctuation)

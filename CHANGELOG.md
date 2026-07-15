@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- **The complete TeXbook p. 170 spacing chart, including the Inner class.**
+  Verified cell-by-cell against the book: operators now set tight against
+  parentheses (`\log n(x)` — Op→Open is 0, we inserted a thin space),
+  adjacent operators get their thin space, and thin space after punctuation
+  vanishes in scripts (it is parenthesized in the chart). New
+  `MathAtomClass.inner`: fractions, `\left…\right` groups, fenced matrices,
+  and `\ldots`/`\cdots`/`\ddots` (plain TeX defines them as `\mathinner`)
+  now attract TeX's thin Inner spaces — `f(x_1,\ldots,x_n)` finally spaces
+  like the book sets it. `\mathinner{…}` classifies and round-trips.
+  `MathSpacingTableTests` pins all 128 text/script cells against an
+  independent transcription; goldens re-blessed knowingly.
+- **ARCHITECTURE.md engages the "why" and shows its work.** New
+  CI-regenerated figures (`arch-*.png`: the pair table in action, the
+  delimiter stretch chain, the style lattice, graceful fallback) embedded
+  beside the sections they illustrate, plus explicit answers to the
+  questions a reader would ask: why two products, why an IR, why closures
+  not a protocol, why three renderers and what the fourth box is.
+  ALGORITHM.md gains the Appendix G sources (the TeXbook PDF and
+  Jackowski's *Appendix G Illuminated*) and the classification-first
+  framing.
+
 - **Readable diagrams and specimens.** The architecture diagram is now a
   small high-level flow plus per-stage sub-diagrams (layout pipeline,
   render products) with the detail in prose — it previously crammed

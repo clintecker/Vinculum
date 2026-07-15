@@ -214,6 +214,24 @@ public enum MathAtomClass: Hashable, Sendable {
     case opening       // ( [
     case closing       // ) ]
     case punctuation   // , ;
+    case inner         // delimited subformulas and fractions (TeXbook p. 170)
+}
+
+extension MathAtomClass {
+    /// Row/column index into the TeXbook p. 170 pair-spacing table
+    /// (Ord Op Bin Rel Open Close Punct Inner).
+    var spacingIndex: Int {
+        switch self {
+        case .ordinary: return 0
+        case .largeOperator: return 1
+        case .binary: return 2
+        case .relation: return 3
+        case .opening: return 4
+        case .closing: return 5
+        case .punctuation: return 6
+        case .inner: return 7
+        }
+    }
 }
 
 public enum MathSymbolStyle: Hashable, Sendable {

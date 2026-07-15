@@ -117,6 +117,7 @@ extension MathNode {
             case .closing: cmd = "mathclose"
             case .punctuation: cmd = "mathpunct"
             case .ordinary: cmd = "mathord"
+            case .inner: cmd = "mathinner"
             }
             return "\\\(cmd){\(base.toLaTeX())}"
 

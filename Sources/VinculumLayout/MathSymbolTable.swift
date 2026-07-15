@@ -136,8 +136,11 @@ extension MathParser {
         "aleph": ("ℵ", .ordinary), "prime": ("′", .ordinary),
         "angle": ("∠", .ordinary), "degree": ("°", .ordinary),
         "neg": ("¬", .ordinary), "lnot": ("¬", .ordinary),
-        "dots": ("…", .ordinary), "ldots": ("…", .ordinary),
-        "cdots": ("⋯", .ordinary), "vdots": ("⋮", .ordinary), "ddots": ("⋱", .ordinary),
+        // Plain TeX defines \ldots/\cdots/\ddots as \mathinner boxes, so the
+        // dots are Inner atoms — that is what puts a thin space on BOTH sides
+        // in f(x_1,\ldots,x_n) (TeXbook p. 172). \vdots is a plain vbox: Ord.
+        "dots": ("…", .inner), "ldots": ("…", .inner),
+        "cdots": ("⋯", .inner), "vdots": ("⋮", .ordinary), "ddots": ("⋱", .inner),
         "therefore": ("∴", .relation), "because": ("∵", .relation),
         // Standalone delimiters (also usable outside \left…\right).
         "langle": ("⟨", .opening), "rangle": ("⟩", .closing),

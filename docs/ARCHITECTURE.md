@@ -43,6 +43,19 @@ flowchart LR
     S --> SVG["SVG (server-side)"]
 ```
 
+**Why two products and not one?** Three reasons, in order of importance:
+the geometry becomes *unit-testable* (every fraction-bar position and script
+shift is asserted headlessly in CI, no simulator, no golden image needed);
+the layout runs *anywhere* (a Linux server typesets the same scenes a Mac
+renders); and platform churn is *quarantined* (an AppKit deprecation can
+never touch typesetting code, because typesetting code can't see AppKit).
+The cost is one seam — glyph measurement must be injected — and that seam is
+examined below.
+
+What comes out the far end, for orientation (CI-regenerated):
+
+![Real-world equations](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/04-equations.png)
+
 ### The layout pipeline (VinculumLayout · platform-free · Linux-tested)
 
 ```mermaid
@@ -75,13 +88,38 @@ flowchart LR
     A --> UI["MathText · VinculumLabel · MathView"]
 ```
 
-- **MathSceneRenderer** — draws a scene into any y-up `CGContext`
-  (requires the font the scene was measured with).
-- **MathImageRenderer** — measure → layout → rasterize, cached by
-  content + theme + size + font; feeds the attachment API, the document
-  pipeline (`MathText`), and both views.
-- **MathSVGRenderer** — platform-free; headless scenes become
-  self-contained SVG (server-side rendering).
+**Why three renderers, not one?** Because the three consumers have
+*incompatible* constraints, and a single renderer would have to be the union
+of them:
+
+- **MathSceneRenderer** draws a scene into a live y-up `CGContext` you
+  already own — a custom view's `draw(_:)`, a PDF context, an offscreen
+  bitmap. It can't cache (it doesn't own the surface) and it needs CoreText
+  (it draws real glyphs from the font the scene was measured with).
+- **MathImageRenderer** exists because the *text system* can't consume a
+  draw call — an `NSAttributedString` carries math as an
+  `NSTextAttachment`, which needs a finished **image** with a baseline
+  offset. Owning the image lets it own the **cache** (content + theme +
+  size + font) — the reason a keystroke-frequency editor re-renders in
+  ~0.7 µs instead of re-typesetting — and caching is only sound here, where
+  the output is immutable.
+- **MathSVGRenderer** exists for hosts where the other two *can't run at
+  all*: no CoreGraphics, no display — a Linux server, a static-site
+  pipeline. It trades pixels for markup, so it's the one renderer that is
+  platform-free end to end.
+
+Each is a thin projection of the same `MathScene`; the alternative — one
+renderer with three output modes — would drag CoreText into the SVG path,
+force caching semantics onto live contexts, and couple three release
+cadences together.
+
+**Why the fourth box?** `MathText`, `VinculumLabel`, and `MathView` are not
+renderers — they are the *UI surfaces built on the image renderer*. They sit
+behind `MathImageRenderer` (not beside it) because everything they show is a
+cached attachment/image; they add text-system integration (document
+scanning, intrinsic size, baseline alignment, theme reactivity), never
+drawing logic. The arrow direction is the design rule: **UI consumes the
+cache; only renderers consume scenes.**
 
 
 The macro pre-pass is deliberately outside the parser: definitions are
@@ -92,6 +130,14 @@ block's source before handing the plain LaTeX to the parser or the renderer.
 ---
 
 ## The device-independent scene IR
+
+**Why an IR at all — why not draw during layout?** Because a scene can go
+places a draw call can't: into a *diff* (the golden-image tests compare
+scenes' renders, the layout tests assert on scene geometry directly), into a
+*cache* (the image renderer stores finished renders; a draw-as-you-go design
+has nothing to store), and into *other backends* (the SVG renderer walks the
+same elements the CoreGraphics renderer does). It is TeX's DVI idea at
+expression scale.
 
 `MathScene` (in `MathScene.swift`) is the contract between the two products:
 
@@ -184,6 +230,17 @@ let engine = MathLayoutEngine(measure: someMeasurer, baseSize: 15)
 The seam is the whole reason the layout geometry is unit-testable in CI on a
 headless Linux runner.
 
+**Why closures and not a protocol?** The seams are `@Sendable` function
+types (`MathTextMeasurer`, `MathDelimiterProvider`, …) rather than a
+`FontServices` protocol because each capability is *independently optional*:
+a headless host supplies a measurer and nothing else; the Apple factory
+supplies all six. A protocol would force every host to answer every
+requirement (or force a sprawl of default implementations that silently do
+the wrong thing); closures make "this host has no delimiter variants" a
+`nil`, and the engine's fallback behavior explicit at each call site.
+`MathFontServices` exists only to *bundle* the closures for the common case,
+not to abstract them.
+
 ---
 
 ## Delimiter size variants — the optional MATH-table seam
@@ -227,6 +284,16 @@ bounds-checked; any malformed sub-table degrades to "no data" and layout
 falls back to scaling. `CoreTextDelimiterProvider.make(font:)` /
 `.makeAssembly(font:)` / `.makeAccentVariants(font:)` wrap lookups into the
 font's parsed `MathVariantsData` as the injected closures.
+
+![The delimiter stretch chain](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-delimiters.png)
+
+**Why a chain and not just scaling?** Point-scaling a `(` fattens its stroke
+in proportion — a 3× parenthesis looks like it was set in bold. The font
+already solves this twice over: discrete **size variants** are purpose-drawn
+taller cuts with constant stroke weight, and beyond the largest cut a
+**glyph assembly** builds arbitrary heights from end caps plus repeatable
+extender pieces. Scaling survives only as the last-resort fallback (and as
+the deliberate behavior of `\big…\Bigg`, which request a *size*, not a fit).
 
 **Build engines through the factory.** On Apple platforms,
 `MathLayoutEngine.make(font:baseSize:)` is the one correct construction: it
@@ -272,33 +339,62 @@ per-glyph typography, variants); otherwise it is a named `MathLayout` /
 ## The atom-class spacing model
 
 Vinculum spaces atoms the way TeX does — not by eyeballing gaps, but by
-classifying each atom and looking up the pair in a table. Every `MathNode`
-symbol carries a `MathAtomClass`:
+classifying each atom and looking up the pair in a table. **Why a table and
+not heuristics?** Because inter-atom space is *semantic*, not visual: the
+minus in `x - 1` is an operation (medium space) and the minus in `x = -1` is
+a sign (no space), and no amount of glyph-level tuning can tell them apart —
+only classification can. Every `MathNode` symbol carries a `MathAtomClass`:
 
 ```swift
-enum MathAtomClass { case ordinary, largeOperator, binary, relation, opening, closing, punctuation }
+enum MathAtomClass { case ordinary, largeOperator, binary, relation,
+                     opening, closing, punctuation, inner }
 ```
 
 `MathSymbolTable` assigns the class (e.g. `+` is `.binary`, `=` is
-`.relation`, `∑` is `.largeOperator`, `(` is `.opening`). In `rowBox`, the
-engine walks adjacent atoms and inserts spacing per
-`MathLayoutEngine.spacing(between:and:)`, which encodes TeX's pair table
-(TeXbook p. 170):
+`.relation`, `∑` is `.largeOperator`, `(` is `.opening`), and the layout
+engine classifies composites: fractions, `\left…\right` groups, and the
+`\ldots`/`\cdots` ellipses are **Inner** — TeX's eighth class for "a
+subformula set inside the formula", which attracts a thin space where two
+ordinary atoms would touch (compare `a½b` run together with TeX's
+`a ½ b`). In `rowBox`, the engine walks adjacent atoms and inserts spacing
+per `MathLayoutEngine.spacing(between:and:)` — the 8×8 pair table from
+p. 170 of *The TeXbook*, transcribed cell for cell (and pinned cell for cell
+by `MathSpacingTableTests` against an independent transcription):
 
-- Ord↔Op → thin (3mu)
-- around Bin → medium (4mu)
-- around Rel → thick (5mu)
-- after Punct → thin
+| left \ right | Ord | Op | Bin | Rel | Open | Close | Punct | Inner |
+|---|---|---|---|---|---|---|---|---|
+| **Ord**   | 0 | 1 | (2) | (3) | 0 | 0 | 0 | (1) |
+| **Op**    | 1 | 1 | \*  | (3) | 0 | 0 | 0 | (1) |
+| **Bin**   | (2) | (2) | \* | \* | (2) | \* | \* | (2) |
+| **Rel**   | (3) | (3) | \* | 0 | (3) | 0 | 0 | (3) |
+| **Open**  | 0 | 0 | \* | 0 | 0 | 0 | 0 | 0 |
+| **Close** | 0 | 1 | (2) | (3) | 0 | 0 | 0 | (1) |
+| **Punct** | (1) | (1) | \* | (1) | (1) | (1) | (1) | (1) |
+| **Inner** | (1) | 1 | (2) | (3) | (1) | 0 | (1) | (1) |
 
-This is why `a+b` and `a=b` and `\sum x` all get *correct* — and different —
-spacing, and why a directly-typed `∫x` behaves like `\int x`: `characterNode`
-looks the raw glyph up in `glyphAtomClass` (the reverse of the symbol table) so
-it gets the same class its command spelling would.
+0/1/2/3 = none / thin (3mu) / medium (4mu) / thick (5mu); parenthesized
+entries apply **only in display and text style** — they vanish inside
+scripts, which is why `x^{a+b}` sets its exponent tight. The `*` cells can
+never be consulted: reclassification (below) has already retyped any Bin
+that would land there.
+
+The table is full of judgment calls you'd get wrong by intuition — the row
+worth reading twice is **Op→Open = 0**: TeX inserts *no* space between an
+operator and a parenthesis, so `\log n(x)` sets tight, because formulas like
+`\sin(x)` must. This is also why `a+b` and `a=b` and `\sum x` all get
+*correct* — and different — spacing, and why a directly-typed `∫x` behaves
+like `\int x`: `characterNode` looks the raw glyph up in `glyphAtomClass`
+(the reverse of the symbol table) so it gets the same class its command
+spelling would.
+
+![Atom-class spacing in action](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-spacing.png)
 
 ### Binary / unary reclassification
 
 Before spacing, `rowBox` runs the class list through
-`MathLayoutEngine.reclassifyBinaries` (TeXbook p. 170). A `.binary` atom with
+`MathLayoutEngine.reclassifyBinaries` (Appendix G rules 5–6; p. 170 states
+the consequence — "Bin atoms must be preceded and followed by atoms
+compatible with the nature of binary operations"). A `.binary` atom with
 no valid left operand — at the start of a row, or after Bin/Op/Rel/Open/Punct —
 is really a unary sign, so it becomes `.ordinary`; and a `.binary` immediately
 left of a Rel/Close/Punct becomes `.ordinary` too. This is what sets a *thick*
@@ -327,6 +423,13 @@ shared state:
 
 Because the engine is a value type, these sub-contexts are cheap and can't leak
 across siblings: a `\color` on one operand never bleeds into the next.
+
+The same copy-don't-mutate pattern carries the **style lattice** — TeX's
+display → text → script → scriptscript progression that sizes every subtree
+(scripts shrink to 70%, then hit the 50% scriptscript floor; `\dfrac` /
+`\tfrac` force a style; display operators swap in their larger cut):
+
+![The style lattice](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-styles.png)
 
 ---
 
@@ -363,7 +466,7 @@ TeX's own row-of-atoms model. There are currently **24 cases**:
 | `unsupported(String)` | anything unrecognized — degrades to a source card, never throws |
 
 The associated enums are worth knowing when reusing a node kind:
-`MathAtomClass` (7 classes above), `MathSymbolStyle` {italic, roman, bold},
+`MathAtomClass` (8 classes above), `MathSymbolStyle` {italic, roman, bold},
 `MathMatrixStyle` {centered, cases, aligned, substack, array(`ArraySpec`)},
 `MathDecoration` {boxed, phantom, hphantom, vphantom, cancel, bcancel, xcancel,
 negation, smash, rlap, llap, clap}, `MathOverUnder` {plain, overbrace,
@@ -434,7 +537,13 @@ a named operator like `\sin`, add to `functionNames` instead — the parser emit
 
 The parser's cardinal rule: **never fail.** Unknown commands become
 `.unsupported` leaves so a document degrades to a named source card instead of
-throwing.
+throwing. **Why no thrown errors?** Because the input is *someone else's
+document* — a pasted note, an LLM response — and the author isn't present to
+fix it. A thrown error turns one unknown command into a blank paragraph; an
+`.unsupported` leaf keeps the rest of the formula typeset and shows the
+unknown part as legible monospace source, in place:
+
+![Degradation, not failure](https://raw.githubusercontent.com/clintecker/Vinculum/gallery/arch-fallback.png)
 
 ---
 
