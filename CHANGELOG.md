@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **iosMath's full example set now renders (20/20).** Probing Vinculum
+  against every equation in iosMath's README found five that fell back;
+  all five traced to three classic TeX features, now added:
+  **infix generalized fractions** (`\over` `\atop` `\choose` `\brace`
+  `\brack` — `{n \brace k}` for Stirling numbers), **old-style font
+  switches** (`\bf` `\rm` `\it` `\cal` `\frak` `\bb` `\scr` `\sf`
+  `\tt`, stateful to the current group, so `\vec{\bf E}` and `{\cal C}`
+  work), and **`\limits`** to force operator-limit stacking
+  (`\int\limits_a^b`). Also: `eqalign`/`displaylines` environment aliases,
+  and a bare inline `\` degrades to a no-op instead of a fallback card.
+  Fixed two bugs the new round-trip cases exposed — stateful switches
+  overran `\right`/`&`/`\\` boundaries (a latent bug `\color`/`\displaystyle`
+  shared), and `\brace`/`\brack` genfracs serialized their `{`/`}` fences
+  into un-parseable `\genfrac{{}…}`.
+
 - **PRODUCT.md refreshed against the shipped reality.** Version, Fira
   Math licensing, exact command counts (404+37), the p. 170-verified
   spacing and `\vec` seating in the typography table, five-font specimen

@@ -622,6 +622,81 @@ final class MathParserTests: XCTestCase {
         XCTAssertTrue(MathParser.isFullySupported(node))
     }
 
+    // MARK: - Legacy/infix constructs (iosMath corpus)
+
+    func testInfixOverIsAFraction() {
+        guard case .fraction(let num, let den) = MathParser.parse(#"{a \over b}"#) else {
+            return XCTFail("`\\over` should build a fraction")
+        }
+        if case .symbol("a", _, _) = num, case .symbol("b", _, _) = den { } else {
+            XCTFail("numerator/denominator split wrong: \(num) / \(den)")
+        }
+    }
+
+    func testInfixChooseBraceBrackAtop() {
+        // Each maps to a genfrac with the right fences and no rule.
+        for (latex, l, r) in [(#"{n \choose k}"#, "(", ")"),
+                              (#"{n \brace k}"#, "{", "}"),
+                              (#"{n \brack k}"#, "[", "]"),
+                              (#"{n \atop k}"#, "", "")] {
+            guard case .genfrac(_, _, let hasRule, let left, let right) = MathParser.parse(latex) else {
+                return XCTFail("\(latex) should build a genfrac")
+            }
+            XCTAssertFalse(hasRule, "\(latex) has no rule")
+            XCTAssertEqual(left, l); XCTAssertEqual(right, r)
+        }
+    }
+
+    func testInfixNumeratorIsEverythingBefore() {
+        // `a + b \over c` → the whole `a + b` is the numerator, not just `b`.
+        guard case .fraction(let num, _) = MathParser.parse(#"a + b \over c"#) else {
+            return XCTFail("expected a fraction")
+        }
+        guard case .row(let kids) = num else { return XCTFail("numerator should be the row a + b") }
+        XCTAssertEqual(kids.count, 3, "numerator is the full row before \\over")
+    }
+
+    func testOldStyleFontSwitchesAreSupported() {
+        for latex in [#"\bf x"#, #"\rm x"#, #"\it x"#, #"\cal C"#, #"\frak Q"#,
+                      #"\bb R"#, #"\scr S"#, #"\sf A"#, #"\tt m"#, #"\vec{\bf E}"#] {
+            XCTAssertTrue(MathParser.isFullySupported(MathParser.parse(latex)),
+                          "\(latex) should render natively")
+        }
+    }
+
+    func testFontSwitchScopesToGroup() {
+        // `{\cal C} D`: the switch styles only C; D stays a normal symbol.
+        guard case .row(let kids) = MathParser.parse(#"{\cal C} D"#) else {
+            return XCTFail("expected a row")
+        }
+        guard case .symbol("D", _, _) = kids.last else {
+            XCTFail("the trailing D must not inherit \\cal styling: \(kids)")
+            return
+        }
+    }
+
+    func testFontSwitchDoesNotSwallowRightDelimiter() {
+        // Regression: a switch's rest-of-group scan must stop at \right,
+        // or `\left| \cal C \right|` loses its closing fence and degrades.
+        XCTAssertTrue(MathParser.isFullySupported(MathParser.parse(#"\left| \cal C \right|"#)))
+    }
+
+    func testIntLimitsForcesStackedForm() {
+        // `\int\limits_a^b` wraps the operator so its scripts stack, like \sum.
+        let node = MathParser.parse(#"\int\limits_{-\infty}^{\infty}"#)
+        XCTAssertTrue(MathParser.isFullySupported(node))
+        guard case .scripts(let base, _, _) = node else { return XCTFail("expected scripts") }
+        guard case .limitsOperator = base else {
+            return XCTFail("\\limits should wrap the operator in .limitsOperator, got \(base)")
+        }
+    }
+
+    func testBareRowBreakDegradesToNoOp() {
+        // A `\\` outside any environment can't break a line inline; it must
+        // NOT become an unsupported card (it did before).
+        XCTAssertTrue(MathParser.isFullySupported(MathParser.parse(#"a + b \\ + c"#)))
+    }
+
     /// Convenience: the single mapped glyph of a one-atom expression.
     private func glyph(_ latex: String) -> String? {
         if case .symbol(let g, _, _) = MathParser.parse(latex) { return g }

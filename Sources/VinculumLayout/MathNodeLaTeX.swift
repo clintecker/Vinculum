@@ -105,7 +105,10 @@ extension MathNode {
 
         case .limitsOperator(let base):
             if case .functionName(let name) = base { return "\\operatorname*{\(name)}" }
-            return base.toLaTeX()
+            // A non-function operator forced to stack (e.g. `\int\limits`):
+            // keep the `\limits` so the round-trip re-stacks rather than
+            // reverting to the operator's default side scripts.
+            return base.toLaTeX() + "\\limits "
 
         case .classified(let base, let cls):
             let cmd: String
@@ -146,14 +149,22 @@ extension MathNode {
             return "\\\(Self.accentCommand(accent)){\(base.toLaTeX())}"
 
         case .genfrac(let top, let bottom, let hasRule, let left, let right):
-            if hasRule, left.isEmpty, right.isEmpty {
-                return "\\frac{\(top.toLaTeX())}{\(bottom.toLaTeX())}"
+            let t = top.toLaTeX(), b = bottom.toLaTeX()
+            if hasRule, left.isEmpty, right.isEmpty { return "\\frac{\(t)}{\(b)}" }
+            // Ruleless genfracs whose fences are the infix operators' own
+            // serialize back to the infix form — the only round-trip-safe
+            // spelling for brace/bracket delimiters, whose `{`/`}` can't live
+            // inside `\genfrac`'s own brace-delimited delimiter arguments.
+            if !hasRule {
+                switch (left, right) {
+                case ("(", ")"): return "\\binom{\(t)}{\(b)}"
+                case ("{", "}"): return "{\(t) \\brace \(b)}"
+                case ("[", "]"): return "{\(t) \\brack \(b)}"
+                case ("", ""):   return "{\(t) \\atop \(b)}"
+                default: break
+                }
             }
-            if !hasRule, left == "(", right == ")" {
-                return "\\binom{\(top.toLaTeX())}{\(bottom.toLaTeX())}"
-            }
-            return "\\genfrac{\(left)}{\(right)}{\(hasRule ? "1pt" : "0pt")}{}"
-                + "{\(top.toLaTeX())}{\(bottom.toLaTeX())}"
+            return "\\genfrac{\(left)}{\(right)}{\(hasRule ? "1pt" : "0pt")}{}{\(t)}{\(b)}"
 
         case .overUnder(let base, let over, let under, let kind):
             return Self.overUnderLaTeX(base: base, over: over, under: under, kind: kind)

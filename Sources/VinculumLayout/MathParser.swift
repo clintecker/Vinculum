@@ -83,10 +83,71 @@ public enum MathParser {
                 tokens.removeFirst()
                 break
             }
+            // Infix generalized fractions (`{a \over b}`, `{n \brace k}`, …):
+            // TeX's one infix construct. Everything parsed in this group so far
+            // is the numerator; everything remaining (to the terminator) is the
+            // denominator. Only one may appear per group, and it takes over the
+            // whole group — so build the node and return it as the row.
+            if case .command(let n) = token, let infix = InfixFraction(command: n) {
+                tokens.removeFirst()
+                let numerator = nodes.count == 1 ? nodes[0] : .row(nodes)
+                let denomNodes = parseRow(&tokens, until: terminator)  // consumes the terminator
+                let denominator = denomNodes.count == 1 ? denomNodes[0] : .row(denomNodes)
+                return [infix.node(numerator: numerator, denominator: denominator)]
+            }
             guard let node = parseAtom(&tokens) else { continue }
-            nodes.append(attachScriptsAndPrimes(node, &tokens))
+            let modified = applyLimitsModifier(node, &tokens)
+            nodes.append(attachScriptsAndPrimes(modified, &tokens))
         }
         return nodes
+    }
+
+    /// TeX's infix generalized-fraction operators. Each restructures its
+    /// enclosing group into a numerator-over-denominator, differing only in
+    /// the fences and whether a rule is drawn — so all map onto the existing
+    /// `.fraction` / `.genfrac` nodes (no new node kind).
+    private enum InfixFraction {
+        case over, atop, choose, brace, brack
+
+        init?(command: String) {
+            switch command {
+            case "over": self = .over
+            case "atop": self = .atop
+            case "choose": self = .choose
+            case "brace": self = .brace
+            case "brack": self = .brack
+            default: return nil
+            }
+        }
+
+        func node(numerator: MathNode, denominator: MathNode) -> MathNode {
+            switch self {
+            case .over:   return .fraction(numerator: numerator, denominator: denominator)
+            case .atop:   return .genfrac(top: numerator, bottom: denominator, hasRule: false, left: "", right: "")
+            case .choose: return .genfrac(top: numerator, bottom: denominator, hasRule: false, left: "(", right: ")")
+            case .brace:  return .genfrac(top: numerator, bottom: denominator, hasRule: false, left: "{", right: "}")
+            case .brack:  return .genfrac(top: numerator, bottom: denominator, hasRule: false, left: "[", right: "]")
+            }
+        }
+    }
+
+    /// `\limits` / `\nolimits` / `\displaylimits` after an operator. `\limits`
+    /// forces the stacked (over/under) form via `.limitsOperator`; the other
+    /// two are consumed and leave the operator's default placement (so an
+    /// unknown-limits leaf never blocks a render). Runs before scripts attach,
+    /// since TeX writes `\int\limits_a^b`.
+    private static func applyLimitsModifier(_ node: MathNode, _ tokens: inout ArraySlice<Token>) -> MathNode {
+        guard case .command(let n)? = tokens.first else { return node }
+        switch n {
+        case "limits":
+            tokens.removeFirst()
+            return .limitsOperator(base: node)
+        case "nolimits", "displaylimits":
+            tokens.removeFirst()
+            return node
+        default:
+            return node
+        }
     }
 
     /// One atom: a group, a command, or a single character.
@@ -322,6 +383,20 @@ public enum MathParser {
         case "pmb":                              // poor-man bold ≈ bold
             return styledLetters(parseAtom(&tokens) ?? .row([]), command: "mathbf")
 
+        case "bf", "rm", "it", "mit", "sl", "sf", "tt", "cal", "frak", "bb", "scr":
+            // Old-style (plain TeX / legacy amsmath) font switches. Unlike the
+            // `\mathbf{…}` argument form, these are STATEFUL — they apply to
+            // the rest of the current group (the same mechanism as stateful
+            // `\color` / `\displaystyle`). Common in hand-written and legacy
+            // LaTeX; `\vec{\bf E}` and `{\cal C}` are the usual shapes.
+            var rest: [MathNode] = []
+            while let t = tokens.first, !endsStatefulScope(t) {
+                guard let atom = parseAtomWithScripts(&tokens) else { break }
+                rest.append(atom)
+            }
+            let body: MathNode = rest.count == 1 ? rest[0] : .row(rest)
+            return Self.oldFontStyled(body, switchName: name)
+
         // Atom-class overrides: force the inter-atom spacing class of a subexpr.
         case "mathbin":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .binary)
         case "mathrel":   return .classified(base: parseAtom(&tokens) ?? .row([]), atomClass: .relation)
@@ -480,7 +555,7 @@ public enum MathParser {
                 return .styled(base: parseAtom(&tokens) ?? .row([]), color: color)
             }
             var rest: [MathNode] = []
-            while let t = tokens.first, t != .groupClose {
+            while let t = tokens.first, !endsStatefulScope(t) {
                 guard let atom = parseAtomWithScripts(&tokens) else { break }
                 rest.append(atom)
             }
@@ -493,7 +568,7 @@ public enum MathParser {
                 : name == "textstyle" ? .text
                 : name == "scriptstyle" ? .script : .scriptScript
             var rest: [MathNode] = []
-            while let t = tokens.first, t != .groupClose {
+            while let t = tokens.first, !endsStatefulScope(t) {
                 guard let atom = parseAtomWithScripts(&tokens) else { break }
                 rest.append(atom)
             }
@@ -508,6 +583,13 @@ public enum MathParser {
         case "negthickspace": return .space(-5.0 / 18.0)
         case "enspace": return .space(0.5)
         case "notag", "nonumber": return .row([])   // no auto-numbering to suppress
+        case "\\":
+            // A bare row break OUTSIDE any environment (inside matrix/cases/
+            // gather it's consumed by the environment parser). Inline math is
+            // a single line — multi-line splitting is a deliberate non-goal —
+            // so this degrades to a no-op instead of an unsupported card; the
+            // author's surrounding `\quad`/spaces carry the intended gap.
+            return .row([])
         case "quad": return .space(1.0)
         case "qquad": return .space(2.0)
         case " ": return .space(6.0 / 18.0)
@@ -570,6 +652,20 @@ public enum MathParser {
     }
 
     /// Reads a brace-delimited literal name like `{pmatrix}` or `{3}`.
+    /// Tokens that end a stateful switch's "rest of the current group" scan
+    /// (`\color`, `\displaystyle`, `\bf`, …). Beyond the closing brace, a
+    /// switch must not run past the structural boundaries its enclosing
+    /// context is itself waiting on — `\right`/`\middle` (a `\left…\right`
+    /// body), `&` and `\\` (matrix cells and rows) — or it swallows the
+    /// boundary and breaks the enclosing construct (`{\cal C\right|}`).
+    private static func endsStatefulScope(_ token: Token) -> Bool {
+        switch token {
+        case .groupClose, .character("&"): return true
+        case .command(let n): return n == "right" || n == "middle" || n == "\\"
+        default: return false
+        }
+    }
+
     private static func readBraceName(_ tokens: inout ArraySlice<Token>) -> String {
         guard tokens.first == .groupOpen else { return "" }
         tokens.removeFirst()
@@ -610,7 +706,8 @@ public enum MathParser {
         case "cases":   (left, right, style) = ("{", "", .cases)
         case "smallmatrix": (left, right, style) = ("", "", .substack)   // script-size grid
         case "aligned", "align", "alignedat", "alignat", "split",
-             "gather", "gathered", "multline":
+             "gather", "gathered", "multline",
+             "eqalign", "displaylines":     // legacy amsmath/plain-TeX aliases
             (left, right, style) = ("", "", .aligned)
         default:        (left, right, style) = ("", "", .centered)   // matrix, array, …
         }
@@ -864,6 +961,33 @@ public enum MathParser {
             return .row(children.map { styledLetters($0, command: command) })
         default:
             return node
+        }
+    }
+
+    /// Maps an old-style font switch (`\bf`, `\cal`, `\rm`, …) onto the same
+    /// styling the `\math*` argument commands produce: alphabet-mapped faces
+    /// reuse `styledLetters`; `\rm`/`\it` just set the symbol style.
+    private static func oldFontStyled(_ node: MathNode, switchName: String) -> MathNode {
+        switch switchName {
+        case "bf":   return styledLetters(node, command: "mathbf")
+        case "cal":  return styledLetters(node, command: "mathcal")
+        case "frak": return styledLetters(node, command: "mathfrak")
+        case "bb":   return styledLetters(node, command: "mathbb")
+        case "scr":  return styledLetters(node, command: "mathscr")
+        case "sf":   return styledLetters(node, command: "mathsf")
+        case "tt":   return styledLetters(node, command: "mathtt")
+        case "rm":   return restyle(node, to: .roman)
+        default:     return restyle(node, to: .italic)   // it, mit, sl
+        }
+    }
+
+    /// Sets the font style on every symbol in a subtree (for `\rm`/`\it`,
+    /// which change slant without remapping to alphabet codepoints).
+    private static func restyle(_ node: MathNode, to style: MathSymbolStyle) -> MathNode {
+        switch node {
+        case .symbol(let s, let cls, _): return .symbol(s, cls, style: style)
+        case .row(let kids): return .row(kids.map { restyle($0, to: style) })
+        default: return node
         }
     }
 

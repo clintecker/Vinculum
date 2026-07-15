@@ -45,6 +45,18 @@ Every structural command below, rendered source-beside-result (CI-regenerated):
 | `\tbinom{n}{k}` | `\tbinom{n}{k}` | Binom, forced text style |
 | `\genfrac{l}{r}{thick}{style}{n}{d}` | `\genfrac{[}{]}{0pt}{}{n}{k}` | Custom delimiters; `thick=0pt`→no rule; `style` `0`=display, `1/2/3`=text |
 
+**Infix (TeX legacy) forms.** `\over`, `\atop`, `\choose`, `\brace`, `\brack`
+restructure their enclosing group into numerator-over-denominator. Everything
+before the operator is the numerator, everything after is the denominator.
+
+| Command | Example | Note |
+| --- | --- | --- |
+| `\over` | `{a+b \over c+d}` | Infix `\frac` |
+| `\atop` | `{n \atop k}` | Stacked, no rule, no fences |
+| `\choose` | `{n \choose k}` | Infix `\binom` (parens) |
+| `\brace` | `{n \brace k}` | Braced (Stirling 2nd kind) |
+| `\brack` | `{n \brack k}` | Bracketed |
+
 ## Roots
 
 | Command | Example | Note |
@@ -65,7 +77,9 @@ Every structural command below, rendered source-beside-result (CI-regenerated):
 
 Big-operator limits are automatic: ∑-class stacks limits above/below in display,
 ∫-class keeps them to the side, and the `\lim`-family stacks. `\operatorname*`
-and `\mathop{…}` force the stacking (limits) form.
+and `\mathop{…}` force the stacking (limits) form. `\limits` after an operator
+forces stacking explicitly (`\int\limits_a^b`); `\nolimits` / `\displaylimits`
+are accepted and leave the operator's default placement.
 
 ## Delimiters
 
@@ -105,7 +119,11 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `split` | `\begin{split} … \end{split}` | Aligned |
 | `gather` / `gathered` | `\begin{gather} a \\ b \end{gather}` | Centered rows |
 | `multline` | `\begin{multline} … \end{multline}` | Aligned |
+| `eqalign` / `displaylines` | `\begin{eqalign} a &= b \\ c &= d \end{eqalign}` | Legacy plain-TeX aliases for the aligned stack |
 | `substack` | `\sum_{\substack{0<i<n \\ i\ \text{odd}}}` | Tight vertical stack for limits |
+
+A bare `\\` **outside** any environment (an inline line break) is a no-op —
+inline math is a single line; multi-line splitting is a host concern.
 
 Row rules inside `array`: `\hline` (full-width rule), `\cline{i-j}` (columns
 i…j), `\hdashline`. Unknown environments still lay out as a bare centered grid so
@@ -209,6 +227,19 @@ Each maps one following atom's letters/digits to the styled codepoint.
 
 Alphabet holes (letters encoded outside the contiguous math block, e.g. `\mathbb{R}`→ℝ,
 `\mathcal{H}`→ℋ) are mapped correctly.
+
+**Old-style (plain-TeX) font switches.** Unlike the `\math…{…}` argument
+forms, these are *stateful*: they apply to the rest of the current group
+(scope them with braces, e.g. `{\cal C}`). Common in legacy and hand-written
+LaTeX. `\vec{\bf E}` and `{\cal C}` are the usual shapes.
+
+| Switch | Equivalent | Switch | Equivalent |
+| --- | --- | --- | --- |
+| `\bf` | `\mathbf` | `\cal` | `\mathcal` |
+| `\rm` | `\mathrm` (upright) | `\frak` | `\mathfrak` |
+| `\it` / `\sl` / `\mit` | italic | `\bb` | `\mathbb` |
+| `\sf` | `\mathsf` | `\scr` | `\mathscr` |
+| `\tt` | `\mathtt` | | |
 
 ## Atom-class overrides
 

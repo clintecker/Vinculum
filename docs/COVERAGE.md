@@ -38,6 +38,7 @@ spacing class.
 | `\dfrac` / `\tfrac` | ✅ | `\dfrac{a}{b}` | Force display / text style regardless of ambient context |
 | `\dbinom` / `\tbinom` | ✅ | `\dbinom{n}{k}` | Force display / text style |
 | `\genfrac` | ✅ | `\genfrac{[}{]}{0pt}{}{n}{k}` | Custom left/right delims, rule on/off (`0pt` → no rule), forced style (`0`=display, `1/2/3`=text) |
+| `\over` `\atop` `\choose` `\brace` `\brack` | ✅ | `{n \brace k}` | TeX infix forms: numerator = everything before, denominator = everything after, in the group |
 
 ```latex
 \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \qquad \cfrac{1}{1 + \cfrac{1}{1 + \cfrac{1}{x}}}
@@ -431,6 +432,14 @@ honored):
   variants exist in Unicode).
 - `\mathbf` uses a bold **system font**, not a Mathematical-Alphanumeric
   codepoint.
+- Old-style `\rm`/`\it`/`\sl`/`\mit` switches render, but round-trip through
+  `\mathrm`/italic so their exact spacing may shift on re-serialization; the
+  alphabet switches (`\bf`/`\cal`/`\frak`/`\bb`/`\scr`/`\sf`/`\tt`) round-trip
+  exactly.
+- `\nolimits` / `\displaylimits` are accepted but leave the operator's default
+  placement — only `\limits` actively forces stacking.
+- A bare `\\` outside an environment is a no-op: inline math is one line
+  (multi-line splitting is a host/line-breaking concern, not layout's).
 
 If you need one of these, it's a good first contribution — see the "add a
 command" walkthrough in [ARCHITECTURE.md](ARCHITECTURE.md).

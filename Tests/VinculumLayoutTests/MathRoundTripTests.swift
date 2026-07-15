@@ -36,6 +36,13 @@ final class MathRoundTripTests: XCTestCase {
         #"\begin{aligned} a &= b \\ &= c \end{aligned}"#,
         #"\left\{ x \middle| x > 0 \right\}"#,
         #"\hspace{0.3em} x \qquad y \, z \; w"#,
+        // Legacy/infix constructs (iosMath corpus): infix fractions, old-style
+        // font switches, and \int\limits stacking must all round-trip. Each
+        // switch is braced to its own group (a stateful switch's scope is the
+        // group; nesting two unbraced switches is genuinely order-dependent).
+        #"{a+b \over c+d} + {n \choose k} + {n \atop k} + {p \brace q} + {r \brack s}"#,
+        #"\vec{\bf E} + {\cal C} + {\frak Q} + {\bb R} + {\scr S}"#,
+        #"\int\limits_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}"#,
     ]
 
     func testCorpusRoundTripsToIdenticalScenes() {
